@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>LernDashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA META TAGS -->
+    <meta name="theme-color" content="#6b46c1">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        :root {
+            --primary: #6b46c1;
+            --primary-light: #7e5be0;
+            --danger: #e53e3e;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --tool: #1e90ff;
+            --competence: #ff8c00;
+            --grade: #50c878;
+            --text: #333;
+            --text-light: #555;
+        }
+        .dark {
+            --bg: #1a1a1a;
+            --card: #2d2d2d;
+            --text: #e0e0e0;
+            --text-light: #bbbbbb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: #111 !important;
+            color: var(--text) !important;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* === LOGO: ZENTRIERT === */
+        .logo-container {
+            width: 200px; float: left; text-align: center; padding: 20px 0; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .logo-wrapper {
+            width: 90px; height: 90px; margin-bottom: 12px;
+            border-radius: 50%; overflow: hidden;
+            box-shadow: 0 6px 16px rgba(107,70,193,0.3);
+            padding: 8px; background: white;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-svg { width: 100%; height: 100%; }
+        .logo-text { font-size: 18px; font-weight: 700; color: #333; margin: 8px 0 4px; }
+        .logo-subtext { font-size: 13px; color: #666; }
+
+        .content { margin-left: 230px; min-height: 100vh; }
+
+        /* === FILTER === */
+        .filter-container {
+            background: linear-gradient(135deg, #eef5ff, #e0edff);
+            padding: 14px; border-radius: 12px; border: 1px solid #cce0ff;
+            margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; min-width: 160px; flex: 1; }
+        .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
+        .filter-group select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; }
+        .search-container { display: flex; flex-direction: column; flex: 1; max-width: 500px; }
+        .search-container label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
+        .search-input { padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff; font-size: 14px; }
+        .reset-btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap; align-self: flex-end; }
+
+        /* === EXPORT & IMPORT === */
+        .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn.csv { background: #27ae60; } .btn.pdf { background: #e74c3c; } .btn.print { background: #34495e; } .btn.import { background: #f39c12; }
+        .file-input { display: none; }
+
+        /* === NEUE RESSOURCE BUTTON === */
+        .new-resource-btn {
+            display: block; margin: 20px auto 10px; padding: 16px 32px; font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; border-radius: 12px;
+            cursor: pointer; box-shadow: 0 6px 16px rgba(107,70,193,0.3); transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 400px;
+        }
+        .new-resource-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(107,70,193,0.4); }
+
+        /* === RESSOURCEN === */
+        .resource-item { display: flex; flex-direction: column; margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
+        .resource-item:hover { transform: translateY(-2px); }
+        .resource-content { margin-bottom: 12px; line-height: 1.6; font-size: 15px; }
+        .tag { display: inline-block; padding: 5px 12px; margin: 3px 6px 3px 0; border-radius: 20px; font-size: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .tag:hover { opacity: 0.8; transform: scale(1.05); }
+        .grade-tag { background: var(--grade); } .tool-tag { background: var(--tool); } .competence-tag { background: var(--competence); }
+        .description { margin-top: 12px; font-size: 14px; color: var(--text-light); background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 3px solid var(--primary); }
+
+        /* === ACTION ICONS === */
+        .action-icons { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+        .action-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .action-icon:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
+        .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
+        .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
+        .action-icon[aria-label]:hover::after { content: attr(aria-label); position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); background: #333; color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+        /* === FORM === */
+        #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+
+        /* === STATS === */
+        .stats-section { margin-top: 30px; }
+        .stats-section h3 { margin-bottom: 12px; }
+        .stat-item { display: flex; align-items: center; margin: 8px 0; font-size: 14px; }
+        .stat-label { width: 140px; font-weight: 600; }
+        .stat-bar-container { flex: 1; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin-left: 10px; position: relative; }
+        .stat-bar { height: 100%; width: 0; background: #999; border-radius: 10px; transition: width 0.6s ease; }
+
+        /* === DARK MODE TOGGLE === */
+        .dark-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #333; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        /* === HAUPT-CONTAINER: STATISTIK IMMER RECHTS === */
+        .main-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: nowrap;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding-bottom: 60px;
+            min-height: calc(100vh - 200px);
+        }
+        .resources-section {
+            flex: 2;
+            min-width: 320px;
+            overflow-y: auto;
+        }
+        .stats-section {
+            flex: 1;
+            min-width: 260px;
+            background: var(--card);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .content { margin-left: 0; }
+            .logo-container { float: none; width: 100%; margin-bottom: 20px; }
+            .filters, .filter-container { flex-direction: column; align-items: stretch; }
+            .filter-group, .search-container { min-width: 100%; }
+            .reset-btn { width: 100%; margin-top: 8px; }
+            .main-container { flex-direction: column; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- ZENTRIERTES LOGO -->
+    <div class="logo-container" onclick="resetFilters()">
+        <div class="logo-wrapper">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+                <defs>
+                    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#8e67d6"/>
+                        <stop offset="100%" stop-color="#5e3ab0"/>
+                    </linearGradient>
+                    <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#f0f4ff"/>
+                        <stop offset="100%" stop-color="#d0e0ff"/>
+                    </linearGradient>
+                </defs>
+                <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
+                <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
+                <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
+                <g transform="translate(21,21)">
+                    <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
+                    <circle cx="3.5" cy="2.5" r="1.5" fill="#fff"/>
+                    <path d="M2.5 4.5h2" stroke="#fff" stroke-width="1"/>
+                    <g transform="translate(9,0)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
+                        <path d="M2 2l3 3m0-3l-3 3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+                    </g>
+                    <g transform="translate(18,0)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
+                        <circle cx="3.5" cy="3.5" r="2" fill="#fff"/>
+                        <circle cx="4" cy="3" r="0.8" fill="#333"/>
+                    </g>
+                    <g transform="translate(0,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
+                        <path d="M2 5v-2l3 1v2l-3 1z" fill="#fff"/>
+                        <circle cx="4.5" cy="1.5" r="1" fill="#fff"/>
+                    </g>
+                    <g transform="translate(9,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
+                        <path d="M2.5 2l2.5 1.5v-3z" fill="#fff"/>
+                    </g>
+                    <g transform="translate(18,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
+                        <path d="M1.5 2h4M1.5 3.5h4M1.5 5h2" stroke="#fff" stroke-width="0.8"/>
+                    </g>
+                    <g transform="translate(0,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
+                        <path d="M1.5 5.5h1v-2h-1zM3 5.5h1v-3h-1zM4.5 5.5h1v-1h-1z" fill="#fff"/>
+                    </g>
+                    <g transform="translate(9,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
+                        <circle cx="3.5" cy="3.5" r="2.5" stroke="#fff" stroke-width="0.8" fill="none"/>
+                        <path d="M1.5 3.5h4M3.5 1.5v4" stroke="#fff" stroke-width="0.6"/>
+                    </g>
+                    <g transform="translate(18,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
+                        <path d="M1.5 2h4M1.5 4h4" stroke="#999" stroke-width="0.8"/>
+                        <path d="M1.5 2l.7.7m-.7-.7l1.4 1.4" stroke="#4caf50" stroke-width="1"/>
+                    </g>
+                </g>
+                <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
+            </svg>
+        </div>
+        <div class="logo-text">LernDashboard</div>
+        <div class="logo-subtext">Digitale Ressourcen</div>
+    </div>
+
+    <div class="content">
+        <h1>Dashboard</h1>
+        <p>Übersicht aller digitalen Lernressourcen</p>
+
+        <!-- Filter -->
+        <div class="filter-container">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Unterrichtsfach</label>
+                    <select id="filterSubject"><option value="">Alle Fächer</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Klassenstufe</label>
+                    <select id="filterGrade"><option value="">Alle Klassen</option>
+                        <option value="Klasse 1">Klasse 1</option><option value="Klasse 2">Klasse 2</option>
+                        <option value="Klasse 3">Klasse 3</option><option value="Klasse 4">Klasse 4</option>
+                        <option value="Klasse 5">Klasse 5</option><option value="Klasse 6">Klasse 6</option>
+                        <option value="Klasse 7">Klasse 7</option><option value="Klasse 8">Klasse 8</option>
+                        <option value="Klasse 9">Klasse 9</option><option value="Klasse 10">Klasse 10</option>
+                        <option value="Klasse 11">Klasse 11</option><option value="Klasse 12">Klasse 12</option>
+                        <option value="Klasse 13">Klasse 13</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Digitales Hilfsmittel</label>
+                    <select id="filterTool"><option value="">Alle Hilfsmittel</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Kompetenzbereich</label>
+                    <select id="filterCompetence"><option value="">Alle Bereiche</option>
+                        <option value="Suchen, Verarbeiten und Aufbewahren">Suchen, Verarbeiten und Aufbewahren</option>
+                        <option value="Kommunizieren und Kooperieren">Kommunizieren und Kooperieren</option>
+                        <option value="Produzieren und Präsentieren">Produzieren und Präsentieren</option>
+                        <option value="Schützen und sicher Agieren">Schützen und sicher Agieren</option>
+                        <option value="Problemlösen und Handeln">Problemlösen und Handeln</option>
+                        <option value="Analysieren und Reflektieren">Analysieren und Reflektieren</option>
+                    </select>
+                </div>
+            </div>
+            <button class="reset-btn" onclick="resetFilters()">Filter zurücksetzen</button>
+        </div>
+
+        <div class="filter-container">
+            <div class="search-container">
+                <label>Suche nach Thema</label>
+                <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel, Bruchrechnen...">
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <button class="btn csv" onclick="exportCSV()">CSV</button>
+            <button class="btn pdf" onclick="exportPDF()">PDF</button>
+            <button class="btn print" onclick="window.print()">Drucken</button>
+            <label class="btn import">
+                CSV Import
+                <input type="file" id="csvFile" class="file-input" accept=".csv" onchange="importCSV(event)">
+            </label>
+        </div>
+
+        <button class="new-resource-btn" onclick="window.location.href='new-resource.html'">
+            Neue Ressource hinzufügen
+        </button>
+
+        <div class="main-container">
+            <div class="resources-section">
+                <div class="card" id="resources">Ressourcen-Übersicht (<span id="count">0</span>)</div>
+            </div>
+            <div class="stats-section">
+                <h3>Statistik nach Fächern</h3>
+                <div id="stats-content"></div>
+            </div>
+        </div>
+
+        <div id="editForm">
+            <h3>Ressource bearbeiten</h3>
+            <div class="form-group">
+                <label>Unterrichtsfach</label>
+                <select id="editSubject"><option value="">Fach auswählen</option></select>
+            </div>
+            <div class="form-group">
+                <label>Klassenstufe</label>
+                <select id="editGrade">
+                    <option value="">Klasse auswählen</option>
+                    <option value="Klasse 1">Klasse 1</option><option value="Klasse 2">Klasse 2</option>
+                    <option value="Klasse 3">Klasse 3</option><option value="Klasse 4">Klasse 4</option>
+                    <option value="Klasse 5">Klasse 5</option><option value="Klasse 6">Klasse 6</option>
+                    <option value="Klasse 7">Klasse 7</option><option value="Klasse 8">Klasse 8</option>
+                    <option value="Klasse 9">Klasse 9</option><option value="Klasse 10">Klasse 10</option>
+                    <option value="Klasse 11">Klasse 11</option><option value="Klasse 12">Klasse 12</option>
+                    <option value="Klasse 13">Klasse 13</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kompetenzbereich</label>
+                <select id="editCompetence">
+                    <option value="">Kompetenzbereich auswählen</option>
+                    <option value="Suchen, Verarbeiten und Aufbewahren">Suchen, Verarbeiten und Aufbewahren</option>
+                    <option value="Kommunizieren und Kooperieren">Kommunizieren und Kooperieren</option>
+                    <option value="Produzieren und Präsentieren">Produzieren und Präsentieren</option>
+                    <option value="Schützen und sicher Agieren">Schützen und sicher Agieren</option>
+                    <option value="Problemlösen und Handeln">Problemlösen und Handeln</option>
+                    <option value="Analysieren und Reflektieren">Analysieren und Reflektieren</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Thema</label>
+                <input type="text" id="editTopic">
+            </div>
+            <div class="form-group">
+                <label>Digitales Hilfsmittel</label>
+                <input type="text" id="editTool">
+            </div>
+            <div class="form-group">
+                <label>Zusätzliche Beschreibung</label>
+                <textarea id="editDescription"></textarea>
+            </div>
+            <button class="btn" style="background:#27ae60;" onclick="saveEdit()">Speichern</button>
+            <button class="btn" style="background:#95a5a6;" onclick="cancelEdit()">Abbrechen</button>
+        </div>
+    </div>
+
+    <button class="dark-toggle" onclick="toggleDark()">Dark Mode</button>
+
+<!-- PWA + VERSION + KEIN RELOAD -->
+<script>
+  const APP_VERSION = 'v1.6.0';
+
+  // VERSION ANZEIGEN
+  const versionEl = document.createElement('div');
+  versionEl.id = 'app-version';
+  versionEl.textContent = APP_VERSION;
+  versionEl.style.cssText = `
+    position: fixed; bottom: 10px; right: 10px;
+    background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
+    border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
+    z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  `;
+  document.body.appendChild(versionEl);
+
+  // SERVICE WORKER
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker?.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              const btn = document.createElement('div');
+              btn.innerHTML = `Update ${APP_VERSION}!`;
+              btn.style.cssText = 'position:fixed;bottom:45px;right:10px;background:#27ae60;color:white;padding:10px 15px;border-radius:10px;font-size:13px;cursor:pointer;z-index:10000;';
+              btn.onclick = () => window.location.reload();
+              document.body.appendChild(btn);
+              setTimeout(() => btn.remove(), 15000);
+            }
+          });
+        });
+        setInterval(() => reg.update(), 5000);
+      });
+  }
+
+  // VERSION BLEIBT
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const el = document.getElementById('app-version');
+      if (el) el.textContent = APP_VERSION;
+    }, 100);
+  });
+</script>
+    <script>
+        let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        const resourceList = document.getElementById('resources');
+        const count = document.getElementById('count');
+        const editForm = document.getElementById('editForm');
+        let editIndex = -1;
+        let tools = new Set();
+        const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
+        const rainbowColors = ["#FF0000","#FF4500","#FFD700","#9ACD32","#00CED1","#1E90FF","#8A2BE2"];
+        const colorMap = {};
+        subjects.forEach((s,i) => colorMap[s] = rainbowColors[i % rainbowColors.length]);
+
+        function toggleDark() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+        }
+        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+        function populateSubjectDropdowns() {
+            const filterSubject = document.getElementById('filterSubject');
+            const editSubject = document.getElementById('editSubject');
+            filterSubject.innerHTML = '<option value="">Alle Fächer</option>';
+            editSubject.innerHTML = '<option value="">Fach auswählen</option>';
+            subjects.forEach(s => {
+                filterSubject.add(new Option(s, s));
+                editSubject.add(new Option(s, s));
+            });
+        }
+
+        resources.forEach(r => r.tool && tools.add(r.tool.toLowerCase()));
+        updateToolFilter();
+
+        function updateToolFilter() {
+            const filterTool = document.getElementById('filterTool');
+            const val = filterTool.value;
+            filterTool.innerHTML = '<option value="">Alle Hilfsmittel</option>';
+            tools.forEach(t => filterTool.add(new Option(t.charAt(0).toUpperCase() + t.slice(1), t)));
+            filterTool.value = val;
+        }
+
+        function displayResources(fS='', fG='', fC='', fT='', search='') {
+            const filtered = resources.filter(r =>
+                (!fS || r.subject === fS) &&
+                (!fG || r.grade === fG) &&
+                (!fC || r.competence === fC) &&
+                (!fT || r.tool?.toLowerCase() === fT.toLowerCase()) &&
+                (!search || r.topic.toLowerCase().includes(search.toLowerCase()))
+            );
+            count.textContent = filtered.length;
+            resourceList.innerHTML = `<div style="margin-bottom:12px;font-size:16px;">Ressourcen-Übersicht (<strong>${filtered.length}</strong>)</div>`;
+            filtered.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'resource-item';
+                const content = document.createElement('div');
+                content.className = 'resource-content';
+                content.innerHTML = `<strong>Thema:</strong> ${r.topic}`;
+                const subjectTag = document.createElement('span');
+                subjectTag.className = 'tag subject-tag';
+                subjectTag.style.backgroundColor = colorMap[r.subject] || '#4a90e2';
+                subjectTag.textContent = r.subject;
+                subjectTag.onclick = () => filterBy('filterSubject', r.subject);
+
+                const gradeTag = document.createElement('span');
+                gradeTag.className = 'tag grade-tag';
+                gradeTag.textContent = r.grade;
+                gradeTag.onclick = () => filterBy('filterGrade', r.grade);
+
+                const toolTag = document.createElement('span');
+                toolTag.className = 'tag tool-tag';
+                toolTag.textContent = r.tool || '—';
+                toolTag.onclick = () => r.tool && filterBy('filterTool', r.tool.toLowerCase());
+
+                const compTag = document.createElement('span');
+                compTag.className = 'tag competence-tag';
+                compTag.textContent = r.competence || '—';
+                compTag.onclick = () => r.competence && filterBy('filterCompetence', r.competence);
+
+                content.appendChild(document.createElement('br'));
+                [subjectTag, gradeTag, toolTag, compTag].forEach(tag => content.appendChild(tag));
+
+                if (r.description) {
+                    const desc = document.createElement('div');
+                    desc.className = 'description';
+                    desc.textContent = r.description;
+                    content.appendChild(desc);
+                }
+
+                const actions = document.createElement('div');
+                actions.className = 'action-icons';
+
+                const editBtn = document.createElement('div');
+                editBtn.className = 'action-icon edit-icon';
+                editBtn.setAttribute('aria-label', 'Bearbeiten');
+                editBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+                editBtn.onclick = () => editResource(resources.indexOf(r));
+
+                const delBtn = document.createElement('div');
+                delBtn.className = 'action-icon delete-icon';
+                delBtn.setAttribute('aria-label', 'Löschen');
+                delBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+                delBtn.onclick = () => deleteResource(resources.indexOf(r));
+
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+                div.appendChild(content);
+                div.appendChild(actions);
+                resourceList.appendChild(div);
+            });
+        }
+
+        function filterBy(id, value) {
+            document.getElementById(id).value = value;
+            applyFilters();
+        }
+
+        function editResource(i) {
+            editIndex = i;
+            const r = resources[i];
+            document.getElementById('editSubject').value = r.subject || '';
+            document.getElementById('editGrade').value = r.grade || '';
+            document.getElementById('editCompetence').value = r.competence || '';
+            document.getElementById('editTopic').value = r.topic || '';
+            document.getElementById('editTool').value = r.tool || '';
+            document.getElementById('editDescription').value = r.description || '';
+            editForm.style.display = 'block';
+            editForm.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function saveEdit() {
+            if (editIndex < 0) return;
+            const newTool = document.getElementById('editTool').value.trim();
+            if (newTool && !tools.has(newTool.toLowerCase())) {
+                tools.add(newTool.toLowerCase());
+                updateToolFilter();
+            }
+            resources[editIndex] = {
+                subject: document.getElementById('editSubject').value,
+                grade: document.getElementById('editGrade').value,
+                competence: document.getElementById('editCompetence').value,
+                topic: document.getElementById('editTopic').value,
+                tool: newTool,
+                description: document.getElementById('editDescription').value
+            };
+            localStorage.setItem('resources', JSON.stringify(resources));
+            cancelEdit();
+            applyFilters();
+        }
+
+        function cancelEdit() { editForm.style.display = 'none'; editIndex = -1; }
+
+        function deleteResource(i) {
+            if (confirm('Möchtest du diese Ressource wirklich löschen?')) {
+                resources.splice(i, 1);
+                localStorage.setItem('resources', JSON.stringify(resources));
+                applyFilters();
+            }
+        }
+
+        function updateStats() {
+            const container = document.getElementById('stats-content');
+            container.innerHTML = '';
+            const stats = {};
+            resources.forEach(r => stats[r.subject] = (stats[r.subject] || 0) + 1);
+            Object.keys(stats).sort().forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'stat-item';
+                div.innerHTML = `
+                    <div class="stat-label">${s}:</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="background:${colorMap[s]};"></div>
+                    </div>
+                    <span style="margin-left:8px;min-width:30px;text-align:right;">${stats[s]}</span>
+                `;
+                container.appendChild(div);
+                setTimeout(() => {
+                    const bar = div.querySelector('.stat-bar');
+                    const percent = Math.min((stats[s] / Math.max(...Object.values(stats))) * 100, 100);
+                    bar.style.width = percent + '%';
+                }, 100);
+            });
+        }
+
+        function applyFilters() {
+            const fS = document.getElementById('filterSubject').value;
+            const fG = document.getElementById('filterGrade').value;
+            const fC = document.getElementById('filterCompetence').value;
+            const fT = document.getElementById('filterTool').value;
+            const search = document.getElementById('searchTopic').value;
+            displayResources(fS, fG, fC, fT, search);
+            updateStats();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterSubject').value = '';
+            document.getElementById('filterGrade').value = '';
+            document.getElementById('filterTool').value = '';
+            document.getElementById('filterCompetence').value = '';
+            document.getElementById('searchTopic').value = '';
+            applyFilters();
+        }
+
+        function exportCSV() {
+            if (resources.length === 0) { alert("Keine Daten zum Exportieren!"); return; }
+            let csv = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n";
+            resources.forEach(r => {
+                csv += `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${r.tool||''}","${(r.description||'').replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'lerndashboard_ressourcen.csv';
+            link.click();
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            if (resources.length === 0) { alert("Keine Daten zum Exportieren!"); return; }
+            const doc = new jsPDF('p', 'mm', 'a4');
+            let y = 20;
+            doc.setFontSize(16);
+            doc.text('LernDashboard – Ressourcen', 105, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(10);
+
+            resources.forEach((r, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                doc.text(`${i+1}. ${r.topic} (${r.subject}, ${r.grade})`, 15, y);
+                y += 6;
+                doc.setFontSize(9);
+                doc.setTextColor(100);
+                doc.text(`   Tool: ${r.tool || '—'} | Kompetenz: ${r.competence || '—'}`, 15, y);
+                y += 8;
+                doc.setFontSize(10);
+                doc.setTextColor(0);
+            });
+
+            doc.save('lerndashboard_ressourcen.pdf');
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
+                if (lines.length < 2) { alert("CSV ist leer oder hat kein Header!"); return; }
+                const imported = [];
+                lines.slice(1).forEach(line => {
+                    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                    if (cols.length >= 5) {
+                        imported.push({
+                            topic: cols[0], subject: cols[1], grade: cols[2],
+                            competence: cols[3], tool: cols[4], description: cols[5] || ''
+                        });
+                    }
+                });
+                if (imported.length > 0) {
+                    resources = resources.concat(imported);
+                    imported.forEach(r => r.tool && tools.add(r.tool.toLowerCase()));
+                    updateToolFilter();
+                    localStorage.setItem('resources', JSON.stringify(resources));
+                    alert(`${imported.length} Ressourcen importiert!`);
+                    applyFilters();
+                } else {
+                    alert("Keine gültigen Daten im CSV gefunden.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
+            document.getElementById(id).addEventListener('change', applyFilters);
+        });
+        document.getElementById('searchTopic').addEventListener('input', applyFilters);
+
+        populateSubjectDropdowns();
+        applyFilters();
+    </script>
+</body>
+</html>
