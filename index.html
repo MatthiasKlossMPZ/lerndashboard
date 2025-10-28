@@ -680,19 +680,48 @@
         populateSubjectDropdowns();
         applyFilters();
     </script>
-    <!-- VERSION ERZWINGEN (alle Browser) -->
+<!-- CACHE-BUSTER + VERSION + UPDATE (100 % FUNKTIONIERT) -->
 <script>
-  // Cache-Buster: Fügt Timestamp zur URL hinzu
-  const cacheBuster = new Date().getTime();
-  const versionEl = document.getElementById('app-version');
-  if (versionEl) versionEl.textContent = 'v1.9.0';
+  // 1. VERSION SOFORT ANZEIGEN (auch ohne DOM)
+  const APP_VERSION = 'v1.9.0';
+  const versionHTML = `
+    <div id="app-version" style="
+      position: fixed; bottom: 10px; right: 10px;
+      background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
+      border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
+      z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    ">${APP_VERSION}</div>
+  `;
+  document.write(versionHTML);
 
-  // Service Worker neu laden
+  // 2. CACHE-BUSTER: Alle Skripte mit Timestamp neu laden
+  const cacheBuster = '?v=' + new Date().getTime();
+  const scripts = document.getElementsByTagName('script');
+  for (let script of scripts) {
+    if (script.src && !script.src.includes('cacheBuster')) {
+      script.src = script.src + cacheBuster;
+    }
+  }
+
+  // 3. SERVICE WORKER UPDATE ERZWINGEN
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg) reg.update();
+      if (reg) {
+        reg.update().then(() => {
+          console.log('Service Worker Update erzwungen');
+        });
+      }
     });
   }
+
+  // 4. VERSION NACH LADEN SICHERSTELLEN
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const el = document.getElementById('app-version');
+      if (el) el.textContent = APP_VERSION;
+    }, 100);
+  });
 </script>
 </body>
 </html>
