@@ -680,48 +680,55 @@
         populateSubjectDropdowns();
         applyFilters();
     </script>
-<!-- CACHE-BUSTER + VERSION + UPDATE (100 % FUNKTIONIERT) -->
+<!-- VERSION + CACHE-BUSTER + UPDATE (OHNE document.write!) -->
 <script>
-  // 1. VERSION SOFORT ANZEIGEN (auch ohne DOM)
   const APP_VERSION = 'v1.9.0';
-  const versionHTML = `
-    <div id="app-version" style="
-      position: fixed; bottom: 10px; right: 10px;
-      background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
-      border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
-      z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    ">${APP_VERSION}</div>
-  `;
-  document.write(versionHTML);
 
-  // 2. CACHE-BUSTER: Alle Skripte mit Timestamp neu laden
+  // 1. VERSION ANZEIGEN (DOM-basiert)
+  function showVersion() {
+    let versionEl = document.getElementById('app-version');
+    if (!versionEl) {
+      versionEl = document.createElement('div');
+      versionEl.id = 'app-version';
+      versionEl.style.cssText = `
+        position: fixed; bottom: 10px; right: 10px;
+        background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
+        border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
+        z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      `;
+      document.body.appendChild(versionEl);
+    }
+    versionEl.textContent = APP_VERSION;
+  }
+
+  // 2. CACHE-BUSTER: Alle Skripte neu laden
   const cacheBuster = '?v=' + new Date().getTime();
   const scripts = document.getElementsByTagName('script');
   for (let script of scripts) {
     if (script.src && !script.src.includes('cacheBuster')) {
-      script.src = script.src + cacheBuster;
+      script.src = script.src.split('?')[0] + cacheBuster;
     }
   }
 
-  // 3. SERVICE WORKER UPDATE ERZWINGEN
+  // 3. SERVICE WORKER UPDATE
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg) {
-        reg.update().then(() => {
-          console.log('Service Worker Update erzwungen');
-        });
-      }
+      if (reg) reg.update();
     });
   }
 
-  // 4. VERSION NACH LADEN SICHERSTELLEN
+  // 4. VERSION NACH LADEN
   window.addEventListener('load', () => {
-    setTimeout(() => {
-      const el = document.getElementById('app-version');
-      if (el) el.textContent = APP_VERSION;
-    }, 100);
+    setTimeout(showVersion, 100);
   });
+
+  // 5. VERSION SOFORT (falls DOM schon da)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showVersion);
+  } else {
+    showVersion();
+  }
 </script>
 </body>
 </html>
