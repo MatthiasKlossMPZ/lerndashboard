@@ -324,7 +324,7 @@
 
     <!-- PWA + VERSION + UPDATE -->
     <script>
-      const APP_VERSION = 'v1.9.0';
+      const APP_VERSION = 'v1.9.1';
       const versionEl = document.createElement('div');
       versionEl.id = 'app-version';
       versionEl.textContent = APP_VERSION;
@@ -680,5 +680,19 @@
         populateSubjectDropdowns();
         applyFilters();
     </script>
+    <!-- VERSION ERZWINGEN (alle Browser) -->
+<script>
+  // Cache-Buster: Fügt Timestamp zur URL hinzu
+  const cacheBuster = new Date().getTime();
+  const versionEl = document.getElementById('app-version');
+  if (versionEl) versionEl.textContent = 'v1.9.0';
+
+  // Service Worker neu laden
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update();
+    });
+  }
+</script>
 </body>
 </html>
