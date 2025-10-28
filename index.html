@@ -350,19 +350,25 @@
         </div>
     </div>
 
-    <!-- DARK MODE BUTTON (vor Version) -->
-    <button class="dark-toggle" onclick="toggleDark()">Dark Mode</button>
+    <!-- DARK MODE + VERSION (nebeneinander) -->
+    <div style="
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; align-items: center; gap: 10px;
+      z-index: 10000;
+    ">
+      <!-- Dark Mode Button -->
+      <button class="dark-toggle" onclick="toggleDark()">Dark Mode</button>
+      
+      <!-- Version -->
+      <div id="app-version" style="
+        background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
+        border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
+        pointer-events: none; backdrop-filter: blur(6px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      ">v1.9.2</div>
+    </div>
 
-    <!-- VERSION ANZEIGEN -->
-    <div id="app-version" style="
-      position: fixed; bottom: 10px; right: 10px;
-      background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
-      border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
-      z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    ">v1.9.2</div>
-
-    <!-- PWA + VERSION + UPDATE -->
+    <!-- PWA + UPDATE -->
     <script>
       const APP_VERSION = 'v1.9.2';
       if ('serviceWorker' in navigator) {
@@ -375,7 +381,7 @@
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                     const btn = document.createElement('div');
                     btn.innerHTML = `Update ${APP_VERSION}!`;
-                    btn.style.cssText = 'position:fixed;bottom:45px;right:10px;background:#27ae60;color:white;padding:10px 15px;border-radius:10px;font-size:13px;cursor:pointer;z-index:10000;';
+                    btn.style.cssText = 'position:fixed;bottom:70px;right:20px;background:#27ae60;color:white;padding:10px 15px;border-radius:10px;font-size:13px;cursor:pointer;z-index:10000;';
                     btn.onclick = () => {
                       caches.keys().then(names => names.forEach(name => caches.delete(name)))
                         .finally(() => window.location.reload());
@@ -390,7 +396,6 @@
           });
       }
     </script>
-
     <script>
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
         const resourceList = document.getElementById('resources');
