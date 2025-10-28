@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lerndashboard-v13'; // 
+const CACHE_NAME = 'lerndashboard-v15'; // ← v14 → v15
   '/',
   'index.html',
   'new-resource.html',
