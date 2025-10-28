@@ -1,5 +1,4 @@
-const CACHE_NAME = 'lerndashboard-v9'; // ← v9!
-const urlsToCache = [
+const CACHE_NAME = 'lerndashboard-v12'; // 
   '/',
   'index.html',
   'new-resource.html',
