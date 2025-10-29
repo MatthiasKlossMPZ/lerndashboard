@@ -730,14 +730,15 @@ function exportPDF() {
     doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
     y += 12;
 
-    // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE**
+    // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE – VOR DEM LOOP**
     doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
     doc.setTextColor(0);
 
     resources.forEach((r, i) => {
         if (y > 270) { doc.addPage(); y = 20; }
 
-        // Überschrift: Thema + Nummer
+        // Überschrift: Thema + Nummer (fett)
         doc.setFont('helvetica', 'bold');
         doc.text(`${i+1}. ${r.topic}`, 15, y);
 
