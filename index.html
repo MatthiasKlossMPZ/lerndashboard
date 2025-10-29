@@ -126,14 +126,6 @@
         .stat-label { width: 140px; font-weight: 600; }
         .stat-bar-container { flex: 1; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin-left: 10px; position: relative; }
         .stat-bar { height: 100%; width: 0; background: #999; border-radius: 10px; transition: width 0.6s ease; }
-        /* === DARK MODE TOGGLE === */
-        .dark-toggle {
-            position: fixed; top: 20px; right: 20px;
-            z-index: 1000; background: #333; color: white;
-            border: none; width: 50px; height: 50px;
-            border-radius: 50%; cursor: pointer;
-            font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
         /* === HAUPT-CONTAINER: STATISTIK IMMER RECHTS === */
         .main-container {
             display: flex;
@@ -177,7 +169,6 @@
     <div class="logo-container" onclick="resetFilters()">
         <div class="logo-wrapper">
             <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
-                <!-- [SVG wie vorher – gekürzt] -->
                 <defs>
                     <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#8e67d6"/>
@@ -321,28 +312,38 @@
         </div>
     </div>
 
-    <!-- DARK MODE BUTTON (zentrierter Text im Kreis) -->
-    <button class="dark-toggle" onclick="toggleDark()" style="
-      position: fixed; top: 20px; right: 20px;
-      width: 60px; height: 60px; border-radius: 50%;
-      background: #333; color: white; border: none;
-      cursor: pointer; font-size: 11px; font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      text-align: center; line-height: 1.2; padding: 0;
+    <!-- FAVORITEN + DARK MODE (gleich groß, zentriert) -->
+    <div style="
+      position: fixed; top: 15px; right: 15px;
+      display: flex; gap: 10px; z-index: 10000;
     ">
-      <span>Dark</span>
-      <span>Mode</span>
-    </button>
+      <!-- FAVORITEN BUTTON -->
+      <button id="favFilterBtn" onclick="toggleFavorites()" style="
+        width: 60px; height: 60px; border-radius: 50%;
+        background: #ff9800; color: white; border: none;
+        cursor: pointer; font-size: 11px; font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; line-height: 1.2; padding: 0;
+        transition: background 0.2s;
+      ">
+        <span id="favText">Alle</span>
+      </button>
 
-        <!-- FAVORITEN-FILTER BUTTON -->
-    <button class="dark-toggle" onclick="toggleFavorites()" style="
-      position: fixed; top: 20px; right: 90px;
-      background: #ff9800; color: white; border: none; padding: 8px 16px;
-      border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 10000; transition: 0.2s;
-    " id="favFilterBtn">Favoriten</button>
-    
+      <!-- DARK MODE BUTTON -->
+      <button class="dark-toggle" onclick="toggleDark()" style="
+        width: 60px; height: 60px; border-radius: 50%;
+        background: #333; color: white; border: none;
+        cursor: pointer; font-size: 11px; font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; line-height: 1.2; padding: 0;
+      ">
+        <span>Dark</span>
+        <span>Mode</span>
+      </button>
+    </div>
+
     <!-- VERSION ANZEIGEN (UNTEN RECHTS) -->
     <div id="app-version" style="
       position: fixed; bottom: 20px; right: 20px;
@@ -393,6 +394,17 @@
         const colorMap = {};
         subjects.forEach((s,i) => colorMap[s] = rainbowColors[i % rainbowColors.length]);
 
+        let showFavoritesOnly = false;
+
+        function toggleFavorites() {
+          showFavoritesOnly = !showFavoritesOnly;
+          const btn = document.getElementById('favFilterBtn');
+          const text = document.getElementById('favText');
+          btn.style.background = showFavoritesOnly ? '#f57c00' : '#ff9800';
+          text.innerHTML = showFavoritesOnly ? '★' : 'Alle';
+          applyFilters();
+        }
+
         function toggleDark() {
             document.body.classList.toggle('dark');
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
@@ -426,13 +438,19 @@
         }
 
         function displayResources(fS='', fG='', fC='', fT='', search='') {
-            const filtered = resources.filter(r =>
+            let filtered = resources.filter(r =>
                 (!fS || r.subject === fS) &&
                 (!fG || r.grade === fG) &&
                 (!fC || r.competence === fC) &&
                 (!fT || r.tool?.toLowerCase() === fT.toLowerCase()) &&
                 (!search || r.topic.toLowerCase().includes(search.toLowerCase()))
             );
+
+            // FAVORITEN-FILTER
+            if (showFavoritesOnly) {
+              filtered = filtered.filter(r => r.favorite);
+            }
+
             count.textContent = filtered.length;
             resourceList.innerHTML = `<div style="margin-bottom:12px;font-size:16px;">Ressourcen-Übersicht (<strong>${filtered.length}</strong>)</div>`;
             filtered.forEach(r => {
@@ -441,7 +459,6 @@
                 const content = document.createElement('div');
                 content.className = 'resource-content';
                 content.innerHTML = `<strong>Thema:</strong> ${r.topic} <small style="color:#666;">(${r.lastModified})</small>`;
-
                 // Favoriten-Stern
                 const favBtn = document.createElement('span');
                 favBtn.innerHTML = r.favorite ? '★' : '☆';
@@ -453,53 +470,43 @@
                   applyFilters();
                 };
                 content.appendChild(favBtn);
-
                 const subjectTag = document.createElement('span');
                 subjectTag.className = 'tag subject-tag';
                 subjectTag.style.backgroundColor = colorMap[r.subject] || '#4a90e2';
                 subjectTag.textContent = r.subject;
                 subjectTag.onclick = () => filterBy('filterSubject', r.subject);
-
                 const gradeTag = document.createElement('span');
                 gradeTag.className = 'tag grade-tag';
                 gradeTag.textContent = r.grade;
                 gradeTag.onclick = () => filterBy('filterGrade', r.grade);
-
                 const toolTag = document.createElement('span');
                 toolTag.className = 'tag tool-tag';
                 toolTag.textContent = r.tool || '—';
                 toolTag.onclick = () => r.tool && filterBy('filterTool', r.tool.toLowerCase());
-
                 const compTag = document.createElement('span');
                 compTag.className = 'tag competence-tag';
                 compTag.textContent = r.competence || '—';
                 compTag.onclick = () => r.competence && filterBy('filterCompetence', r.competence);
-
                 content.appendChild(document.createElement('br'));
                 [subjectTag, gradeTag, toolTag, compTag].forEach(tag => content.appendChild(tag));
-
                 if (r.description) {
                     const desc = document.createElement('div');
                     desc.className = 'description';
                     desc.textContent = r.description;
                     content.appendChild(desc);
                 }
-
                 const actions = document.createElement('div');
                 actions.className = 'action-icons';
-
                 const editBtn = document.createElement('div');
                 editBtn.className = 'action-icon edit-icon';
                 editBtn.setAttribute('aria-label', 'Bearbeiten');
                 editBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
                 editBtn.onclick = () => editResource(resources.indexOf(r));
-
                 const delBtn = document.createElement('div');
                 delBtn.className = 'action-icon delete-icon';
                 delBtn.setAttribute('aria-label', 'Löschen');
                 delBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
                 delBtn.onclick = () => deleteResource(resources.indexOf(r));
-
                 actions.appendChild(editBtn);
                 actions.appendChild(delBtn);
                 div.appendChild(content);
@@ -604,7 +611,6 @@
         // === SUCHVORSCHLÄGE (AUTOCOMPLETE) ===
         const searchInput = document.getElementById('searchTopic');
         const suggestions = document.getElementById('suggestions');
-
         searchInput.addEventListener('input', () => {
           const val = searchInput.value.toLowerCase().trim();
           suggestions.innerHTML = '';
@@ -617,12 +623,10 @@
               .map(r => r.topic)
               .filter(t => t.toLowerCase().includes(val))
           )].slice(0, 6);
-
           if (matches.length === 0) {
             suggestions.style.display = 'none';
             return;
           }
-
           matches.forEach(m => {
             const div = document.createElement('div');
             div.textContent = m;
@@ -635,7 +639,6 @@
           });
           suggestions.style.display = 'block';
         });
-
         // Schließe bei Klick außerhalb
         document.addEventListener('click', (e) => {
           if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
@@ -717,59 +720,49 @@
             link.click();
         }
 
-// === BESSERER PDF-EXPORT (alle Überschriften 100% gleich groß) ===
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    if (resources.length === 0) { alert("Keine Daten!"); return; }
-
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
-
-    // Titel
-    doc.setFontSize(18);
-    doc.setTextColor(107, 70, 193);
-    doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    // Export-Datum
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-    y += 15; // MEHR ABSTAND
-
-    // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE – VOR DEM LOOP**
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0);
-
-    resources.forEach((r, i) => {
-        if (y > 270) { doc.addPage(); y = 20; }
-
-        // Überschrift: Thema + Nummer (fett, 11pt)
-        doc.text(`${i+1}. ${r.topic}`, 15, y);
-
-        // Details – normal, 9pt, grau
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(100);
-        doc.text(` ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
-
-        // ZULETZT BEARBEITET
-        if (r.lastModified) {
-            doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
-            y += 5;
+        // === BESSERER PDF-EXPORT (alle Überschriften gleich groß) ===
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            if (resources.length === 0) { alert("Keine Daten!"); return; }
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 20;
+            // Titel
+            doc.setFontSize(18);
+            doc.setTextColor(107, 70, 193);
+            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
+            y += 10;
+            // Export-Datum
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
+            y += 15;
+            // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE – VOR DEM LOOP**
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0);
+            resources.forEach((r, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                // Überschrift: Thema + Nummer (fett, 11pt)
+                doc.text(`${i+1}. ${r.topic}`, 15, y);
+                // Details – normal, 9pt, grau
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(100);
+                doc.text(` ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
+                // ZULETZT BEARBEITET
+                if (r.lastModified) {
+                    doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
+                    y += 5;
+                }
+                // Nächster Eintrag: zurück zu 11pt + fett
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                y += 18;
+            });
+            doc.save('lerndashboard_ressourcen.pdf');
         }
 
-        // Nächster Eintrag: zurück zu 11pt + fett
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        y += 18;
-    });
-
-    doc.save('lerndashboard_ressourcen.pdf');
-}
-        
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
@@ -778,43 +771,5 @@ function exportPDF() {
         populateSubjectDropdowns();
         applyFilters();
     </script>
-<script>
-  let showFavoritesOnly = false;
-
-  function toggleFavorites() {
-    showFavoritesOnly = !showFavoritesOnly;
-    const btn = document.getElementById('favFilterBtn');
-    btn.style.background = showFavoritesOnly ? '#f57c00' : '#ff9800';
-    btn.innerHTML = showFavoritesOnly ? '★ Alle' : 'Favoriten';
-    applyFilters();
-  }
-
-  // IN applyFilters() EINFÜGEN
-  function applyFilters() {
-    const fS = document.getElementById('filterSubject').value;
-    const fG = document.getElementById('filterGrade').value;
-    const fC = document.getElementById('filterCompetence').value;
-    const fT = document.getElementById('filterTool').value;
-    const search = document.getElementById('searchTopic').value;
-
-    let filtered = resources.filter(r =>
-      (!fS || r.subject === fS) &&
-      (!fG || r.grade === fG) &&
-      (!fC || r.competence === fC) &&
-      (!fT || r.tool?.toLowerCase() === fT.toLowerCase()) &&
-      (!search || r.topic.toLowerCase().includes(search.toLowerCase()))
-    );
-
-    // FAVORITEN-FILTER
-    if (showFavoritesOnly) {
-      filtered = filtered.filter(r => r.favorite);
-    }
-
-    // Anzeige
-    count.textContent = filtered.length;
-    resourceList.innerHTML = `<div style="margin-bottom:12px;font-size:16px;">Ressourcen-Übersicht (<strong>${filtered.length}</strong>)</div>`;
-    // ... (Rest wie vorher)
-  }
-</script>
 </body>
 </html>
