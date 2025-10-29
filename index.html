@@ -736,7 +736,7 @@ function exportPDF() {
     resources.forEach((r, i) => {
         if (y > 270) { doc.addPage(); y = 20; }
 
-        // Überschrift: Thema + Nummer – GLEICH FÜR ALLE
+        // Überschrift: Thema + Nummer
         doc.setFont('helvetica', 'bold');
         doc.text(`${i+1}. ${r.topic}`, 15, y);
 
@@ -746,7 +746,7 @@ function exportPDF() {
         doc.setTextColor(100);
         doc.text(`   ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
 
-        // Optional: Zuletzt bearbeitet
+        // ZULETZT BEARBEITET
         if (r.lastModified) {
             doc.text(`   Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
             y += 5;
@@ -757,7 +757,7 @@ function exportPDF() {
 
     doc.save('lerndashboard_ressourcen.pdf');
 }
-
+        
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
