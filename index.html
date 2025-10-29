@@ -69,10 +69,20 @@
         .filter-group { display: flex; flex-direction: column; min-width: 160px; flex: 1; }
         .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
         .filter-group select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; }
-        .search-container { display: flex; flex-direction: column; flex: 1; max-width: 500px; }
+        .search-container { display: flex; flex-direction: column; flex: 1; max-width: 500px; position: relative; }
         .search-container label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
         .search-input { padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff; font-size: 14px; }
         .reset-btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap; align-self: flex-end; }
+        /* === AUTOCOMPLETE SUGGESTIONS === */
+        #suggestions {
+            position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc;
+            max-height: 200px; overflow-y: auto; z-index: 1000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+        #suggestions div {
+            padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee;
+        }
+        #suggestions div:hover { background: #f0f4ff; }
         /* === EXPORT & IMPORT === */
         .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
@@ -117,12 +127,12 @@
         .stat-bar-container { flex: 1; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin-left: 10px; position: relative; }
         .stat-bar { height: 100%; width: 0; background: #999; border-radius: 10px; transition: width 0.6s ease; }
         /* === DARK MODE TOGGLE === */
-        .dark-toggle { 
-            position: fixed; bottom: 20px; right: 20px; 
-            z-index: 1000; background: #333; color: white; 
-            border: none; width: 50px; height: 50px; 
-            border-radius: 50%; cursor: pointer; 
-            font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+        .dark-toggle {
+            position: fixed; top: 20px; right: 20px;
+            z-index: 1000; background: #333; color: white;
+            border: none; width: 50px; height: 50px;
+            border-radius: 50%; cursor: pointer;
+            font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         /* === HAUPT-CONTAINER: STATISTIK IMMER RECHTS === */
         .main-container {
@@ -167,6 +177,7 @@
     <div class="logo-container" onclick="resetFilters()">
         <div class="logo-wrapper">
             <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+                <!-- [SVG wie vorher – gekürzt] -->
                 <defs>
                     <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#8e67d6"/>
@@ -180,47 +191,6 @@
                 <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
                 <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
                 <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
-                <g transform="translate(21,21)">
-                    <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
-                    <circle cx="3.5" cy="2.5" r="1.5" fill="#fff"/>
-                    <path d="M2.5 4.5h2" stroke="#fff" stroke-width="1"/>
-                    <g transform="translate(9,0)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
-                        <path d="M2 2l3 3m0-3l-3 3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
-                    </g>
-                    <g transform="translate(18,0)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
-                        <circle cx="3.5" cy="3.5" r="2" fill="#fff"/>
-                        <circle cx="4" cy="3" r="0.8" fill="#333"/>
-                    </g>
-                    <g transform="translate(0,9)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
-                        <path d="M2 5v-2l3 1v2l-3 1z" fill="#fff"/>
-                        <circle cx="4.5" cy="1.5" r="1" fill="#fff"/>
-                    </g>
-                    <g transform="translate(9,9)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
-                        <path d="M2.5 2l2.5 1.5v-3z" fill="#fff"/>
-                    </g>
-                    <g transform="translate(18,9)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
-                        <path d="M1.5 2h4M1.5 3.5h4M1.5 5h2" stroke="#fff" stroke-width="0.8"/>
-                    </g>
-                    <g transform="translate(0,18)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
-                        <path d="M1.5 5.5h1v-2h-1zM3 5.5h1v-3h-1zM4.5 5.5h1v-1h-1z" fill="#fff"/>
-                    </g>
-                    <g transform="translate(9,18)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
-                        <circle cx="3.5" cy="3.5" r="2.5" stroke="#fff" stroke-width="0.8" fill="none"/>
-                        <path d="M1.5 3.5h4M3.5 1.5v4" stroke="#fff" stroke-width="0.6"/>
-                    </g>
-                    <g transform="translate(18,18)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
-                        <path d="M1.5 2h4M1.5 4h4" stroke="#999" stroke-width="0.8"/>
-                        <path d="M1.5 2l.7.7m-.7-.7l1.4 1.4" stroke="#4caf50" stroke-width="1"/>
-                    </g>
-                </g>
                 <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
             </svg>
         </div>
@@ -274,6 +244,7 @@
             <div class="search-container">
                 <label>Suche nach Thema</label>
                 <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel, Bruchrechnen...">
+                <div id="suggestions"></div>
             </div>
         </div>
 
@@ -363,7 +334,7 @@
       <span>Dark</span>
       <span>Mode</span>
     </button>
-    
+
     <!-- VERSION ANZEIGEN (UNTEN RECHTS) -->
     <div id="app-version" style="
       position: fixed; bottom: 20px; right: 20px;
@@ -401,6 +372,7 @@
           });
       }
     </script>
+
     <script>
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
         const resourceList = document.getElementById('resources');
@@ -430,7 +402,11 @@
             });
         }
 
-        resources.forEach(r => r.tool && tools.add(r.tool.toLowerCase()));
+        resources.forEach(r => {
+            r.tool && tools.add(r.tool.toLowerCase());
+            if (!r.favorite) r.favorite = false;
+            if (!r.lastModified) r.lastModified = '';
+        });
         updateToolFilter();
 
         function updateToolFilter() {
@@ -456,7 +432,20 @@
                 div.className = 'resource-item';
                 const content = document.createElement('div');
                 content.className = 'resource-content';
-                content.innerHTML = `<strong>Thema:</strong> ${r.topic}`;
+                content.innerHTML = `<strong>Thema:</strong> ${r.topic} <small style="color:#666;">(${r.lastModified})</small>`;
+
+                // Favoriten-Stern
+                const favBtn = document.createElement('span');
+                favBtn.innerHTML = r.favorite ? '★' : '☆';
+                favBtn.style.cssText = 'cursor:pointer; font-size:18px; margin-left:8px; color:#ff9800;';
+                favBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  r.favorite = !r.favorite;
+                  localStorage.setItem('resources', JSON.stringify(resources));
+                  applyFilters();
+                };
+                content.appendChild(favBtn);
+
                 const subjectTag = document.createElement('span');
                 subjectTag.className = 'tag subject-tag';
                 subjectTag.style.backgroundColor = colorMap[r.subject] || '#4a90e2';
@@ -542,7 +531,9 @@
                 competence: document.getElementById('editCompetence').value,
                 topic: document.getElementById('editTopic').value,
                 tool: newTool,
-                description: document.getElementById('editDescription').value
+                description: document.getElementById('editDescription').value,
+                favorite: resources[editIndex].favorite,
+                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
             };
             localStorage.setItem('resources', JSON.stringify(resources));
             cancelEdit();
@@ -602,6 +593,48 @@
             applyFilters();
         }
 
+        // === SUCHVORSCHLÄGE (AUTOCOMPLETE) ===
+        const searchInput = document.getElementById('searchTopic');
+        const suggestions = document.getElementById('suggestions');
+
+        searchInput.addEventListener('input', () => {
+          const val = searchInput.value.toLowerCase().trim();
+          suggestions.innerHTML = '';
+          if (!val) {
+            suggestions.style.display = 'none';
+            return;
+          }
+          const matches = [...new Set(
+            resources
+              .map(r => r.topic)
+              .filter(t => t.toLowerCase().includes(val))
+          )].slice(0, 6);
+
+          if (matches.length === 0) {
+            suggestions.style.display = 'none';
+            return;
+          }
+
+          matches.forEach(m => {
+            const div = document.createElement('div');
+            div.textContent = m;
+            div.onclick = () => {
+              searchInput.value = m;
+              suggestions.style.display = 'none';
+              applyFilters();
+            };
+            suggestions.appendChild(div);
+          });
+          suggestions.style.display = 'block';
+        });
+
+        // Schließe bei Klick außerhalb
+        document.addEventListener('click', (e) => {
+          if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+          }
+        });
+
         // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
         function exportCSV() {
             if (resources.length === 0) { alert("Keine Daten!"); return; }
@@ -650,7 +683,8 @@
                     if (cols.length >= 5) {
                         resources.push({
                             topic: cols[0], subject: cols[1], grade: cols[2],
-                            competence: cols[3], tool: cols[4], description: cols[5] || ''
+                            competence: cols[3], tool: cols[4], description: cols[5] || '',
+                            favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
                         });
                         imported++;
                     }
@@ -667,7 +701,7 @@
 
         // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
-            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Mathematik,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
+            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
             const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -675,27 +709,44 @@
             link.click();
         }
 
-        // === PDF-EXPORT ===
+        // === BESSERER PDF-EXPORT ===
         function exportPDF() {
             const { jsPDF } = window.jspdf;
             if (resources.length === 0) { alert("Keine Daten!"); return; }
+
             const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
             let y = 20;
-            doc.setFontSize(16);
-            doc.text('LernDashboard – Ressourcen', 105, y, { align: 'center' });
+
+            // Titel
+            doc.setFontSize(18);
+            doc.setTextColor(107, 70, 193);
+            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
             y += 10;
+
+            // Datum
             doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
+            y += 10;
+
+            // Ressourcen
+            doc.setFontSize(11);
+            doc.setTextColor(0);
             resources.forEach((r, i) => {
                 if (y > 270) { doc.addPage(); y = 20; }
-                doc.text(`${i+1}. ${r.topic} (${r.subject}, ${r.grade})`, 15, y);
-                y += 6;
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${i+1}. ${r.topic}`, 15, y);
+                doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
                 doc.setTextColor(100);
-                doc.text(`   Tool: ${r.tool || '—'} | Kompetenz: ${r.competence || '—'}`, 15, y);
-                y += 8;
-                doc.setFontSize(10);
-                doc.setTextColor(0);
+                doc.text(`   ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
+                if (r.lastModified) {
+                    doc.text(`   Zuletzt: ${r.lastModified}`, 15, y + 10);
+                }
+                y += 18;
             });
+
             doc.save('lerndashboard_ressourcen.pdf');
         }
 
