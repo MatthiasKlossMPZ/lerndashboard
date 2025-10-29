@@ -1,12 +1,15 @@
-const CACHE_NAME = 'lerndashboard-v17'; // ← v16 → v17
+const CACHE_NAME = 'lerndashboard-v15'; // ← neue Version!
+const urlsToCache = [
   '/',
   'index.html',
   'new-resource.html',
   'manifest.json',
-  'icon-192.png'
+  'icon-192.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
 ];
 
-// INSTALL
+// INSTALL: Cache alles
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -15,7 +18,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// ACTIVATE – LÖSCHE ALTEN CACHE
+// ACTIVATE: Alte Caches löschen
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(names => {
@@ -27,16 +30,10 @@ self.addEventListener('activate', event => {
   );
 });
 
-// FETCH – IMMER AKTUELLE VERSION
+// FETCH: Immer aus Cache, wenn offline
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('index.html') || event.request.url.includes('new-resource.html')) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request)
-        .then(response => response || fetch(event.request))
-    );
-  }
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
 });
