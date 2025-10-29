@@ -725,7 +725,7 @@
             link.click();
         }
 
-// === PDF-EXPORT MIT FARBEN (Kompetenz magenta, Tool hellgrün, Import dunkelgrün) ===
+// === PDF-EXPORT MIT FARBEN (Kompetenz magenta, Tool hellgrün) ===
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     if (resources.length === 0) { alert("Keine Daten!"); return; }
@@ -760,23 +760,29 @@ function exportPDF() {
         // 2. Details – FARBE je nach Typ
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(100);
 
-        const parts = [];
-        parts.push(r.subject || '—');
-        parts.push(r.grade || '—');
+        const x = 15;
+        let currentX = x;
+
+        // Fach (grau)
+        doc.setTextColor(100);
+        doc.text(r.subject || '—', currentX, y + 5);
+        currentX += doc.getTextWidth(`${r.subject || '—'} | `);
+
+        // Klasse (grau)
+        doc.text(r.grade || '—', currentX, y + 5);
+        currentX += doc.getTextWidth(`${r.grade || '—'} | `);
 
         // Tool: hellgrün
         doc.setTextColor(39, 174, 96); // #27ae60
-        parts.push(r.tool || '—');
+        doc.text(r.tool || '—', currentX, y + 5);
+        currentX += doc.getTextWidth(`${r.tool || '—'} | `);
 
         // Kompetenz: magenta
         doc.setTextColor(233, 30, 99); // #e91e63
-        parts.push(r.competence || '—');
+        doc.text(r.competence || '—', currentX, y + 5);
 
-        doc.text(` ${parts.join(' | ')}`, 15, y + 5);
-
-        // 3. ZULETZT BEARBEITET
+        // ZULETZT BEARBEITET
         if (r.lastModified) {
             doc.setTextColor(100);
             doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
