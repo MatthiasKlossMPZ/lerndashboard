@@ -672,48 +672,57 @@
             });
         }
 
-        // === VERBESSERTER CSV-IMPORT (Vorschau + Validierung + Fortschritt) ===
-        function importCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
-                if (lines.length < 2) { alert("CSV leer!"); return; }
-                const header = lines[0].split(',');
-                const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Digitales Hilfsmittel'];
-                const missing = required.filter(col => !header.includes(col));
-                if (missing.length > 0) {
-                    alert(`Fehlende Spalten: ${missing.join(', ')}`);
-                    return;
-                }
-                const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).join(', ')).join('\n');
-                if (!confirm(`Vorschau (erste 5 Zeilen):\n${preview}\n\nImportieren? (${lines.length-1} Zeilen)`)) return;
-                let imported = 0;
-                let progress = document.createElement('div');
-                progress.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;z-index:10000;';
-                progress.innerHTML = '<div id="progress">0%</div><div id="status">Starte Import...</div>';
-                document.body.appendChild(progress);
-                lines.slice(1).forEach((line, i) => {
-                    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-                    if (cols.length >= 5) {
-                        resources.push({
-                            topic: cols[0], subject: cols[1], grade: cols[2],
-                            competence: cols[3], tool: cols[4], description: cols[5] || '',
-                            favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                        });
-                        imported++;
-                    }
-                    document.getElementById('progress').textContent = Math.round((i / lines.length) * 100) + '%';
-                    document.getElementById('status').textContent = `Zeile ${i+1}/${lines.length}`;
-                });
-                progress.remove();
-                localStorage.setItem('resources', JSON.stringify(resources));
-                alert(`${imported} Ressourcen importiert!`);
-                applyFilters();
-            };
-            reader.readAsText(file);
+// === VERBESSERTER CSV-IMPORT (Filter aktualisiert) ===
+function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
+        if (lines.length < 2) { alert("CSV leer!"); return; }
+        const header = lines[0].split(',');
+        const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Digitales Hilfsmittel'];
+        const missing = required.filter(col => !header.includes(col));
+        if (missing.length > 0) {
+            alert(`Fehlende Spalten: ${missing.join(', ')}`);
+            return;
         }
+        const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).join(', ')).join('\n');
+        if (!confirm(`Vorschau (erste 5 Zeilen):\n${preview}\n\nImportieren? (${lines.length-1} Zeilen)`)) return;
+
+        let imported = 0;
+        let progress = document.createElement('div');
+        progress.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;z-index:10000;';
+        progress.innerHTML = '<div id="progress">0%</div><div id="status">Starte Import...</div>';
+        document.body.appendChild(progress);
+
+        lines.slice(1).forEach((line, i) => {
+            const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+            if (cols.length >= 5) {
+                const newTool = cols[4].trim();
+                resources.push({
+                    topic: cols[0], subject: cols[1], grade: cols[2],
+                    competence: cols[3], tool: newTool, description: cols[5] || '',
+                    favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                });
+                // TOOL ZUM SET HINZUFÜGEN
+                if (newTool) tools.add(newTool.toLowerCase());
+                imported++;
+            }
+            document.getElementById('progress').textContent = Math.round((i / lines.length) * 100) + '%';
+            document.getElementById('status').textContent = `Zeile ${i+1}/${lines.length}`;
+        });
+
+        progress.remove();
+        localStorage.setItem('resources', JSON.stringify(resources));
+        alert(`${imported} Ressourcen importiert!`);
+
+        // FILTER AKTUALISIEREN
+        updateToolFilter();
+        applyFilters();
+    };
+    reader.readAsText(file);
+}
 
         // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
