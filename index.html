@@ -667,7 +667,7 @@
 
         // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
-            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
+            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Mathematik,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
             const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
