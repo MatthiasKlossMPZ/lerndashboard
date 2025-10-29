@@ -342,11 +342,11 @@
       border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
       z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    ">v1.9.5</div>
+    ">v1.9.6</div>
 
     <!-- PWA + UPDATE -->
     <script>
-      const APP_VERSION = 'v1.9.5';
+      const APP_VERSION = 'v1.9.6';
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
           .then(reg => {
@@ -709,7 +709,7 @@
             link.click();
         }
 
-// === BESSERER PDF-EXPORT (alle Überschriften gleich groß) ===
+// === BESSERER PDF-EXPORT (alle Überschriften 100% gleich groß) ===
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     if (resources.length === 0) { alert("Keine Daten!"); return; }
@@ -728,21 +728,20 @@ function exportPDF() {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-    y += 12;
+    y += 15; // MEHR ABSTAND
 
     // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE – VOR DEM LOOP**
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0);
 
     resources.forEach((r, i) => {
         if (y > 270) { doc.addPage(); y = 20; }
 
-        // Überschrift: Thema + Nummer (fett)
-        doc.setFont('helvetica', 'bold');
+        // Überschrift: Thema + Nummer (fett, 11pt)
         doc.text(`${i+1}. ${r.topic}`, 15, y);
 
-        // Details – klein, grau
+        // Details – normal, 9pt, grau
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(100);
@@ -754,7 +753,10 @@ function exportPDF() {
             y += 5;
         }
 
-        y += 18; // Abstand
+        // Nächster Eintrag: zurück zu 11pt + fett
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        y += 18;
     });
 
     doc.save('lerndashboard_ressourcen.pdf');
