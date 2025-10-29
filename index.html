@@ -710,45 +710,53 @@
         }
 
         // === BESSERER PDF-EXPORT ===
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            if (resources.length === 0) { alert("Keine Daten!"); return; }
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    if (resources.length === 0) { alert("Keine Daten!"); return; }
 
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            let y = 20;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
 
-            // Titel
-            doc.setFontSize(18);
-            doc.setTextColor(107, 70, 193);
-            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-            y += 10;
+    // Titel
+    doc.setFontSize(18);
+    doc.setTextColor(107, 70, 193);
+    doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
+    y += 10;
 
-            // Datum
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-            y += 10;
+    // Export-Datum
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
+    y += 12;
 
-            // Ressourcen
-            doc.setFontSize(11);
-            doc.setTextColor(0);
-            resources.forEach((r, i) => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${i+1}. ${r.topic}`, 15, y);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.setTextColor(100);
-                doc.text(`   ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
-                if (r.lastModified) {
-                    doc.text(`   Zuletzt: ${r.lastModified}`, 15, y + 10);
-                }
-                y += 18;
-            });
+    // Alle Ressourcen – GLEICHE FORMATIERUNG
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    resources.forEach((r, i) => {
+        if (y > 270) { doc.addPage(); y = 20; }
 
-            doc.save('lerndashboard_ressourcen.pdf');
+        // Überschrift: Thema + Nummer – GLEICH FÜR ALLE
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${i+1}. ${r.topic}`, 15, y);
+
+        // Details – klein, grau
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`   ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
+
+        // Optional: Zuletzt bearbeitet
+        if (r.lastModified) {
+            doc.text(`   Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
+            y += 5;
         }
+
+        y += 18; // Abstand zur nächsten Ressource
+    });
+
+    doc.save('lerndashboard_ressourcen.pdf');
+}
 
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
