@@ -725,7 +725,7 @@
             link.click();
         }
 
-// === PDF-EXPORT MIT FARBEN (Kompetenz magenta, Tool hellgrün) ===
+// === PDF-EXPORT PERFEKT (wie im Browser) ===
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     if (resources.length === 0) { alert("Keine Daten!"); return; }
@@ -746,7 +746,7 @@ function exportPDF() {
     doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
     y += 15;
 
-    // **GLEICHE SCHRIFTGRÖSSE**
+    // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0);
@@ -754,10 +754,10 @@ function exportPDF() {
     resources.forEach((r, i) => {
         if (y > 270) { doc.addPage(); y = 20; }
 
-        // 1. Überschrift: Thema + Nummer
+        // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
         doc.text(`${i+1}. ${r.topic}`, 15, y);
 
-        // 2. Details – FARBE je nach Typ
+        // 2. Details – FARBE + TRENNZEICHEN
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
 
@@ -774,12 +774,12 @@ function exportPDF() {
         currentX += doc.getTextWidth(`${r.grade || '—'} | `);
 
         // Tool: hellgrün
-        doc.setTextColor(39, 174, 96); // #27ae60
+        doc.setTextColor(39, 174, 96);
         doc.text(r.tool || '—', currentX, y + 5);
         currentX += doc.getTextWidth(`${r.tool || '—'} | `);
 
         // Kompetenz: magenta
-        doc.setTextColor(233, 30, 99); // #e91e63
+        doc.setTextColor(233, 30, 99);
         doc.text(r.competence || '—', currentX, y + 5);
 
         // ZULETZT BEARBEITET
@@ -789,12 +789,16 @@ function exportPDF() {
             y += 5;
         }
 
+        // Nächster Eintrag: zurück zu 11pt + fett + schwarz
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0);
         y += 18;
     });
 
     doc.save('lerndashboard_ressourcen.pdf');
 }
-
+        
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
