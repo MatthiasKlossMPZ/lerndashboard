@@ -335,6 +335,14 @@
       <span>Mode</span>
     </button>
 
+        <!-- FAVORITEN-FILTER BUTTON -->
+    <button class="dark-toggle" onclick="toggleFavorites()" style="
+      position: fixed; top: 20px; right: 90px;
+      background: #ff9800; color: white; border: none; padding: 8px 16px;
+      border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 10000; transition: 0.2s;
+    " id="favFilterBtn">Favoriten</button>
+    
     <!-- VERSION ANZEIGEN (UNTEN RECHTS) -->
     <div id="app-version" style="
       position: fixed; bottom: 20px; right: 20px;
@@ -770,5 +778,43 @@ function exportPDF() {
         populateSubjectDropdowns();
         applyFilters();
     </script>
+<script>
+  let showFavoritesOnly = false;
+
+  function toggleFavorites() {
+    showFavoritesOnly = !showFavoritesOnly;
+    const btn = document.getElementById('favFilterBtn');
+    btn.style.background = showFavoritesOnly ? '#f57c00' : '#ff9800';
+    btn.innerHTML = showFavoritesOnly ? '★ Alle' : 'Favoriten';
+    applyFilters();
+  }
+
+  // IN applyFilters() EINFÜGEN
+  function applyFilters() {
+    const fS = document.getElementById('filterSubject').value;
+    const fG = document.getElementById('filterGrade').value;
+    const fC = document.getElementById('filterCompetence').value;
+    const fT = document.getElementById('filterTool').value;
+    const search = document.getElementById('searchTopic').value;
+
+    let filtered = resources.filter(r =>
+      (!fS || r.subject === fS) &&
+      (!fG || r.grade === fG) &&
+      (!fC || r.competence === fC) &&
+      (!fT || r.tool?.toLowerCase() === fT.toLowerCase()) &&
+      (!search || r.topic.toLowerCase().includes(search.toLowerCase()))
+    );
+
+    // FAVORITEN-FILTER
+    if (showFavoritesOnly) {
+      filtered = filtered.filter(r => r.favorite);
+    }
+
+    // Anzeige
+    count.textContent = filtered.length;
+    resourceList.innerHTML = `<div style="margin-bottom:12px;font-size:16px;">Ressourcen-Übersicht (<strong>${filtered.length}</strong>)</div>`;
+    // ... (Rest wie vorher)
+  }
+</script>
 </body>
 </html>
