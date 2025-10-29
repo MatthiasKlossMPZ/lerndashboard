@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icon-192.png">
-
     <style>
         :root {
             --primary: #6b46c1;
@@ -196,22 +195,22 @@
         <a href="index.html" class="back-link">Zurück zum Dashboard</a>
     </div>
 
-    <!-- VERSION ANZEIGEN (wie in index.html) -->
-    <script>
-        const APP_VERSION = 'v1.9.4';
-
-        const versionEl = document.createElement('div');
-        versionEl.id = 'app-version';
-        versionEl.textContent = APP_VERSION;
-        versionEl.style.cssText = `
-            position: fixed; bottom: 10px; right: 10px;
-            background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
-            border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
-            z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        `;
-        document.body.appendChild(versionEl);
-    </script>
+    <!-- EIGENER DIALOG (statt alert) -->
+    <div id="customAlert" style="
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;
+    ">
+      <div style="
+        background: white; padding: 20px; border-radius: 12px; max-width: 300px; text-align: center;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif;
+      ">
+        <p id="alertMessage" style="margin: 0 0 16px; font-size: 16px;"></p>
+        <button onclick="closeAlert()" style="
+          background: #6b46c1; color: white; border: none; padding: 10px 20px;
+          border-radius: 8px; cursor: pointer; font-weight: 600;
+        ">OK</button>
+      </div>
+    </div>
 
     <script>
         const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
@@ -234,56 +233,40 @@
             competences.forEach(x => c.add(new Option(x, x)));
         }
 
-function saveResource() {
-    const r = {
-        subject: document.getElementById('subject').value,
-        grade: document.getElementById('grade').value,
-        competence: document.getElementById('competence').value,
-        topic: document.getElementById('topic').value.trim(),
-        tool: document.getElementById('tool').value.trim(),
-        description: document.getElementById('description').value.trim()
-    };
-    if (!r.subject || !r.grade || !r.competence || !r.topic) {
-        showAlert("Bitte alle Pflichtfelder ausfüllen!");
-        return;
-    }
-    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    resources.push(r);
-    localStorage.setItem('resources', JSON.stringify(resources));
+        function saveResource() {
+            const r = {
+                subject: document.getElementById('subject').value,
+                grade: document.getElementById('grade').value,
+                competence: document.getElementById('competence').value,
+                topic: document.getElementById('topic').value.trim(),
+                tool: document.getElementById('tool').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                favorite: false,
+                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            };
+            if (!r.subject || !r.grade || !r.competence || !r.topic) {
+                showAlert("Bitte alle Pflichtfelder ausfüllen!");
+                return;
+            }
+            let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            resources.push(r);
+            localStorage.setItem('resources', JSON.stringify(resources));
 
-    // EIGENER DIALOG + WEITERLEITUNG NACH 1,2 SEKUNDEN
-    showAlert("Ressource erfolgreich gespeichert!\n\nDie Daten sind lokal gespeichert.");
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1200);
-}
+            showAlert("Ressource erfolgreich gespeichert!\n\nDie Daten sind lokal gespeichert.");
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1200);
+        }
+
+        function showAlert(message) {
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('customAlert').style.display = 'flex';
+        }
+        function closeAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
 
         populate();
     </script>
-<!-- EIGENER DIALOG (statt alert) -->
-<div id="customAlert" style="
-  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;
-">
-  <div style="
-    background: white; padding: 20px; border-radius: 12px; max-width: 300px; text-align: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif;
-  ">
-    <p id="alertMessage" style="margin: 0 0 16px; font-size: 16px;"></p>
-    <button onclick="closeAlert()" style="
-      background: #6b46c1; color: white; border: none; padding: 10px 20px;
-      border-radius: 8px; cursor: pointer; font-weight: 600;
-    ">OK</button>
-  </div>
-</div>
-<script>
-  function showAlert(message) {
-    document.getElementById('alertMessage').textContent = message;
-    document.getElementById('customAlert').style.display = 'flex';
-  }
-  function closeAlert() {
-    document.getElementById('customAlert').style.display = 'none';
-  }
-</script>
 </body>
 </html>
