@@ -234,25 +234,25 @@
             competences.forEach(x => c.add(new Option(x, x)));
         }
 
-        function saveResource() {
-            const r = {
-                subject: document.getElementById('subject').value,
-                grade: document.getElementById('grade').value,
-                competence: document.getElementById('competence').value,
-                topic: document.getElementById('topic').value.trim(),
-                tool: document.getElementById('tool').value.trim(),
-                description: document.getElementById('description').value.trim()
-            };
-            if (!r.subject || !r.grade || !r.competence || !r.topic) {
-                alert("Bitte alle Pflichtfelder ausfüllen!");
-                return;
-            }
-            let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-            resources.push(r);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            showAlert("Ressource erfolgreich gespeichert!\n\nDie Daten sind lokal gespeichert.");
-            window.location.href = 'index.html';
-        }
+function saveResource() {
+    const r = {
+        subject: document.getElementById('subject').value,
+        grade: document.getElementById('grade').value,
+        competence: document.getElementById('competence').value,
+        topic: document.getElementById('topic').value.trim(),
+        tool: document.getElementById('tool').value.trim(),
+        description: document.getElementById('description').value.trim()
+    };
+    if (!r.subject || !r.grade || !r.competence || !r.topic) {
+        alert("Bitte alle Pflichtfelder ausfüllen!");
+        return;
+    }
+    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+    resources.push(r);
+    localStorage.setItem('resources', JSON.stringify(resources));
+    alert("Ressource gespeichert!");
+    window.location.href = 'index.html';
+}
 
         populate();
     </script>
