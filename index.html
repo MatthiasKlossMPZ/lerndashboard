@@ -161,6 +161,11 @@
             .reset-btn { width: 100%; margin-top: 8px; }
             .main-container { flex-direction: column; }
         }
+    /* === EXPORT & IMPORT BUTTONS === */
+        .btn.csv { background: #27ae60; } /* Hellgrün */
+        .btn.import { background: #1e8449; } /* Dunkelgrün */
+        .competence-tag { background: #e91e63; } /* Magenta */
+        
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -720,48 +725,69 @@
             link.click();
         }
 
-        // === BESSERER PDF-EXPORT (alle Überschriften gleich groß) ===
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            if (resources.length === 0) { alert("Keine Daten!"); return; }
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            let y = 20;
-            // Titel
-            doc.setFontSize(18);
-            doc.setTextColor(107, 70, 193);
-            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-            y += 10;
-            // Export-Datum
-            doc.setFontSize(10);
+// === PDF-EXPORT MIT FARBEN (Kompetenz magenta, Tool hellgrün, Import dunkelgrün) ===
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    if (resources.length === 0) { alert("Keine Daten!"); return; }
+
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    // Titel
+    doc.setFontSize(18);
+    doc.setTextColor(107, 70, 193);
+    doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
+    y += 10;
+
+    // Export-Datum
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
+    y += 15;
+
+    // **GLEICHE SCHRIFTGRÖSSE**
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0);
+
+    resources.forEach((r, i) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+
+        // 1. Überschrift: Thema + Nummer
+        doc.text(`${i+1}. ${r.topic}`, 15, y);
+
+        // 2. Details – FARBE je nach Typ
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+
+        const parts = [];
+        parts.push(r.subject || '—');
+        parts.push(r.grade || '—');
+
+        // Tool: hellgrün
+        doc.setTextColor(39, 174, 96); // #27ae60
+        parts.push(r.tool || '—');
+
+        // Kompetenz: magenta
+        doc.setTextColor(233, 30, 99); // #e91e63
+        parts.push(r.competence || '—');
+
+        doc.text(` ${parts.join(' | ')}`, 15, y + 5);
+
+        // 3. ZULETZT BEARBEITET
+        if (r.lastModified) {
             doc.setTextColor(100);
-            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-            y += 15;
-            // **GLEICHE SCHRIFTGRÖSSE FÜR ALLE EINTRÄGE – VOR DEM LOOP**
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-            resources.forEach((r, i) => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                // Überschrift: Thema + Nummer (fett, 11pt)
-                doc.text(`${i+1}. ${r.topic}`, 15, y);
-                // Details – normal, 9pt, grau
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.setTextColor(100);
-                doc.text(` ${r.subject} | ${r.grade} | ${r.tool || '—'} | ${r.competence || '—'}`, 15, y + 5);
-                // ZULETZT BEARBEITET
-                if (r.lastModified) {
-                    doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
-                    y += 5;
-                }
-                // Nächster Eintrag: zurück zu 11pt + fett
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'bold');
-                y += 18;
-            });
-            doc.save('lerndashboard_ressourcen.pdf');
+            doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
+            y += 5;
         }
+
+        y += 18;
+    });
+
+    doc.save('lerndashboard_ressourcen.pdf');
+}
 
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
