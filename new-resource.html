@@ -244,14 +244,18 @@ function saveResource() {
         description: document.getElementById('description').value.trim()
     };
     if (!r.subject || !r.grade || !r.competence || !r.topic) {
-        alert("Bitte alle Pflichtfelder ausfüllen!");
+        showAlert("Bitte alle Pflichtfelder ausfüllen!");
         return;
     }
     let resources = JSON.parse(localStorage.getItem('resources') || '[]');
     resources.push(r);
     localStorage.setItem('resources', JSON.stringify(resources));
-    alert("Ressource gespeichert!");
-    window.location.href = 'index.html';
+
+    // EIGENER DIALOG + WEITERLEITUNG NACH 1,2 SEKUNDEN
+    showAlert("Ressource erfolgreich gespeichert!\n\nDie Daten sind lokal gespeichert.");
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1200);
 }
 
         populate();
