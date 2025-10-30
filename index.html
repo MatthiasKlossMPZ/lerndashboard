@@ -113,67 +113,47 @@
         .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
         .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
         .action-icon[aria-label]:hover::after { content: attr(aria-label); position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); background: #333; color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
+        .favorite-icon { background: #fff3cd; color: #856404; }
+        .favorite-icon.active { background: #f39c12; color: white; }
         /* === FORM === */
         #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
-        .form-group textarea { min-height: 80px; resize: vertical; }
-        /* === STATS === */
-        .stats-section { margin-top: 30px; }
-        .stats-section h3 { margin-bottom: 12px; }
-        .stat-item { display: flex; align-items: center; margin: 8px 0; font-size: 14px; }
-        .stat-label { width: 140px; font-weight: 600; }
-        .stat-bar-container { flex: 1; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin-left: 10px; position: relative; }
-        .stat-bar { height: 100%; width: 0; background: #999; border-radius: 10px; transition: width 0.6s ease; }
-        /* === HAUPT-CONTAINER: STATISTIK IMMER RECHTS === */
-        .main-container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: nowrap;
-            align-items: flex-start;
-            overflow-x: auto;
-            padding-bottom: 60px;
-            min-height: calc(100vh - 200px);
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-btn-group { display: flex; gap: 12px; margin-top: 16px; }
+        .form-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .save-btn { background: var(--primary); color: white; }
+        .cancel-btn { background: #95a5a6; color: white; }
+        /* === STATISTIKEN === */
+        .stats-section { float: right; width: 300px; padding: 20px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 20px; margin-left: 20px; }
+        .stats-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
+        .stat-item { margin-bottom: 12px; }
+        .stat-label { font-size: 13px; color: var(--text-light); }
+        .stat-bar { height: 8px; background: #e0e0e0; border-radius: 4px; margin-top: 4px; position: relative; overflow: hidden; }
+        .stat-fill { height: 100%; background: var(--primary); transition: width 0.5s ease; }
+        .stat-value { font-size: 12px; color: var(--text-light); margin-top: 4px; text-align: right; }
+        /* === MAIN CONTAINER FÜR RESPONSIVE === */
+        .main-container { display: flex; flex-direction: column; }
+        @media (min-width: 992px) {
+            .main-container { flex-direction: row; }
+            .stats-section { position: sticky; top: 20px; }
         }
-        .resources-section {
-            flex: 2;
-            min-width: 320px;
-            overflow-y: auto;
-        }
-        .stats-section {
-            flex: 1;
-            min-width: 260px;
-            background: var(--card);
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 20px;
-            max-height: calc(100vh - 240px);
-            overflow-y: auto;
-        }
-        @media (max-width: 768px) {
-            .content { margin-left: 0; }
-            .logo-container { float: none; width: 100%; margin-bottom: 20px; }
-            .filters, .filter-container { flex-direction: column; align-items: stretch; }
-            .filter-group, .search-container { min-width: 100%; }
-            .reset-btn { width: 100%; margin-top: 8px; }
-            .main-container { flex-direction: column; }
-        }
-    /* === EXPORT & IMPORT BUTTONS === */
-        .btn.csv { background: #27ae60; } /* Hellgrün */
-        .btn.import { background: #1e8449; } /* Dunkelgrün */
-        .competence-tag { background: #e91e63; } /* Magenta */
-        
+        /* === DARK MODE ANPASSUNGEN === */
+        .dark .filter-container { background: linear-gradient(135deg, #2a2a2a, #3a3a3a); border: 1px solid #444; }
+        .dark .search-input, .dark .filter-group select { background: #333; color: #ddd; border: 1px solid #555; }
+        .dark .resource-item { border: 1px solid #444; }
+        .dark .description { background: #222; border-left: 3px solid var(--primary-light); color: var(--text-light); }
+        .dark .logo-wrapper { background: #222; }
+        .dark .logo-text { color: #ddd; }
+        .dark .logo-subtext { color: #aaa; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <!-- ZENTRIERTES LOGO -->
-    <div class="logo-container" onclick="resetFilters()">
+    <!-- LOGO -->
+    <div class="logo-container" onclick="window.location.href='index.html';">
         <div class="logo-wrapper">
-            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+            <svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#8e67d6"/>
@@ -187,6 +167,47 @@
                 <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
                 <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
                 <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
+                <g transform="translate(21,21)">
+                    <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
+                    <circle cx="3.5" cy="2.5" r="1.5" fill="#fff"/>
+                    <path d="M2.5 4.5h2" stroke="#fff" stroke-width="1"/>
+                    <g transform="translate(9,0)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
+                        <path d="M2 2l3 3m0-3l-3 3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+                    </g>
+                    <g transform="translate(18,0)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
+                        <circle cx="3.5" cy="3.5" r="2" fill="#fff"/>
+                        <circle cx="4" cy="3" r="0.8" fill="#333"/>
+                    </g>
+                    <g transform="translate(0,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
+                        <path d="M2 5v-2l3 1v2l-3 1z" fill="#fff"/>
+                        <circle cx="4.5" cy="1.5" r="1" fill="#fff"/>
+                    </g>
+                    <g transform="translate(9,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
+                        <path d="M2.5 2l2.5 1.5v-3z" fill="#fff"/>
+                    </g>
+                    <g transform="translate(18,9)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
+                        <path d="M1.5 2h4M1.5 3.5h4M1.5 5h2" stroke="#fff" stroke-width="0.8"/>
+                    </g>
+                    <g transform="translate(0,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
+                        <path d="M1.5 5.5h1v-2h-1zM3 5.5h1v-3h-1zM4.5 5.5h1v-1h-1z" fill="#fff"/>
+                    </g>
+                    <g transform="translate(9,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
+                        <circle cx="3.5" cy="3.5" r="2.5" stroke="#fff" stroke-width="0.8" fill="none"/>
+                        <path d="M1.5 3.5h4M3.5 1.5v4" stroke="#fff" stroke-width="0.6"/>
+                    </g>
+                    <g transform="translate(18,18)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
+                        <path d="M1.5 2h4M1.5 4h4" stroke="#999" stroke-width="0.8"/>
+                        <path d="M1.5 2l.7.7m-.7-.7l1.4 1.4" stroke="#4caf50" stroke-width="1"/>
+                    </g>
+                </g>
                 <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
             </svg>
         </div>
@@ -194,414 +215,265 @@
         <div class="logo-subtext">Digitale Ressourcen</div>
     </div>
 
+    <!-- INHALT -->
     <div class="content">
-        <h1>Dashboard</h1>
-        <p>Übersicht aller digitalen Lernressourcen</p>
-
-        <!-- Filter -->
+        <!-- FILTER -->
         <div class="filter-container">
             <div class="filters">
                 <div class="filter-group">
-                    <label>Unterrichtsfach</label>
-                    <select id="filterSubject"><option value="">Alle Fächer</option></select>
-                </div>
-                <div class="filter-group">
-                    <label>Klassenstufe</label>
-                    <select id="filterGrade"><option value="">Alle Klassen</option>
-                        <option value="Klasse 1">Klasse 1</option><option value="Klasse 2">Klasse 2</option>
-                        <option value="Klasse 3">Klasse 3</option><option value="Klasse 4">Klasse 4</option>
-                        <option value="Klasse 5">Klasse 5</option><option value="Klasse 6">Klasse 6</option>
-                        <option value="Klasse 7">Klasse 7</option><option value="Klasse 8">Klasse 8</option>
-                        <option value="Klasse 9">Klasse 9</option><option value="Klasse 10">Klasse 10</option>
-                        <option value="Klasse 11">Klasse 11</option><option value="Klasse 12">Klasse 12</option>
-                        <option value="Klasse 13">Klasse 13</option>
+                    <label>Fach</label>
+                    <select id="filterSubject">
+                        <option value="">Alle</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label>Digitales Hilfsmittel</label>
-                    <select id="filterTool"><option value="">Alle Hilfsmittel</option></select>
-                </div>
-                <div class="filter-group">
-                    <label>Kompetenzbereich</label>
-                    <select id="filterCompetence"><option value="">Alle Bereiche</option>
-                        <option value="Suchen, Verarbeiten und Aufbewahren">Suchen, Verarbeiten und Aufbewahren</option>
-                        <option value="Kommunizieren und Kooperieren">Kommunizieren und Kooperieren</option>
-                        <option value="Produzieren und Präsentieren">Produzieren und Präsentieren</option>
-                        <option value="Schützen und sicher Agieren">Schützen und sicher Agieren</option>
-                        <option value="Problemlösen und Handeln">Problemlösen und Handeln</option>
-                        <option value="Analysieren und Reflektieren">Analysieren und Reflektieren</option>
+                    <label>Klasse</label>
+                    <select id="filterGrade">
+                        <option value="">Alle</option>
                     </select>
                 </div>
+                <div class="filter-group">
+                    <label>Kompetenz</label>
+                    <select id="filterCompetence">
+                        <option value="">Alle</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tool</label>
+                    <select id="filterTool">
+                        <option value="">Alle</option>
+                    </select>
+                </div>
+                <!-- NEU: Favoriten-Filter -->
+                <div class="filter-group">
+                    <label>Favoriten</label>
+                    <select id="filterFavorite">
+                        <option value="">Alle</option>
+                        <option value="true">Nur Favoriten</option>
+                    </select>
+                </div>
+                <div class="search-container">
+                    <label>Thema suchen</label>
+                    <input type="text" id="searchTopic" class="search-input" placeholder="Thema eingeben...">
+                    <div id="suggestions"></div>
+                </div>
+                <button class="reset-btn" onclick="resetFilters()">Zurücksetzen</button>
             </div>
-            <button class="reset-btn" onclick="resetFilters()">Filter zurücksetzen</button>
         </div>
 
-        <div class="filter-container">
-            <div class="search-container">
-                <label>Suche nach Thema</label>
-                <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel, Bruchrechnen...">
-                <div id="suggestions"></div>
-            </div>
-        </div>
-
+        <!-- EXPORT BUTTONS -->
         <div class="export-buttons">
-            <button class="btn csv" onclick="exportCSV()">CSV</button>
-            <button class="btn pdf" onclick="exportPDF()">PDF</button>
+            <button class="btn csv" onclick="exportCSV()">CSV Export (ZIP)</button>
+            <button class="btn pdf" onclick="exportPDF()">PDF Export</button>
             <button class="btn print" onclick="window.print()">Drucken</button>
-            <button class="btn template" onclick="exportTemplate()">Beispiel-CSV</button>
             <label class="btn import">
                 CSV Import
-                <input type="file" id="csvFile" class="file-input" accept=".csv" onchange="importCSV(event)">
+                <input type="file" class="file-input" accept=".csv" onchange="importCSV(event)">
             </label>
+            <button class="btn template" onclick="exportTemplate()">Beispiel-CSV</button>
         </div>
 
+        <!-- NEUE RESSOURCE BUTTON -->
         <button class="new-resource-btn" onclick="window.location.href='new-resource.html'">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
             Neue Ressource hinzufügen
         </button>
 
+        <!-- MAIN CONTAINER: Ressourcen + Stats -->
         <div class="main-container">
-            <div class="resources-section">
-                <div class="card" id="resources">Ressourcen-Übersicht (<span id="count">0</span>)</div>
-            </div>
+            <!-- RESSOURCEN LISTE -->
+            <div id="resourcesList"></div>
+
+            <!-- STATISTIKEN -->
             <div class="stats-section">
-                <h3>Statistik nach Fächern</h3>
-                <div id="stats-content"></div>
+                <div class="stats-title">Statistiken</div>
+                <div id="statsContent"></div>
             </div>
         </div>
 
-        <div id="editForm">
-            <h3>Ressource bearbeiten</h3>
-            <div class="form-group">
-                <label>Unterrichtsfach</label>
-                <select id="editSubject"><option value="">Fach auswählen</option></select>
-            </div>
-            <div class="form-group">
-                <label>Klassenstufe</label>
-                <select id="editGrade">
-                    <option value="">Klasse auswählen</option>
-                    <option value="Klasse 1">Klasse 1</option><option value="Klasse 2">Klasse 2</option>
-                    <option value="Klasse 3">Klasse 3</option><option value="Klasse 4">Klasse 4</option>
-                    <option value="Klasse 5">Klasse 5</option><option value="Klasse 6">Klasse 6</option>
-                    <option value="Klasse 7">Klasse 7</option><option value="Klasse 8">Klasse 8</option>
-                    <option value="Klasse 9">Klasse 9</option><option value="Klasse 10">Klasse 10</option>
-                    <option value="Klasse 11">Klasse 11</option><option value="Klasse 12">Klasse 12</option>
-                    <option value="Klasse 13">Klasse 13</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Kompetenzbereich</label>
-                <select id="editCompetence">
-                    <option value="">Kompetenzbereich auswählen</option>
-                    <option value="Suchen, Verarbeiten und Aufbewahren">Suchen, Verarbeiten und Aufbewahren</option>
-                    <option value="Kommunizieren und Kooperieren">Kommunizieren und Kooperieren</option>
-                    <option value="Produzieren und Präsentieren">Produzieren und Präsentieren</option>
-                    <option value="Schützen und sicher Agieren">Schützen und sicher Agieren</option>
-                    <option value="Problemlösen und Handeln">Problemlösen und Handeln</option>
-                    <option value="Analysieren und Reflektieren">Analysieren und Reflektieren</option>
-                </select>
-            </div>
+        <!-- BEARBEITUNGS-FORMULAR -->
+        <form id="editForm">
+            <input type="hidden" id="editIndex">
             <div class="form-group">
                 <label>Thema</label>
-                <input type="text" id="editTopic">
+                <input type="text" id="editTopic" required>
             </div>
             <div class="form-group">
-                <label>Digitales Hilfsmittel</label>
+                <label>Fach</label>
+                <select id="editSubject" required></select>
+            </div>
+            <div class="form-group">
+                <label>Klasse</label>
+                <select id="editGrade" required></select>
+            </div>
+            <div class="form-group">
+                <label>Kompetenz</label>
+                <select id="editCompetence" required></select>
+            </div>
+            <div class="form-group">
+                <label>Tool</label>
                 <input type="text" id="editTool">
             </div>
             <div class="form-group">
-                <label>Zusätzliche Beschreibung</label>
+                <label>Beschreibung</label>
                 <textarea id="editDescription"></textarea>
             </div>
-            <button class="btn" style="background:#27ae60;" onclick="saveEdit()">Speichern</button>
-            <button class="btn" style="background:#95a5a6;" onclick="cancelEdit()">Abbrechen</button>
-        </div>
+            <div class="form-btn-group">
+                <button type="button" class="form-btn save-btn" onclick="saveEdit()">Speichern</button>
+                <button type="button" class="form-btn cancel-btn" onclick="cancelEdit()">Abbrechen</button>
+            </div>
+        </form>
     </div>
 
-    <!-- FAVORITEN + DARK MODE (gleich groß, zentriert) -->
-    <div style="
-      position: fixed; top: 15px; right: 15px;
-      display: flex; gap: 10px; z-index: 10000;
-    ">
-      <!-- FAVORITEN BUTTON -->
-      <button id="favFilterBtn" onclick="toggleFavorites()" style="
-        width: 60px; height: 60px; border-radius: 50%;
-        background: #ff9800; color: white; border: none;
-        cursor: pointer; font-size: 11px; font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        text-align: center; line-height: 1.2; padding: 0;
-        transition: background 0.2s;
-      ">
-        <span id="favText">Alle</span>
-      </button>
-
-      <!-- DARK MODE BUTTON -->
-      <button class="dark-toggle" onclick="toggleDark()" style="
-        width: 60px; height: 60px; border-radius: 50%;
-        background: #333; color: white; border: none;
-        cursor: pointer; font-size: 11px; font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        text-align: center; line-height: 1.2; padding: 0;
-      ">
-        <span>Dark</span>
-        <span>Mode</span>
-      </button>
-    </div>
-
-    <!-- VERSION ANZEIGEN (UNTEN RECHTS) -->
-    <div id="app-version" style="
-      position: fixed; bottom: 20px; right: 20px;
-      background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
-      border-radius: 8px; font-size: 12px; font-family: 'Segoe UI', sans-serif;
-      z-index: 9999; pointer-events: none; backdrop-filter: blur(6px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    ">v1.9.6</div>
-
-    <!-- PWA + UPDATE -->
-    <script>
-      const APP_VERSION = 'v1.9.6';
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => {
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    const btn = document.createElement('div');
-                    btn.innerHTML = `Update ${APP_VERSION}!`;
-                    btn.style.cssText = 'position:fixed;bottom:70px;right:20px;background:#27ae60;color:white;padding:10px 15px;border-radius:10px;font-size:13px;cursor:pointer;z-index:10000;';
-                    btn.onclick = () => {
-                      caches.keys().then(names => names.forEach(name => caches.delete(name)))
-                        .finally(() => window.location.reload());
-                    };
-                    document.body.appendChild(btn);
-                    setTimeout(() => btn.remove(), 15000);
-                  }
-                });
-              }
-            });
-            setInterval(() => reg.update(), 5000);
-          });
-      }
-    </script>
+    <!-- jsPDF für PDF-Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-        const resourceList = document.getElementById('resources');
-        const count = document.getElementById('count');
-        const editForm = document.getElementById('editForm');
-        let editIndex = -1;
-        let tools = new Set();
         const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
-        const rainbowColors = ["#FF0000","#FF4500","#FFD700","#9ACD32","#00CED1","#1E90FF","#8A2BE2"];
-        const colorMap = {};
-        subjects.forEach((s,i) => colorMap[s] = rainbowColors[i % rainbowColors.length]);
-
-        let showFavoritesOnly = false;
-
-        function toggleFavorites() {
-          showFavoritesOnly = !showFavoritesOnly;
-          const btn = document.getElementById('favFilterBtn');
-          const text = document.getElementById('favText');
-          btn.style.background = showFavoritesOnly ? '#f57c00' : '#ff9800';
-          text.innerHTML = showFavoritesOnly ? '★' : 'Alle';
-          applyFilters();
-        }
-
-        function toggleDark() {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-        }
-        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+        const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
+        const competences = [
+            "Suchen, Verarbeiten und Aufbewahren",
+            "Kommunizieren und Kooperieren",
+            "Produzieren und Präsentieren",
+            "Schützen und sicher Agieren",
+            "Problemlösen und Handeln",
+            "Analysieren und Reflektieren"
+        ];
+        const tools = new Set(resources.map(r => r.tool.toLowerCase()).filter(t => t));
 
         function populateSubjectDropdowns() {
-            const filterSubject = document.getElementById('filterSubject');
-            const editSubject = document.getElementById('editSubject');
-            filterSubject.innerHTML = '<option value="">Alle Fächer</option>';
-            editSubject.innerHTML = '<option value="">Fach auswählen</option>';
-            subjects.forEach(s => {
-                filterSubject.add(new Option(s, s));
-                editSubject.add(new Option(s, s));
+            const dropdowns = ['filterSubject', 'editSubject'];
+            dropdowns.forEach(id => {
+                const select = document.getElementById(id);
+                subjects.forEach(s => {
+                    const option = new Option(s, s);
+                    select.add(option);
+                });
             });
+            const gradeDropdowns = ['filterGrade', 'editGrade'];
+            gradeDropdowns.forEach(id => {
+                const select = document.getElementById(id);
+                grades.forEach(g => {
+                    const option = new Option(g, g);
+                    select.add(option);
+                });
+            });
+            const competenceDropdowns = ['filterCompetence', 'editCompetence'];
+            competenceDropdowns.forEach(id => {
+                const select = document.getElementById(id);
+                competences.forEach(c => {
+                    const option = new Option(c, c);
+                    select.add(option);
+                });
+            });
+            updateToolFilter();
         }
-
-        resources.forEach(r => {
-            r.tool && tools.add(r.tool.toLowerCase());
-            if (!r.favorite) r.favorite = false;
-            if (!r.lastModified) r.lastModified = '';
-        });
-        updateToolFilter();
 
         function updateToolFilter() {
-            const filterTool = document.getElementById('filterTool');
-            const val = filterTool.value;
-            filterTool.innerHTML = '<option value="">Alle Hilfsmittel</option>';
-            tools.forEach(t => filterTool.add(new Option(t.charAt(0).toUpperCase() + t.slice(1), t)));
-            filterTool.value = val;
-        }
-
-        function displayResources(fS='', fG='', fC='', fT='', search='') {
-            let filtered = resources.filter(r =>
-                (!fS || r.subject === fS) &&
-                (!fG || r.grade === fG) &&
-                (!fC || r.competence === fC) &&
-                (!fT || r.tool?.toLowerCase() === fT.toLowerCase()) &&
-                (!search || r.topic.toLowerCase().includes(search.toLowerCase()))
-            );
-
-            // FAVORITEN-FILTER
-            if (showFavoritesOnly) {
-              filtered = filtered.filter(r => r.favorite);
-            }
-
-            count.textContent = filtered.length;
-            resourceList.innerHTML = `<div style="margin-bottom:12px;font-size:16px;">Ressourcen-Übersicht (<strong>${filtered.length}</strong>)</div>`;
-            filtered.forEach(r => {
-                const div = document.createElement('div');
-                div.className = 'resource-item';
-                const content = document.createElement('div');
-                content.className = 'resource-content';
-                content.innerHTML = `<strong>Thema:</strong> ${r.topic} <small style="color:#666;">(${r.lastModified})</small>`;
-                // Favoriten-Stern
-                const favBtn = document.createElement('span');
-                favBtn.innerHTML = r.favorite ? '★' : '☆';
-                favBtn.style.cssText = 'cursor:pointer; font-size:18px; margin-left:8px; color:#ff9800;';
-                favBtn.onclick = (e) => {
-                  e.stopPropagation();
-                  r.favorite = !r.favorite;
-                  localStorage.setItem('resources', JSON.stringify(resources));
-                  applyFilters();
-                };
-                content.appendChild(favBtn);
-                const subjectTag = document.createElement('span');
-                subjectTag.className = 'tag subject-tag';
-                subjectTag.style.backgroundColor = colorMap[r.subject] || '#4a90e2';
-                subjectTag.textContent = r.subject;
-                subjectTag.onclick = () => filterBy('filterSubject', r.subject);
-                const gradeTag = document.createElement('span');
-                gradeTag.className = 'tag grade-tag';
-                gradeTag.textContent = r.grade;
-                gradeTag.onclick = () => filterBy('filterGrade', r.grade);
-                const toolTag = document.createElement('span');
-                toolTag.className = 'tag tool-tag';
-                toolTag.textContent = r.tool || '—';
-                toolTag.onclick = () => r.tool && filterBy('filterTool', r.tool.toLowerCase());
-                const compTag = document.createElement('span');
-                compTag.className = 'tag competence-tag';
-                compTag.textContent = r.competence || '—';
-                compTag.onclick = () => r.competence && filterBy('filterCompetence', r.competence);
-                content.appendChild(document.createElement('br'));
-                [subjectTag, gradeTag, toolTag, compTag].forEach(tag => content.appendChild(tag));
-                if (r.description) {
-                    const desc = document.createElement('div');
-                    desc.className = 'description';
-                    desc.textContent = r.description;
-                    content.appendChild(desc);
-                }
-                const actions = document.createElement('div');
-                actions.className = 'action-icons';
-                const editBtn = document.createElement('div');
-                editBtn.className = 'action-icon edit-icon';
-                editBtn.setAttribute('aria-label', 'Bearbeiten');
-                editBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-                editBtn.onclick = () => editResource(resources.indexOf(r));
-                const delBtn = document.createElement('div');
-                delBtn.className = 'action-icon delete-icon';
-                delBtn.setAttribute('aria-label', 'Löschen');
-                delBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
-                delBtn.onclick = () => deleteResource(resources.indexOf(r));
-                actions.appendChild(editBtn);
-                actions.appendChild(delBtn);
-                div.appendChild(content);
-                div.appendChild(actions);
-                resourceList.appendChild(div);
+            const select = document.getElementById('filterTool');
+            select.innerHTML = '<option value="">Alle</option>';
+            [...tools].sort().forEach(t => {
+                const option = new Option(t.charAt(0).toUpperCase() + t.slice(1), t.charAt(0).toUpperCase() + t.slice(1));
+                select.add(option);
             });
         }
 
-        function filterBy(id, value) {
-            document.getElementById(id).value = value;
+        function displayResources(fS, fG, fC, fT, search, fF = '') {
+            const container = document.getElementById('resourcesList');
+            container.innerHTML = '';
+            
+            const filtered = resources.filter(r => {
+                if (fS && r.subject !== fS) return false;
+                if (fG && r.grade !== fG) return false;
+                if (fC && r.competence !== fC) return false;
+                if (fT && r.tool.toLowerCase() !== fT.toLowerCase()) return false;
+                if (fF === 'true' && !r.favorite) return false;
+                if (search && !r.topic.toLowerCase().includes(search.toLowerCase())) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;margin:20px;">Keine Ressourcen gefunden.</p>';
+                return;
+            }
+
+            filtered.forEach((r, i) => {
+                const index = resources.indexOf(r);
+                const item = document.createElement('div');
+                item.className = 'resource-item';
+                item.innerHTML = `
+                    <div class="resource-content">
+                        <strong>${r.topic}</strong>
+                        <span class="tag grade-tag">${r.grade}</span>
+                        <span class="tag tool-tag">${r.tool || '—'}</span>
+                        <span class="tag competence-tag">${r.competence}</span>
+                    </div>
+                    ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                    <div class="action-icons">
+                        <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" 
+                             onclick="toggleFavorite(${index})" aria-label="Favorit">
+                            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        </div>
+                        <div class="action-icon edit-icon" onclick="editResource(${index})" aria-label="Bearbeiten">
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </div>
+                        <div class="action-icon delete-icon" onclick="deleteResource(${index})" aria-label="Löschen">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleFavorite(index) {
+            resources[index].favorite = !resources[index].favorite;
+            localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
         }
 
-        function editResource(i) {
-            editIndex = i;
-            const r = resources[i];
-            document.getElementById('editSubject').value = r.subject || '';
-            document.getElementById('editGrade').value = r.grade || '';
-            document.getElementById('editCompetence').value = r.competence || '';
-            document.getElementById('editTopic').value = r.topic || '';
-            document.getElementById('editTool').value = r.tool || '';
-            document.getElementById('editDescription').value = r.description || '';
-            editForm.style.display = 'block';
-            editForm.scrollIntoView({ behavior: 'smooth' });
+        function editResource(index) {
+            const r = resources[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editTopic').value = r.topic;
+            document.getElementById('editSubject').value = r.subject;
+            document.getElementById('editGrade').value = r.grade;
+            document.getElementById('editCompetence').value = r.competence;
+            document.getElementById('editTool').value = r.tool;
+            document.getElementById('editDescription').value = r.description;
+            document.getElementById('editForm').style.display = 'block';
+            document.getElementById('editTopic').focus();
         }
 
         function saveEdit() {
-            if (editIndex < 0) return;
-            const newTool = document.getElementById('editTool').value.trim();
-            if (newTool && !tools.has(newTool.toLowerCase())) {
-                tools.add(newTool.toLowerCase());
-                updateToolFilter();
-            }
-            resources[editIndex] = {
-                subject: document.getElementById('editSubject').value,
-                grade: document.getElementById('editGrade').value,
-                competence: document.getElementById('editCompetence').value,
-                topic: document.getElementById('editTopic').value,
-                tool: newTool,
-                description: document.getElementById('editDescription').value,
-                favorite: resources[editIndex].favorite,
-                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-            };
+            const index = document.getElementById('editIndex').value;
+            const r = resources[index];
+            r.topic = document.getElementById('editTopic').value.trim();
+            r.subject = document.getElementById('editSubject').value;
+            r.grade = document.getElementById('editGrade').value;
+            r.competence = document.getElementById('editCompetence').value;
+            r.tool = document.getElementById('editTool').value.trim();
+            r.description = document.getElementById('editDescription').value.trim();
+            r.lastModified = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
             localStorage.setItem('resources', JSON.stringify(resources));
             cancelEdit();
             applyFilters();
         }
 
-        function cancelEdit() { editForm.style.display = 'none'; editIndex = -1; }
+        function cancelEdit() {
+            document.getElementById('editForm').style.display = 'none';
+        }
 
-        function deleteResource(i) {
-            if (confirm('Möchtest du diese Ressource wirklich löschen?')) {
-                resources.splice(i, 1);
+        function deleteResource(index) {
+            if (confirm('Ressource wirklich löschen?')) {
+                resources.splice(index, 1);
                 localStorage.setItem('resources', JSON.stringify(resources));
                 applyFilters();
             }
-        }
-
-        function updateStats() {
-            const container = document.getElementById('stats-content');
-            container.innerHTML = '';
-            const stats = {};
-            resources.forEach(r => stats[r.subject] = (stats[r.subject] || 0) + 1);
-            Object.keys(stats).sort().forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'stat-item';
-                div.innerHTML = `
-                    <div class="stat-label">${s}:</div>
-                    <div class="stat-bar-container">
-                        <div class="stat-bar" style="background:${colorMap[s]};"></div>
-                    </div>
-                    <span style="margin-left:8px;min-width:30px;text-align:right;">${stats[s]}</span>
-                `;
-                container.appendChild(div);
-                setTimeout(() => {
-                    const bar = div.querySelector('.stat-bar');
-                    const percent = Math.min((stats[s] / Math.max(...Object.values(stats))) * 100, 100);
-                    bar.style.width = percent + '%';
-                }, 100);
-            });
-        }
-
-        function applyFilters() {
-            const fS = document.getElementById('filterSubject').value;
-            const fG = document.getElementById('filterGrade').value;
-            const fC = document.getElementById('filterCompetence').value;
-            const fT = document.getElementById('filterTool').value;
-            const search = document.getElementById('searchTopic').value;
-            displayResources(fS, fG, fC, fT, search);
-            updateStats();
         }
 
         function resetFilters() {
@@ -609,46 +481,86 @@
             document.getElementById('filterGrade').value = '';
             document.getElementById('filterTool').value = '';
             document.getElementById('filterCompetence').value = '';
+            document.getElementById('filterFavorite').value = '';
             document.getElementById('searchTopic').value = '';
             applyFilters();
         }
 
-        // === SUCHVORSCHLÄGE (AUTOCOMPLETE) ===
+        function applyFilters() {
+            const fS = document.getElementById('filterSubject').value;
+            const fG = document.getElementById('filterGrade').value;
+            const fC = document.getElementById('filterCompetence').value;
+            const fT = document.getElementById('filterTool').value;
+            const fF = document.getElementById('filterFavorite').value;
+            const search = document.getElementById('searchTopic').value;
+            
+            displayResources(fS, fG, fC, fT, search, fF);
+            updateStats();
+        }
+
+        function updateStats() {
+            const statsContent = document.getElementById('statsContent');
+            statsContent.innerHTML = '';
+            
+            const total = resources.length;
+            const bySubject = subjects.map(s => resources.filter(r => r.subject === s).length);
+            const maxSubject = Math.max(...bySubject);
+
+            subjects.forEach((s, i) => {
+                const count = bySubject[i];
+                if (count === 0) return;
+                const item = document.createElement('div');
+                item.className = 'stat-item';
+                item.innerHTML = `
+                    <div class="stat-label">${s}</div>
+                    <div class="stat-bar"><div class="stat-fill" style="width: ${(count / maxSubject) * 100}%"></div></div>
+                    <div class="stat-value">${count} Ressourcen</div>
+                `;
+                statsContent.appendChild(item);
+            });
+
+            const totalItem = document.createElement('div');
+            totalItem.className = 'stat-item';
+            totalItem.innerHTML = `<div class="stat-label">Gesamt</div><div class="stat-value">${total} Ressourcen</div>`;
+            statsContent.appendChild(totalItem);
+        }
+
+        // AUTOCOMPLETE FÜR SUCHE
         const searchInput = document.getElementById('searchTopic');
         const suggestions = document.getElementById('suggestions');
-        searchInput.addEventListener('input', () => {
-          const val = searchInput.value.toLowerCase().trim();
-          suggestions.innerHTML = '';
-          if (!val) {
-            suggestions.style.display = 'none';
-            return;
-          }
-          const matches = [...new Set(
-            resources
-              .map(r => r.topic)
-              .filter(t => t.toLowerCase().includes(val))
-          )].slice(0, 6);
-          if (matches.length === 0) {
-            suggestions.style.display = 'none';
-            return;
-          }
-          matches.forEach(m => {
-            const div = document.createElement('div');
-            div.textContent = m;
-            div.onclick = () => {
-              searchInput.value = m;
-              suggestions.style.display = 'none';
-              applyFilters();
-            };
-            suggestions.appendChild(div);
-          });
-          suggestions.style.display = 'block';
+        searchInput.addEventListener('input', (e) => {
+            suggestions.innerHTML = '';
+            const val = e.target.value.toLowerCase().trim();
+            if (!val) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            const matches = [...new Set(
+                resources
+                  .map(r => r.topic)
+                  .filter(t => t.toLowerCase().includes(val))
+              )].slice(0, 6);
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.textContent = m;
+                div.onclick = () => {
+                    searchInput.value = m;
+                    suggestions.style.display = 'none';
+                    applyFilters();
+                };
+                suggestions.appendChild(div);
+            });
+            suggestions.style.display = 'block';
         });
         // Schließe bei Klick außerhalb
         document.addEventListener('click', (e) => {
-          if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-            suggestions.style.display = 'none';
-          }
+            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.style.display = 'none';
+            }
         });
 
         // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
@@ -672,57 +584,57 @@
             });
         }
 
-// === VERBESSERTER CSV-IMPORT (Filter aktualisiert) ===
-function importCSV(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
-        if (lines.length < 2) { alert("CSV leer!"); return; }
-        const header = lines[0].split(',');
-        const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Digitales Hilfsmittel'];
-        const missing = required.filter(col => !header.includes(col));
-        if (missing.length > 0) {
-            alert(`Fehlende Spalten: ${missing.join(', ')}`);
-            return;
-        }
-        const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).join(', ')).join('\n');
-        if (!confirm(`Vorschau (erste 5 Zeilen):\n${preview}\n\nImportieren? (${lines.length-1} Zeilen)`)) return;
+        // === VERBESSERTER CSV-IMPORT (Filter aktualisiert) ===
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
+                if (lines.length < 2) { alert("CSV leer!"); return; }
+                const header = lines[0].split(',');
+                const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Digitales Hilfsmittel'];
+                const missing = required.filter(col => !header.includes(col));
+                if (missing.length > 0) {
+                    alert(`Fehlende Spalten: ${missing.join(', ')}`);
+                    return;
+                }
+                const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).join(', ')).join('\n');
+                if (!confirm(`Vorschau (erste 5 Zeilen):\n${preview}\n\nImportieren? (${lines.length-1} Zeilen)`)) return;
 
-        let imported = 0;
-        let progress = document.createElement('div');
-        progress.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;z-index:10000;';
-        progress.innerHTML = '<div id="progress">0%</div><div id="status">Starte Import...</div>';
-        document.body.appendChild(progress);
+                let imported = 0;
+                let progress = document.createElement('div');
+                progress.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;z-index:10000;';
+                progress.innerHTML = '<div id="progress">0%</div><div id="status">Starte Import...</div>';
+                document.body.appendChild(progress);
 
-        lines.slice(1).forEach((line, i) => {
-            const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-            if (cols.length >= 5) {
-                const newTool = cols[4].trim();
-                resources.push({
-                    topic: cols[0], subject: cols[1], grade: cols[2],
-                    competence: cols[3], tool: newTool, description: cols[5] || '',
-                    favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                lines.slice(1).forEach((line, i) => {
+                    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                    if (cols.length >= 5) {
+                        const newTool = cols[4].trim();
+                        resources.push({
+                            topic: cols[0], subject: cols[1], grade: cols[2],
+                            competence: cols[3], tool: newTool, description: cols[5] || '',
+                            favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                        });
+                        // TOOL ZUM SET HINZUFÜGEN
+                        if (newTool) tools.add(newTool.toLowerCase());
+                        imported++;
+                    }
+                    document.getElementById('progress').textContent = Math.round((i / lines.length) * 100) + '%';
+                    document.getElementById('status').textContent = `Zeile ${i+1}/${lines.length}`;
                 });
-                // TOOL ZUM SET HINZUFÜGEN
-                if (newTool) tools.add(newTool.toLowerCase());
-                imported++;
-            }
-            document.getElementById('progress').textContent = Math.round((i / lines.length) * 100) + '%';
-            document.getElementById('status').textContent = `Zeile ${i+1}/${lines.length}`;
-        });
 
-        progress.remove();
-        localStorage.setItem('resources', JSON.stringify(resources));
-        alert(`${imported} Ressourcen importiert!`);
+                progress.remove();
+                localStorage.setItem('resources', JSON.stringify(resources));
+                alert(`${imported} Ressourcen importiert!`);
 
-        // FILTER AKTUALISIEREN
-        updateToolFilter();
-        applyFilters();
-    };
-    reader.readAsText(file);
-}
+                // FILTER AKTUALISIEREN
+                updateToolFilter();
+                applyFilters();
+            };
+            reader.readAsText(file);
+        }
 
         // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
@@ -734,81 +646,81 @@ function importCSV(event) {
             link.click();
         }
 
-// === PDF-EXPORT PERFEKT (wie im Browser) ===
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    if (resources.length === 0) { alert("Keine Daten!"); return; }
+        // === PDF-EXPORT PERFEKT (wie im Browser) ===
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            if (resources.length === 0) { alert("Keine Daten!"); return; }
 
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 20;
 
-    // Titel
-    doc.setFontSize(18);
-    doc.setTextColor(107, 70, 193);
-    doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-    y += 10;
+            // Titel
+            doc.setFontSize(18);
+            doc.setTextColor(107, 70, 193);
+            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
+            y += 10;
 
-    // Export-Datum
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-    y += 15;
-
-    // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0);
-
-    resources.forEach((r, i) => {
-        if (y > 270) { doc.addPage(); y = 20; }
-
-        // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
-        doc.text(`${i+1}. ${r.topic}`, 15, y);
-
-        // 2. Details – FARBE + TRENNZEICHEN
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-
-        const x = 15;
-        let currentX = x;
-
-        // Fach (grau)
-        doc.setTextColor(100);
-        doc.text(r.subject || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.subject || '—'} | `);
-
-        // Klasse (grau)
-        doc.text(r.grade || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.grade || '—'} | `);
-
-        // Tool: hellgrün
-        doc.setTextColor(39, 174, 96);
-        doc.text(r.tool || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.tool || '—'} | `);
-
-        // Kompetenz: magenta
-        doc.setTextColor(233, 30, 99);
-        doc.text(r.competence || '—', currentX, y + 5);
-
-        // ZULETZT BEARBEITET
-        if (r.lastModified) {
+            // Export-Datum
+            doc.setFontSize(10);
             doc.setTextColor(100);
-            doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
-            y += 5;
+            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
+            y += 15;
+
+            // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0);
+
+            resources.forEach((r, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+
+                // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
+                doc.text(`${i+1}. ${r.topic}`, 15, y);
+
+                // 2. Details – FARBE + TRENNZEICHEN
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+
+                const x = 15;
+                let currentX = x;
+
+                // Fach (grau)
+                doc.setTextColor(100);
+                doc.text(r.subject || '—', currentX, y + 5);
+                currentX += doc.getTextWidth(`${r.subject || '—'} | `);
+
+                // Klasse (grau)
+                doc.text(r.grade || '—', currentX, y + 5);
+                currentX += doc.getTextWidth(`${r.grade || '—'} | `);
+
+                // Tool: hellgrün
+                doc.setTextColor(39, 174, 96);
+                doc.text(r.tool || '—', currentX, y + 5);
+                currentX += doc.getTextWidth(`${r.tool || '—'} | `);
+
+                // Kompetenz: magenta
+                doc.setTextColor(233, 30, 99);
+                doc.text(r.competence || '—', currentX, y + 5);
+
+                // ZULETZT BEARBEITET
+                if (r.lastModified) {
+                    doc.setTextColor(100);
+                    doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
+                    y += 5;
+                }
+
+                // Nächster Eintrag: zurück zu 11pt + fett + schwarz
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0);
+                y += 18;
+            });
+
+            doc.save('lerndashboard_ressourcen.pdf');
         }
-
-        // Nächster Eintrag: zurück zu 11pt + fett + schwarz
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0);
-        y += 18;
-    });
-
-    doc.save('lerndashboard_ressourcen.pdf');
-}
         
-        ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
+        ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
         document.getElementById('searchTopic').addEventListener('input', applyFilters);
