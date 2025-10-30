@@ -247,7 +247,6 @@
     </svg>
     
         <script>
-        
         // === DATEN & KONFIG ===
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
         let tools = new Set(resources.map(r => r.tool?.toLowerCase()).filter(Boolean));
@@ -784,8 +783,7 @@
         applyFilters();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
-</html>
+
         // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
         function exportCSV() {
             if (resources.length === 0) { showAlert("Keine Daten!"); return; }
@@ -901,125 +899,6 @@
         applyFilters();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
-</html>
-        // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
-        function exportCSV() {
-            if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-            let chunkSize = 500;
-            let chunks = [];
-            for (let i = 0; i < resources.length; i += chunkSize) {
-                let chunk = resources.slice(i, i + chunkSize).map(r => {
-                    return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
-                }).join('\n');
-                chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
-            }
-            let zip = new JSZip();
-            chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
-            zip.generateAsync({type: "blob"}).then(content => {
-                let link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = 'lerndashboard_ressourcen.zip';
-                link.click();
-            });
-        }
-
-        // === BEISPIEL-CSV VORLAGE ===
-        function exportTemplate() {
-            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
-            const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'beispiel-lerndashboard.csv';
-            link.click();
-        }
-
-        // === PDF-EXPORT PERFEKT (wie im Browser) ===
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            let y = 20;
-
-            // Titel
-            doc.setFontSize(18);
-            doc.setTextColor(107, 70, 193);
-            doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-            y += 10;
-
-            // Export-Datum
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-            y += 15;
-
-            // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-
-            resources.forEach((r, i) => {
-                if (y > 270) { doc.addPage(); y = 20; }
-
-                // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
-                doc.text(`${i+1}. ${r.topic}`, 15, y);
-
-                // 2. Details – FARBE + TRENNZEICHEN
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-
-                const x = 15;
-                let currentX = x;
-
-                // Fach (grau)
-                doc.setTextColor(100);
-                doc.text(r.subject || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.subject || '—'} | `);
-
-                // Klasse (grau)
-                doc.text(r.grade || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.grade || '—'} | `);
-
-                // Tool: hellgrün
-                doc.setTextColor(39, 174, 96);
-                doc.text(r.tool || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.tool || '—'} | `);
-
-                // Kompetenz: magenta
-                doc.setTextColor(233, 30, 99);
-                doc.text(r.competence || '—', currentX, y + 5);
-
-                // ZULETZT BEARBEITET
-                if (r.lastModified) {
-                    doc.setTextColor(100);
-                    doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
-                    y += 5;
-                }
-
-                // Nächster Eintrag: zurück zu 11pt + fett + schwarz
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(0);
-                y += 18;
-            });
-
-            doc.save('lerndashboard_ressourcen.pdf');
-        }
-
-        // === INIT ===
-        ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
-            document.getElementById(id).addEventListener('change', applyFilters);
-        });
-        document.getElementById('searchTopic').addEventListener('input', applyFilters);
-
-        populateDropdowns();
-        applyFilters();
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
-</html>
         // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
         function exportCSV() {
             if (resources.length === 0) { showAlert("Keine Daten!"); return; }
