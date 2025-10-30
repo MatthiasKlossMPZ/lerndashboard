@@ -40,9 +40,9 @@
             background: var(--bg); color: var(--text);
             display: flex; gap: 20px;
         }
-        /* === SIDEBAR STATISTIK === */
+        /* === SIDEBAR: STATISTIK MIT BALKEN === */
         .sidebar {
-            width: 280px; background: var(--card); border-radius: 12px;
+            width: 300px; background: var(--card); border-radius: 12px;
             padding: 16px; box-shadow: var(--shadow); height: fit-content;
             position: sticky; top: 20px;
         }
@@ -255,6 +255,7 @@
     </svg>
 
     <script>
+        // === DATEN ===
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
         let tools = new Set(resources.map(r => r.tool?.toLowerCase()).filter(Boolean));
         let editIndex = -1;
@@ -422,19 +423,72 @@
         function showAlert(msg) {
             const m = document.createElement('div');
             m.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10001;';
-            m.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);"><p style="white-space:pre-line;margin:0 0 16px;">${msg}</p><button onclick="this.parentElement.parentElement.remove()" style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">OK</button></div>`;
+            m.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);"><p style="white-space:pre-line;margin:0 0 16px;">${msg}</p><button onclick="this.parentNode.parentNode.remove()" style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">OK</button></div>`;
             document.body.appendChild(m);
         }
 
-        // === REST (CSV, PDF, etc.) ===
-        function exportCSV() { /* ... wie zuvor ... */ }
-        function exportTemplate() { /* ... */ }
-        function exportPDF() { /* ... */ }
+        // === CSV-EXPORT ===
+        function exportCSV() {
+            if (resources.length === 0) { showAlert("Keine Daten!"); return; }
+            const chunkSize = 500;
+            const chunks = [];
+            for (let i = 0; i < resources.length; i += chunkSize) {
+                const chunk = resources.slice(i, i + chunkSize).map(r => {
+                    return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
+                }).join('\n');
+                chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
+            }
+            const zip = new JSZip();
+            chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
+            zip.generateAsync({type: "blob"}).then(content => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'lerndashboard_ressourcen.zip';
+                link.click();
+            });
+        }
+
+        // === VORLAGE & PDF ===
+        function exportTemplate() {
+            const t = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel";
+            const b = new Blob(['\uFEFF' + t], { type: 'text/csv;charset=utf-8;' });
+            const l = document.createElement('a');
+            l.href = URL.createObjectURL(b);
+            l.download = 'vorlage.csv';
+            l.click();
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            if (!resources.length) { showAlert("Keine Daten!"); return; }
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const w = doc.internal.pageSize.getWidth();
+            let y = 20;
+            doc.setFontSize(18); doc.setTextColor(107, 70, 193);
+            doc.text('LernDashboard – Ressourcen', w / 2, y, { align: 'center' }); y += 15;
+            doc.setFontSize(10); doc.setTextColor(100);
+            doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, 15, y); y += 15;
+            doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+            resources.forEach((r, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                doc.text(`${i+1}. ${r.topic}`, 15, y);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                let x = 15; doc.setTextColor(100); doc.text(r.subject || '—', x, y + 5); x += doc.getTextWidth(`${r.subject || '—'} | `);
+                doc.text(r.grade || '—', x, y + 5); x += doc.getTextWidth(`${r.grade || '—'} | `);
+                doc.setTextColor(39, 174, 96); doc.text(r.tool || '—', x, y + 5);
+                doc.setTextColor(233, 30, 99); doc.text(r.competence || '—', x + doc.getTextWidth(`${r.tool || '—'} | `), y + 5);
+                if (r.lastModified) { doc.setTextColor(100); doc.text(`Zuletzt: ${r.lastModified}`, 15, y + 10); y += 5; }
+                doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+                y += 18;
+            });
+            doc.save('lerndashboard.pdf');
+        }
 
         // === INIT ===
-        ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id=>document.getElementById(id).onchange=applyFilters);
-        document.getElementById('searchTopic').oninput=applyFilters;
-        populateDropdowns(); applyFilters();
+        ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => document.getElementById(id).onchange = applyFilters);
+        document.getElementById('searchTopic').oninput = applyFilters;
+        populateDropdowns();
+        applyFilters();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
