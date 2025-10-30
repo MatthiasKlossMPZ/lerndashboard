@@ -31,6 +31,7 @@
             --text: #e0e0e0;
             --text-light: #bbbbbb;
             --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --primary: #7e5be0;
             background: #111 !important;
             color: var(--text) !important;
         }
@@ -43,27 +44,32 @@
             line-height: 1.6;
             transition: background 0.3s, color 0.3s;
         }
-        /* === LOGO: ZENTRIERT === */
+        /* DARK MODE BUTTON */
+        #themeToggle {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            background: var(--primary); color: white; border: none;
+            padding: 10px 16px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; box-shadow: var(--shadow); transition: 0.2s;
+        }
+        #themeToggle:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(107,70,193,0.3); }
+        /* LOGO */
         .logo-container {
             width: 200px; float: left; text-align: center; padding: 20px 0; cursor: pointer;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .logo-wrapper {
-            width: 90px; height: 90px; margin-bottom: 12px;
-            border-radius: 50%; overflow: hidden;
-            box-shadow: 0 6px 16px rgba(107,70,193,0.3);
-            padding: 8px; background: white;
+            width: 90px; height: 90px; margin-bottom: 12px; border-radius: 50%; overflow: hidden;
+            box-shadow: 0 6px 16px rgba(107,70,193,0.3); padding: 8px; background: white;
             display: flex; align-items: center; justify-content: center;
         }
         .logo-svg { width: 100%; height: 100%; }
         .logo-text { font-size: 18px; font-weight: 700; color: #333; margin: 8px 0 4px; }
         .logo-subtext { font-size: 13px; color: #666; }
         .content { margin-left: 230px; min-height: 100vh; }
-        /* === FILTER === */
+        /* FILTER */
         .filter-container {
-            background: linear-gradient(135deg, #eef5ff, #e0edff);
-            padding: 14px; border-radius: 12px; border: 1px solid #cce0ff;
-            margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            background: linear-gradient(135deg, #eef5ff, #e0edff); padding: 14px; border-radius: 12px;
+            border: 1px solid #cce0ff; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
         .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; min-width: 160px; flex: 1; }
@@ -73,23 +79,19 @@
         .search-container label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
         .search-input { padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff; font-size: 14px; }
         .reset-btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap; align-self: flex-end; }
-        /* === AUTOCOMPLETE SUGGESTIONS === */
+        /* SUGGESTIONS */
         #suggestions {
             position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc;
-            max-height: 200px; overflow-y: auto; z-index: 1000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: none;
+            max-height: 200px; overflow-y: auto; z-index: 1000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none;
         }
-        #suggestions div {
-            padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee;
-        }
+        #suggestions div { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee; }
         #suggestions div:hover { background: #f0f4ff; }
-        /* === EXPORT & IMPORT === */
+        /* BUTTONS */
         .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn.csv { background: #27ae60; } .btn.pdf { background: #e74c3c; } .btn.print { background: #34495e; } .btn.import { background: #f39c12; } .btn.template { background: #9b59b6; }
         .file-input { display: none; }
-        /* === NEUE RESSOURCE BUTTON === */
         .new-resource-btn {
             display: block; margin: 20px auto 10px; padding: 16px 32px; font-size: 18px; font-weight: 700;
             background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; border-radius: 12px;
@@ -97,7 +99,7 @@
             display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 400px;
         }
         .new-resource-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(107,70,193,0.4); }
-        /* === RESSOURCEN === */
+        /* RESSOURCEN */
         .resource-item { display: flex; flex-direction: column; margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
         .resource-item:hover { transform: translateY(-2px); }
         .resource-content { margin-bottom: 12px; line-height: 1.6; font-size: 15px; }
@@ -105,17 +107,20 @@
         .tag:hover { opacity: 0.8; transform: scale(1.05); }
         .grade-tag { background: var(--grade); } .tool-tag { background: var(--tool); } .competence-tag { background: var(--competence); }
         .description { margin-top: 12px; font-size: 14px; color: var(--text-light); background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 3px solid var(--primary); }
-        /* === ACTION ICONS === */
+        /* ACTION ICONS */
         .action-icons { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
         .action-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
         .action-icon:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
         .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
         .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
-        .action-icon[aria-label]:hover::after { content: attr(aria-label); position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); background: #333; color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
         .favorite-icon { background: #fff3cd; color: #856404; }
         .favorite-icon.active { background: #f39c12; color: white; }
-        /* === FORM === */
+        .action-icon[aria-label]:hover::after { 
+            content: attr(aria-label); position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none;
+        }
+        /* FORM */
         #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
@@ -125,21 +130,21 @@
         .form-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .save-btn { background: var(--primary); color: white; }
         .cancel-btn { background: #95a5a6; color: white; }
-        /* === STATISTIKEN === */
+        /* STATISTIKEN */
         .stats-section { float: right; width: 300px; padding: 20px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 20px; margin-left: 20px; }
         .stats-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
-        .stat-item { margin-bottom: 12px; }
+        .stat-item { margin-bottom: 16px; }
         .stat-label { font-size: 13px; color: var(--text-light); }
-        .stat-bar { height: 8px; background: #e0e0e0; border-radius: 4px; margin-top: 4px; position: relative; overflow: hidden; }
-        .stat-fill { height: 100%; background: var(--primary); transition: width 0.5s ease; }
-        .stat-value { font-size: 12px; color: var(--text-light); margin-top: 4px; text-align: right; }
-        /* === MAIN CONTAINER FÜR RESPONSIVE === */
+        .stat-bar { height: 12px; background: #e0e0e0; border-radius: 6px; margin-top: 6px; position: relative; overflow: hidden; }
+        .stat-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); transition: width 0.5s ease; border-radius: 6px; }
+        .stat-value { font-size: 12px; color: var(--text-light); margin-top: 6px; text-align: right; font-weight: 600; }
+        /* MAIN CONTAINER */
         .main-container { display: flex; flex-direction: column; }
         @media (min-width: 992px) {
             .main-container { flex-direction: row; }
             .stats-section { position: sticky; top: 20px; }
         }
-        /* === DARK MODE ANPASSUNGEN === */
+        /* DARK MODE */
         .dark .filter-container { background: linear-gradient(135deg, #2a2a2a, #3a3a3a); border: 1px solid #444; }
         .dark .search-input, .dark .filter-group select { background: #333; color: #ddd; border: 1px solid #555; }
         .dark .resource-item { border: 1px solid #444; }
@@ -147,9 +152,14 @@
         .dark .logo-wrapper { background: #222; }
         .dark .logo-text { color: #ddd; }
         .dark .logo-subtext { color: #aaa; }
+        .dark .stat-bar { background: #333; }
+        .dark #themeToggle { background: #7e5be0; }
     </style>
 </head>
 <body>
+    <!-- DARK MODE TOGGLE -->
+    <button id="themeToggle">Dark Mode</button>
+
     <!-- LOGO -->
     <div class="logo-container" onclick="window.location.href='index.html';">
         <div class="logo-wrapper">
@@ -215,36 +225,27 @@
         <div class="logo-subtext">Digitale Ressourcen</div>
     </div>
 
-    <!-- INHALT -->
+    <!-- CONTENT -->
     <div class="content">
-        <!-- FILTER -->
+        <!-- FILTER CONTAINER -->
         <div class="filter-container">
             <div class="filters">
                 <div class="filter-group">
                     <label>Fach</label>
-                    <select id="filterSubject">
-                        <option value="">Alle</option>
-                    </select>
+                    <select id="filterSubject"><option value="">Alle</option></select>
                 </div>
                 <div class="filter-group">
                     <label>Klasse</label>
-                    <select id="filterGrade">
-                        <option value="">Alle</option>
-                    </select>
+                    <select id="filterGrade"><option value="">Alle</option></select>
                 </div>
                 <div class="filter-group">
                     <label>Kompetenz</label>
-                    <select id="filterCompetence">
-                        <option value="">Alle</option>
-                    </select>
+                    <select id="filterCompetence"><option value="">Alle</option></select>
                 </div>
                 <div class="filter-group">
                     <label>Tool</label>
-                    <select id="filterTool">
-                        <option value="">Alle</option>
-                    </select>
+                    <select id="filterTool"><option value="">Alle</option></select>
                 </div>
-                <!-- NEU: Favoriten-Filter -->
                 <div class="filter-group">
                     <label>Favoriten</label>
                     <select id="filterFavorite">
@@ -273,7 +274,7 @@
             <button class="btn template" onclick="exportTemplate()">Beispiel-CSV</button>
         </div>
 
-        <!-- NEUE RESSOURCE BUTTON -->
+        <!-- NEW RESOURCE BUTTON -->
         <button class="new-resource-btn" onclick="window.location.href='new-resource.html'">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -282,19 +283,16 @@
             Neue Ressource hinzufügen
         </button>
 
-        <!-- MAIN CONTAINER: Ressourcen + Stats -->
+        <!-- MAIN CONTAINER -->
         <div class="main-container">
-            <!-- RESSOURCEN LISTE -->
             <div id="resourcesList"></div>
-
-            <!-- STATISTIKEN -->
             <div class="stats-section">
                 <div class="stats-title">Statistiken</div>
                 <div id="statsContent"></div>
             </div>
         </div>
 
-        <!-- BEARBEITUNGS-FORMULAR -->
+        <!-- EDIT FORM -->
         <form id="editForm">
             <input type="hidden" id="editIndex">
             <div class="form-group">
@@ -328,10 +326,10 @@
         </form>
     </div>
 
-    <!-- jsPDF für PDF-Export -->
+    <!-- SCRIPTS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <script>
+        // DATA
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
         const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
         const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
@@ -343,32 +341,38 @@
             "Problemlösen und Handeln",
             "Analysieren und Reflektieren"
         ];
-        const tools = new Set(resources.map(r => r.tool.toLowerCase()).filter(t => t));
+        let tools = new Set(resources.map(r => (r.tool || '').toLowerCase()).filter(t => t));
 
+        // DARK MODE
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.body.classList.add('dark');
+            themeToggle.textContent = 'Light Mode';
+        }
+        themeToggle.onclick = () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeToggle.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        };
+
+        // POPULATE DROPDOWNS
         function populateSubjectDropdowns() {
             const dropdowns = ['filterSubject', 'editSubject'];
             dropdowns.forEach(id => {
                 const select = document.getElementById(id);
-                subjects.forEach(s => {
-                    const option = new Option(s, s);
-                    select.add(option);
-                });
+                subjects.forEach(s => select.add(new Option(s, s)));
             });
             const gradeDropdowns = ['filterGrade', 'editGrade'];
             gradeDropdowns.forEach(id => {
                 const select = document.getElementById(id);
-                grades.forEach(g => {
-                    const option = new Option(g, g);
-                    select.add(option);
-                });
+                grades.forEach(g => select.add(new Option(g, g)));
             });
             const competenceDropdowns = ['filterCompetence', 'editCompetence'];
             competenceDropdowns.forEach(id => {
                 const select = document.getElementById(id);
-                competences.forEach(c => {
-                    const option = new Option(c, c);
-                    select.add(option);
-                });
+                competences.forEach(c => select.add(new Option(c, c)));
             });
             updateToolFilter();
         }
@@ -377,30 +381,28 @@
             const select = document.getElementById('filterTool');
             select.innerHTML = '<option value="">Alle</option>';
             [...tools].sort().forEach(t => {
-                const option = new Option(t.charAt(0).toUpperCase() + t.slice(1), t.charAt(0).toUpperCase() + t.slice(1));
-                select.add(option);
+                const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
+                select.add(new Option(capitalized, capitalized));
             });
         }
 
-        function displayResources(fS, fG, fC, fT, search, fF = '') {
+        // DISPLAY RESOURCES WITH FAVORITEN FILTER
+        function displayResources(fS = '', fG = '', fC = '', fT = '', search = '', fF = '') {
             const container = document.getElementById('resourcesList');
             container.innerHTML = '';
-            
             const filtered = resources.filter(r => {
                 if (fS && r.subject !== fS) return false;
                 if (fG && r.grade !== fG) return false;
                 if (fC && r.competence !== fC) return false;
-                if (fT && r.tool.toLowerCase() !== fT.toLowerCase()) return false;
+                if (fT && r.tool !== fT) return false;
                 if (fF === 'true' && !r.favorite) return false;
                 if (search && !r.topic.toLowerCase().includes(search.toLowerCase())) return false;
                 return true;
             });
-
             if (filtered.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#888;margin:20px;">Keine Ressourcen gefunden.</p>';
+                container.innerHTML = '<p style="text-align:center;color:#888;margin:40px 0;font-size:16px;">Keine Ressourcen gefunden.</p>';
                 return;
             }
-
             filtered.forEach((r, i) => {
                 const index = resources.indexOf(r);
                 const item = document.createElement('div');
@@ -408,14 +410,13 @@
                 item.innerHTML = `
                     <div class="resource-content">
                         <strong>${r.topic}</strong>
-                        <span class="tag grade-tag">${r.grade}</span>
+                        <span class="tag grade-tag">${r.grade || '—'}</span>
                         <span class="tag tool-tag">${r.tool || '—'}</span>
-                        <span class="tag competence-tag">${r.competence}</span>
+                        <span class="tag competence-tag">${r.competence || '—'}</span>
                     </div>
                     ${r.description ? `<div class="description">${r.description}</div>` : ''}
                     <div class="action-icons">
-                        <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" 
-                             onclick="toggleFavorite(${index})" aria-label="Favorit">
+                        <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" onclick="toggleFavorite(${index})" aria-label="Favorit">
                             <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         </div>
                         <div class="action-icon edit-icon" onclick="editResource(${index})" aria-label="Bearbeiten">
@@ -430,38 +431,41 @@
             });
         }
 
+        // TOGGLE FAVORITE
         function toggleFavorite(index) {
             resources[index].favorite = !resources[index].favorite;
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
         }
 
+        // EDIT FUNCTIONS
         function editResource(index) {
             const r = resources[index];
             document.getElementById('editIndex').value = index;
-            document.getElementById('editTopic').value = r.topic;
-            document.getElementById('editSubject').value = r.subject;
-            document.getElementById('editGrade').value = r.grade;
-            document.getElementById('editCompetence').value = r.competence;
-            document.getElementById('editTool').value = r.tool;
-            document.getElementById('editDescription').value = r.description;
+            document.getElementById('editTopic').value = r.topic || '';
+            document.getElementById('editSubject').value = r.subject || '';
+            document.getElementById('editGrade').value = r.grade || '';
+            document.getElementById('editCompetence').value = r.competence || '';
+            document.getElementById('editTool').value = r.tool || '';
+            document.getElementById('editDescription').value = r.description || '';
             document.getElementById('editForm').style.display = 'block';
             document.getElementById('editTopic').focus();
         }
 
         function saveEdit() {
-            const index = document.getElementById('editIndex').value;
-            const r = resources[index];
-            r.topic = document.getElementById('editTopic').value.trim();
-            r.subject = document.getElementById('editSubject').value;
-            r.grade = document.getElementById('editGrade').value;
-            r.competence = document.getElementById('editCompetence').value;
-            r.tool = document.getElementById('editTool').value.trim();
-            r.description = document.getElementById('editDescription').value.trim();
-            r.lastModified = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const index = parseInt(document.getElementById('editIndex').value);
+            resources[index].topic = document.getElementById('editTopic').value.trim();
+            resources[index].subject = document.getElementById('editSubject').value;
+            resources[index].grade = document.getElementById('editGrade').value;
+            resources[index].competence = document.getElementById('editCompetence').value;
+            resources[index].tool = document.getElementById('editTool').value.trim();
+            resources[index].description = document.getElementById('editDescription').value.trim();
+            resources[index].lastModified = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
             localStorage.setItem('resources', JSON.stringify(resources));
             cancelEdit();
             applyFilters();
+            if (resources[index].tool) tools.add(resources[index].tool.toLowerCase());
+            updateToolFilter();
         }
 
         function cancelEdit() {
@@ -476,11 +480,12 @@
             }
         }
 
+        // FILTERS
         function resetFilters() {
             document.getElementById('filterSubject').value = '';
             document.getElementById('filterGrade').value = '';
-            document.getElementById('filterTool').value = '';
             document.getElementById('filterCompetence').value = '';
+            document.getElementById('filterTool').value = '';
             document.getElementById('filterFavorite').value = '';
             document.getElementById('searchTopic').value = '';
             applyFilters();
@@ -493,19 +498,17 @@
             const fT = document.getElementById('filterTool').value;
             const fF = document.getElementById('filterFavorite').value;
             const search = document.getElementById('searchTopic').value;
-            
             displayResources(fS, fG, fC, fT, search, fF);
             updateStats();
         }
 
+        // STATS
         function updateStats() {
             const statsContent = document.getElementById('statsContent');
             statsContent.innerHTML = '';
-            
             const total = resources.length;
             const bySubject = subjects.map(s => resources.filter(r => r.subject === s).length);
-            const maxSubject = Math.max(...bySubject);
-
+            const maxCount = Math.max(...bySubject, 1);
             subjects.forEach((s, i) => {
                 const count = bySubject[i];
                 if (count === 0) return;
@@ -513,33 +516,41 @@
                 item.className = 'stat-item';
                 item.innerHTML = `
                     <div class="stat-label">${s}</div>
-                    <div class="stat-bar"><div class="stat-fill" style="width: ${(count / maxSubject) * 100}%"></div></div>
+                    <div class="stat-bar"><div class="stat-fill" style="width: ${(count / maxCount * 100)}%"></div></div>
                     <div class="stat-value">${count} Ressourcen</div>
                 `;
                 statsContent.appendChild(item);
             });
-
             const totalItem = document.createElement('div');
             totalItem.className = 'stat-item';
-            totalItem.innerHTML = `<div class="stat-label">Gesamt</div><div class="stat-value">${total} Ressourcen</div>`;
+            totalItem.innerHTML = `
+                <div class="stat-label">Gesamt</div>
+                <div class="stat-value" style="font-size:14px;font-weight:700;color:var(--primary);">${total} Ressourcen</div>
+            `;
             statsContent.appendChild(totalItem);
+            const favoritesCount = resources.filter(r => r.favorite).length;
+            if (favoritesCount > 0) {
+                const favItem = document.createElement('div');
+                favItem.className = 'stat-item';
+                favItem.innerHTML = `
+                    <div class="stat-label">Favoriten</div>
+                    <div class="stat-value" style="color:#f39c12;">${favoritesCount}</div>
+                `;
+                statsContent.appendChild(favItem);
+            }
         }
 
-        // AUTOCOMPLETE FÜR SUCHE
+        // AUTOCOMPLETE
         const searchInput = document.getElementById('searchTopic');
         const suggestions = document.getElementById('suggestions');
-        searchInput.addEventListener('input', (e) => {
+        searchInput.addEventListener('input', () => {
+            const val = searchInput.value.toLowerCase().trim();
             suggestions.innerHTML = '';
-            const val = e.target.value.toLowerCase().trim();
             if (!val) {
                 suggestions.style.display = 'none';
                 return;
             }
-            const matches = [...new Set(
-                resources
-                  .map(r => r.topic)
-                  .filter(t => t.toLowerCase().includes(val))
-              )].slice(0, 6);
+            const matches = [...new Set(resources.map(r => r.topic).filter(t => t.toLowerCase().includes(val)))].slice(0, 6);
             if (matches.length === 0) {
                 suggestions.style.display = 'none';
                 return;
@@ -556,87 +567,74 @@
             });
             suggestions.style.display = 'block';
         });
-        // Schließe bei Klick außerhalb
         document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-                suggestions.style.display = 'none';
-            }
+            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) suggestions.style.display = 'none';
         });
 
-        // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
+        // EXPORT/IMPORT
         function exportCSV() {
-            if (resources.length === 0) { alert("Keine Daten!"); return; }
-            let chunkSize = 500;
-            let chunks = [];
+            if (resources.length === 0) return alert("Keine Daten!");
+            const chunkSize = 500;
+            const chunks = [];
             for (let i = 0; i < resources.length; i += chunkSize) {
-                let chunk = resources.slice(i, i + chunkSize).map(r => {
-                    return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${r.tool||''}","${(r.description||'').replace(/"/g, '""')}"`;
-                }).join('\n');
+                const chunk = resources.slice(i, i + chunkSize).map(r => 
+                    `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${r.tool||''}","${(r.description||'').replace(/"/g, '""')}"`
+                ).join('\n');
                 chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
             }
-            let zip = new JSZip();
+            const zip = new JSZip();
             chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
             zip.generateAsync({type: "blob"}).then(content => {
-                let link = document.createElement('a');
+                const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
                 link.download = 'lerndashboard_ressourcen.zip';
                 link.click();
             });
         }
 
-        // === VERBESSERTER CSV-IMPORT (Filter aktualisiert) ===
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l);
-                if (lines.length < 2) { alert("CSV leer!"); return; }
+                if (lines.length < 2) return alert("CSV leer!");
                 const header = lines[0].split(',');
                 const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Digitales Hilfsmittel'];
-                const missing = required.filter(col => !header.includes(col));
-                if (missing.length > 0) {
-                    alert(`Fehlende Spalten: ${missing.join(', ')}`);
-                    return;
-                }
-                const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).join(', ')).join('\n');
+                const missing = required.filter(col => !header.some(h => h.trim() === col));
+                if (missing.length > 0) return alert(`Fehlende Spalten: ${missing.join(', ')}`);
+                const preview = lines.slice(1, 6).map(line => line.split(',').slice(0, 5).map(c => c.replace(/^"|"$/g, '')).map(row => row.join(', ')).join('\n');
                 if (!confirm(`Vorschau (erste 5 Zeilen):\n${preview}\n\nImportieren? (${lines.length-1} Zeilen)`)) return;
-
                 let imported = 0;
-                let progress = document.createElement('div');
-                progress.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;z-index:10000;';
-                progress.innerHTML = '<div id="progress">0%</div><div id="status">Starte Import...</div>';
+                const progress = document.createElement('div');
+                progress.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                progress.innerHTML = '<div style="background:white;padding:30px;border-radius:12px;text-align:center;min-width:300px;"><div id="progress" style="font-size:24px;font-weight:bold;margin-bottom:10px;">0%</div><div id="status">Importiere...</div></div>';
                 document.body.appendChild(progress);
-
                 lines.slice(1).forEach((line, i) => {
                     const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
                     if (cols.length >= 5) {
-                        const newTool = cols[4].trim();
+                        const newTool = cols[4];
                         resources.push({
-                            topic: cols[0], subject: cols[1], grade: cols[2],
-                            competence: cols[3], tool: newTool, description: cols[5] || '',
-                            favorite: false, lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                            topic: cols[0], subject: cols[1], grade: cols[2], competence: cols[3], tool: newTool,
+                            description: cols[5] || '', favorite: false,
+                            lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
                         });
-                        // TOOL ZUM SET HINZUFÜGEN
                         if (newTool) tools.add(newTool.toLowerCase());
                         imported++;
                     }
-                    document.getElementById('progress').textContent = Math.round((i / lines.length) * 100) + '%';
-                    document.getElementById('status').textContent = `Zeile ${i+1}/${lines.length}`;
+                    const percent = Math.round(((i + 1) / (lines.length - 1)) * 100);
+                    document.getElementById('progress').textContent = `${percent}%`;
+                    document.getElementById('status').textContent = `Zeile ${i + 1}/${lines.length - 1}`;
                 });
-
                 progress.remove();
                 localStorage.setItem('resources', JSON.stringify(resources));
                 alert(`${imported} Ressourcen importiert!`);
-
-                // FILTER AKTUALISIEREN
                 updateToolFilter();
                 applyFilters();
             };
             reader.readAsText(file);
         }
 
-        // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
             const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
             const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
@@ -646,85 +644,56 @@
             link.click();
         }
 
-        // === PDF-EXPORT PERFEKT (wie im Browser) ===
         function exportPDF() {
             const { jsPDF } = window.jspdf;
-            if (resources.length === 0) { alert("Keine Daten!"); return; }
-
+            if (resources.length === 0) return alert("Keine Daten!");
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
             let y = 20;
-
-            // Titel
             doc.setFontSize(18);
             doc.setTextColor(107, 70, 193);
             doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
             y += 10;
-
-            // Export-Datum
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
             y += 15;
-
-            // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0);
-
             resources.forEach((r, i) => {
                 if (y > 270) { doc.addPage(); y = 20; }
-
-                // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
                 doc.text(`${i+1}. ${r.topic}`, 15, y);
-
-                // 2. Details – FARBE + TRENNZEICHEN
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-
-                const x = 15;
-                let currentX = x;
-
-                // Fach (grau)
+                let currentX = 15;
                 doc.setTextColor(100);
-                doc.text(r.subject || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.subject || '—'} | `);
-
-                // Klasse (grau)
-                doc.text(r.grade || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.grade || '—'} | `);
-
-                // Tool: hellgrün
+                doc.text(`${r.subject || '—'} | `, currentX, y + 5); currentX += doc.getTextWidth(`${r.subject || '—'} | `);
+                doc.text(`${r.grade || '—'} | `, currentX, y + 5); currentX += doc.getTextWidth(`${r.grade || '—'} | `);
                 doc.setTextColor(39, 174, 96);
-                doc.text(r.tool || '—', currentX, y + 5);
-                currentX += doc.getTextWidth(`${r.tool || '—'} | `);
-
-                // Kompetenz: magenta
+                doc.text(`${r.tool || '—'} | `, currentX, y + 5); currentX += doc.getTextWidth(`${r.tool || '—'} | `);
                 doc.setTextColor(233, 30, 99);
                 doc.text(r.competence || '—', currentX, y + 5);
-
-                // ZULETZT BEARBEITET
                 if (r.lastModified) {
                     doc.setTextColor(100);
-                    doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
+                    doc.text(`Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
                     y += 5;
                 }
-
-                // Nächster Eintrag: zurück zu 11pt + fett + schwarz
                 doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(0);
                 y += 18;
             });
-
             doc.save('lerndashboard_ressourcen.pdf');
         }
-        
-        ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
+
+        // EVENT LISTENERS
+        ['filterSubject', 'filterGrade', 'filterTool', 'filterCompetence', 'filterFavorite'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
         document.getElementById('searchTopic').addEventListener('input', applyFilters);
 
+        // INIT
         populateSubjectDropdowns();
         applyFilters();
     </script>
