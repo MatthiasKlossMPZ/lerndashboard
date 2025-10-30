@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lerndashboard-v16'; // ← neue Version!
+const CACHE_NAME = 'lerndashboard-v17'; // ← neue Version! 30.9.
 const urlsToCache = [
   '/',
   'index.html',
