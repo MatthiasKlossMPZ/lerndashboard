@@ -24,6 +24,7 @@
             --grade: #50c878;
             --text: #333;
             --text-light: #555;
+            --favorite: #f39c12;
         }
         .dark {
             --bg: #1a1a1a;
@@ -97,6 +98,15 @@
             display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 400px;
         }
         .new-resource-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(107,70,193,0.4); }
+        /* === STATISTIK === */
+        .stats {
+            display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0;
+        }
+        .stat-card {
+            background: var(--card); padding: 16px; border-radius: 12px; flex: 1; min-width: 150px;
+            box-shadow: var(--shadow); text-align: center; font-weight: 600;
+        }
+        .stat-card span { display: block; font-size: 24px; color: var(--primary); margin-top: 8px; }
         /* === RESSOURCEN === */
         .resource-item { display: flex; flex-direction: column; margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
         .resource-item:hover { transform: translateY(-2px); }
@@ -106,17 +116,24 @@
         .grade-tag { background: var(--grade); } .tool-tag { background: var(--tool); } .competence-tag { background: var(--competence); }
         .description { margin-top: 12px; font-size: 14px; color: var(--text-light); background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 3px solid var(--primary); }
         /* === ACTION ICONS === */
-        .action-icons { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
-        .action-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .action-icons { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; align-items: center; }
+        .action-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
         .action-icon:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
+        .action-icon svg { width: 20px; height: 20px; fill: currentColor; }
         .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
         .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
+        .favorite-icon { background: #fff8e1; color: #f39c12; } .favorite-icon.active { background: #f39c12; color: white; }
+        .favorite-icon:hover { background: #f39c12; color: white; }
         .action-icon[aria-label]:hover::after { content: attr(aria-label); position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); background: #333; color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
         /* === FORM === */
         #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        #editForm button { margin-right: 10px; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        #editForm button[type="submit"] { background: var(--primary); color: white; }
+        #editForm button[type="button"] { background: #95a5a6; color: white; }
     </style>
 </head>
 <body>
@@ -212,6 +229,26 @@
             </div>
         </div>
 
+        <!-- STATISTIK -->
+        <div class="stats">
+            <div class="stat-card">
+                <div>Gesamt</div>
+                <span id="statTotal">0</span>
+            </div>
+            <div class="stat-card">
+                <div>Favoriten</div>
+                <span id="statFavorites">0</span>
+            </div>
+            <div class="stat-card">
+                <div>Tools</div>
+                <span id="statTools">0</span>
+            </div>
+            <div class="stat-card">
+                <div>Fächer</div>
+                <span id="statSubjects">0</span>
+            </div>
+        </div>
+
         <!-- EXPORT BUTTONS -->
         <div class="export-buttons">
             <button class="btn csv" onclick="exportCSV()">CSV Export</button>
@@ -238,23 +275,23 @@
         <!-- EDIT FORM -->
         <form id="editForm">
             <div class="form-group">
-                <label>Thema</label>
-                <input type="text" id="editTopic">
+                <label>Thema *</label>
+                <input type="text" id="editTopic" required>
             </div>
             <div class="form-group">
-                <label>Fach</label>
-                <select id="editSubject"></select>
+                <label>Unterrichtsfach *</label>
+                <select id="editSubject" required></select>
             </div>
             <div class="form-group">
-                <label>Klasse</label>
-                <select id="editGrade"></select>
+                <label>Klassenstufe *</label>
+                <select id="editGrade" required></select>
             </div>
             <div class="form-group">
-                <label>Kompetenz</label>
-                <select id="editCompetence"></select>
+                <label>Kompetenzbereich *</label>
+                <select id="editCompetence" required></select>
             </div>
             <div class="form-group">
-                <label>Tool</label>
+                <label>Digitales Hilfsmittel</label>
                 <input type="text" id="editTool">
             </div>
             <div class="form-group">
@@ -266,9 +303,23 @@
         </form>
     </div>
 
+    <!-- SVG SYMBOLS -->
+    <svg style="display:none">
+        <symbol id="edit-icon" viewBox="0 0 24 24">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </symbol>
+        <symbol id="delete-icon" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </symbol>
+        <symbol id="star-icon" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </symbol>
+    </svg>
+
     <script>
+        // === DATEN & KONFIG ===
         let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-        let tools = new Set(resources.map(r => r.tool.toLowerCase()).filter(Boolean));
+        let tools = new Set(resources.map(r => r.tool?.toLowerCase()).filter(Boolean));
         let editIndex = -1;
 
         const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
@@ -282,25 +333,26 @@
             "Analysieren und Reflektieren"
         ];
 
+        // === DARK MODE ===
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
         }
-
         if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
 
+        // === DROPDOWNS ===
         function populateSubjectDropdowns() {
-            subjects.forEach(s => {
-                document.getElementById('filterSubject').add(new Option(s, s));
-                document.getElementById('editSubject').add(new Option(s, s));
+            [document.getElementById('filterSubject'), document.getElementById('editSubject')].forEach(el => {
+                el.innerHTML = '<option value="">Alle</option>';
+                subjects.forEach(s => el.add(new Option(s, s)));
             });
-            grades.forEach(g => {
-                document.getElementById('filterGrade').add(new Option(g, g));
-                document.getElementById('editGrade').add(new Option(g, g));
+            [document.getElementById('filterGrade'), document.getElementById('editGrade')].forEach(el => {
+                el.innerHTML = '<option value="">Alle</option>';
+                grades.forEach(g => el.add(new Option(g, g)));
             });
-            competences.forEach(c => {
-                document.getElementById('filterCompetence').add(new Option(c, c));
-                document.getElementById('editCompetence').add(new Option(c, c));
+            [document.getElementById('filterCompetence'), document.getElementById('editCompetence')].forEach(el => {
+                el.innerHTML = '<option value="">Alle</option>';
+                competences.forEach(c => el.add(new Option(c, c)));
             });
             updateToolFilter();
         }
@@ -309,35 +361,50 @@
             const select = document.getElementById('filterTool');
             select.innerHTML = '<option value="">Alle</option>';
             [...tools].sort().forEach(t => {
-                const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
-                select.add(new Option(capitalized, capitalized));
+                const cap = t.charAt(0).toUpperCase() + t.slice(1);
+                select.add(new Option(cap, cap));
             });
         }
 
+        // === STATISTIK ===
+        function updateStats() {
+            document.getElementById('statTotal').textContent = resources.length;
+            document.getElementById('statFavorites').textContent = resources.filter(r => r.favorite).length;
+            document.getElementById('statTools').textContent = tools.size;
+            document.getElementById('statSubjects').textContent = new Set(resources.map(r => r.subject)).size;
+        }
+
+        // === FILTER & ANZEIGE ===
         function applyFilters() {
-            const subject = document.getElementById('filterSubject').value.toLowerCase();
-            const grade = document.getElementById('filterGrade').value.toLowerCase();
-            const competence = document.getElementById('filterCompetence').value.toLowerCase();
-            const tool = document.getElementById('filterTool').value.toLowerCase();
-            const topic = document.getElementById('searchTopic').value.toLowerCase();
+            const filters = {
+                subject: document.getElementById('filterSubject').value.toLowerCase(),
+                grade: document.getElementById('filterGrade').value.toLowerCase(),
+                competence: document.getElementById('filterCompetence').value.toLowerCase(),
+                tool: document.getElementById('filterTool').value.toLowerCase(),
+                topic: document.getElementById('searchTopic').value.toLowerCase()
+            };
 
             const filtered = resources.filter(r => 
-                (!subject || r.subject.toLowerCase() === subject) &&
-                (!grade || r.grade.toLowerCase() === grade) &&
-                (!competence || r.competence.toLowerCase() === competence) &&
-                (!tool || r.tool.toLowerCase() === tool) &&
-                (!topic || r.topic.toLowerCase().includes(topic))
+                (!filters.subject || r.subject.toLowerCase() === filters.subject) &&
+                (!filters.grade || r.grade.toLowerCase() === filters.grade) &&
+                (!filters.competence || r.competence.toLowerCase() === filters.competence) &&
+                (!filters.tool || r.tool?.toLowerCase() === filters.tool) &&
+                (!filters.topic || r.topic.toLowerCase().includes(filters.topic))
             );
 
             displayResources(filtered);
+            updateStats();
         }
 
         function resetFilters() {
-            document.getElementById('filterSubject').value = '';
-            document.getElementById('filterGrade').value = '';
-            document.getElementById('filterCompetence').value = '';
-            document.getElementById('filterTool').value = '';
+            ['filterSubject','filterGrade','filterCompetence','filterTool'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('searchTopic').value = '';
+            applyFilters();
+        }
+
+        function toggleFavorite(index) {
+            resources[index].favorite = !resources[index].favorite;
+            localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
         }
 
@@ -356,6 +423,9 @@
                         ${r.description ? `<div class="description">${r.description}</div>` : ''}
                     </div>
                     <div class="action-icons">
+                        <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" onclick="toggleFavorite(${i})" aria-label="Favorit">
+                            <svg><use xlink:href="#star-icon"/></svg>
+                        </div>
                         <div class="action-icon edit-icon" onclick="editResource(${i})" aria-label="Bearbeiten">
                             <svg><use xlink:href="#edit-icon"/></svg>
                         </div>
@@ -368,6 +438,7 @@
             });
         }
 
+        // === BEARBEITEN ===
         function editResource(index) {
             editIndex = index;
             const r = resources[index];
@@ -375,8 +446,8 @@
             document.getElementById('editSubject').value = r.subject;
             document.getElementById('editGrade').value = r.grade;
             document.getElementById('editCompetence').value = r.competence;
-            document.getElementById('editTool').value = r.tool;
-            document.getElementById('editDescription').value = r.description;
+            document.getElementById('editTool').value = r.tool || '';
+            document.getElementById('editDescription').value = r.description || '';
             document.getElementById('editForm').style.display = 'block';
         }
 
@@ -389,12 +460,13 @@
             e.preventDefault();
             if (editIndex === -1) return;
             const updated = {
-                topic: document.getElementById('editTopic').value,
+                topic: document.getElementById('editTopic').value.trim(),
                 subject: document.getElementById('editSubject').value,
                 grade: document.getElementById('editGrade').value,
                 competence: document.getElementById('editCompetence').value,
-                tool: document.getElementById('editTool').value,
-                description: document.getElementById('editDescription').value,
+                tool: document.getElementById('editTool').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                favorite: resources[editIndex].favorite,
                 lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
             };
             resources[editIndex] = updated;
@@ -411,364 +483,191 @@
             }
         }
 
+        // === AUTOCOMPLETE ===
         const searchInput = document.getElementById('searchTopic');
         const suggestions = document.getElementById('suggestions');
         searchInput.addEventListener('input', (e) => {
             suggestions.innerHTML = '';
             const val = e.target.value.toLowerCase().trim();
-            if (!val) {
-                suggestions.style.display = 'none';
-                return;
-            }
-            const matches = [...new Set(
-                resources
-                  .map(r => r.topic)
-                  .filter(t => t.toLowerCase().includes(val))
-            )].slice(0, 6);
-            if (matches.length === 0) {
-                suggestions.style.display = 'none';
-                return;
-            }
+            if (!val) { suggestions.style.display = 'none'; return; }
+            const matches = [...new Set(resources.map(r => r.topic).filter(t => t.toLowerCase().includes(val)))].slice(0, 6);
+            if (!matches.length) { suggestions.style.display = 'none'; return; }
             matches.forEach(m => {
                 const div = document.createElement('div');
                 div.textContent = m;
-                div.onclick = () => {
-                    searchInput.value = m;
-                    suggestions.style.display = 'none';
-                    applyFilters();
-                };
+                div.onclick = () => { searchInput.value = m; suggestions.style.display = 'none'; applyFilters(); };
                 suggestions.appendChild(div);
             });
             suggestions.style.display = 'block';
         });
-        // Schließe bei Klick außerhalb
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
                 suggestions.style.display = 'none';
             }
         });
 
-        // === VERBESSERTER CSV-EXPORT (ZIP + Chunked) ===
+        // === CSV-EXPORT (ZIP) ===
         function exportCSV() {
-            if (resources.length === 0) { alert("Keine Daten!"); return; }
-            let chunkSize = 500;
-            let chunks = [];
+            if (resources.length === 0) { showAlert("Keine Daten!"); return; }
+            const chunkSize = 500;
+            const chunks = [];
             for (let i = 0; i < resources.length; i += chunkSize) {
-                let chunk = resources.slice(i, i + chunkSize).map(r => {
+                const chunk = resources.slice(i, i + chunkSize).map(r => {
                     return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
                 }).join('\n');
                 chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
             }
-            let zip = new JSZip();
+            const zip = new JSZip();
             chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
             zip.generateAsync({type: "blob"}).then(content => {
-                let link = document.createElement('a');
+                const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
                 link.download = 'lerndashboard_ressourcen.zip';
                 link.click();
             });
         }
 
-        // === VERBESSERTER CSV-IMPORT (ROBUST & BENUTZERFREUNDLICH) ===
-function importCSV(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const text = e.target.result;
-        let lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l);
-        if (lines.length < 1) { showAlert("CSV-Datei ist leer!"); return; }
-
-        // CSV parsen mit Anführungszeichen-Unterstützung
-        const parsed = parseCSV(lines);
-        if (!parsed || parsed.data.length === 0) { showAlert("Keine gültigen Daten gefunden!"); return; }
-
-        const { header, data } = parsed;
-        const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich'];
-        const missing = required.filter(col => !header.includes(col));
-        if (missing.length > 0) {
-            showAlert(`Fehlende Spalten: ${missing.join(', ')}\n\nGefundene Spalten: ${header.join(', ')}`);
-            return;
-        }
-
-        // Vorschau: erste 8 Zeilen
-        const previewLines = data.slice(0, 8).map(row => {
-            return `${row.Thema || ''} | ${row.Unterrichtsfach || ''} | ${row.Klassenstufe || ''} | ${row.Digitales_Hilfsmittel || ''}`;
-        }).join('\n');
-        const total = data.length;
-
-        if (!confirm(`Vorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\nImportieren? (${total} Ressourcen)`)) return;
-
-        // Import mit Fortschritt
-        importWithProgress(data, header);
-    };
-    reader.readAsText(file, 'UTF-8');
-}
-
-// Hilfsfunktion: Robuster CSV-Parser (mit Anführungszeichen & Zeilenumbrüche in Feldern)
-function parseCSV(lines) {
-    const result = { header: [], data: [] };
-    let headerLine = lines[0];
-    let dataLines = lines.slice(1);
-
-    // Header parsen
-    const headerCells = [];
-    let inQuotes = false;
-    let cell = '';
-    for (let i = 0; i < headerLine.length; i++) {
-        const char = headerLine[i];
-        if (char === '"') {
-            inQuotes = !inQuotes;
-            continue;
-        }
-        if (char === ',' && !inQuotes) {
-            headerCells.push(cell.trim());
-            cell = '';
-        } else {
-            cell += char;
-        }
-    }
-    headerCells.push(cell.trim());
-    result.header = headerCells;
-
-    // Daten parsen
-    for (let line of dataLines) {
-        const row = {};
-        let inQuotes = false;
-        let cell = '';
-        let colIndex = 0;
-
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-                if (i + 1 < line.length && line[i + 1] === '"') {
-                    cell += '"';
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
+        // === CSV-IMPORT (ROBUST) ===
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l);
+                if (lines.length < 1) { showAlert("CSV-Datei ist leer!"); return; }
+                const parsed = parseCSV(lines);
+                if (!parsed || parsed.data.length === 0) { showAlert("Keine gültigen Daten!"); return; }
+                const { header, data } = parsed;
+                const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich'];
+                const missing = required.filter(col => !header.includes(col));
+                if (missing.length > 0) {
+                    showAlert(`Fehlende Spalten: ${missing.join(', ')}\n\nGefunden: ${header.join(', ')}`);
+                    return;
                 }
-                continue;
-            }
-            if (char === ',' && !inQuotes) {
-                const headerKey = result.header[colIndex] || `col${colIndex}`;
-                row[normalizeHeader(headerKey)] = cell.trim();
-                cell = '';
-                colIndex++;
-            } else {
-                cell += char;
-            }
-        }
-        const headerKey = result.header[colIndex] || `col${colIndex}`;
-        row[normalizeHeader(headerKey)] = cell.trim();
-
-        // Nur Zeilen mit mindestens "Thema" importieren
-        if (row.Thema) {
-            result.data.push(row);
-        }
-    }
-
-    return result;
-}
-
-// Normalisiere Spaltennamen
-function normalizeHeader(str) {
-    return str
-        .replace(/Digitales Hilfsmittel/g, 'Digitales_Hilfsmittel')
-        .replace(/Beschreibung/g, 'Beschreibung')
-        .replace(/[^a-zA-Z0-9_]/g, '_');
-}
-
-// Import mit Fortschrittsdialog
-function importWithProgress(data, header) {
-    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    let imported = 0;
-    let skipped = 0;
-    let errors = [];
-
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);
-        display:flex;justify-content:center;align-items:center;z-index:10000;
-        font-family:Segoe UI,sans-serif;
-    `;
-    modal.innerHTML = `
-        <div style="background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-            <h3 style="margin:0 0 16px;color:#6b46c1;">Import läuft...</h3>
-            <div style="background:#f0f0f0;height:12px;border-radius:6px;overflow:hidden;margin:16px 0;">
-                <div id="progressBar" style="background:#6b46c1;width:0%;height:100%;transition:width 0.2s;"></div>
-            </div>
-            <p id="status" style="margin:8px 0;font-size:14px;color:#555;">0 von ${data.length}</p>
-            <p id="log" style="max-height:120px;overflow-y:auto;font-size:13px;color:#333;margin-top:12px;"></p>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    const progressBar = modal.querySelector('#progressBar');
-    const status = modal.querySelector('#status');
-    const log = modal.querySelector('#log');
-
-    const processChunk = (index) => {
-        if (index >= data.length) {
-            modal.remove();
-            const summary = `Import abgeschlossen!\n\n${imported} hinzugefügt\n${skipped} übersprungen (Duplikat)\n${errors.length} Fehler`;
-            showAlert(summary + (errors.length > 0 ? '\n\nFehler: ' + errors.slice(0, 5).join('; ') : ''));
-            localStorage.setItem('resources', JSON.stringify(resources));
-            updateToolFilter();
-            applyFilters();
-            return;
-        }
-
-        const row = data[index];
-        try {
-            const newRes = {
-                topic: (row.Thema || '').trim(),
-                subject: (row.Unterrichtsfach || '').trim(),
-                grade: (row.Klassenstufe || '').trim(),
-                competence: (row.Kompetenzbereich || '').trim(),
-                tool: (row.Digitales_Hilfsmittel || '').trim(),
-                description: (row.Beschreibung || '').trim(),
-                favorite: false,
-                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                const preview = data.slice(0, 8).map(r => `${r.Thema} | ${r.Unterrichtsfach} | ${r.Klassenstufe}`).join('\n');
+                if (!confirm(`Vorschau:\n\n${preview}\n${data.length > 8 ? `\n... +${data.length-8} Zeilen` : ''}\n\nImportieren?`)) return;
+                importWithProgress(data);
             };
+            reader.readAsText(file, 'UTF-8');
+        }
 
-            // Duplikat prüfen (Thema + Fach + Klasse)
-            const duplicate = resources.some(r =>
-                r.topic === newRes.topic &&
-                r.subject === newRes.subject &&
-                r.grade === newRes.grade
-            );
-
-            if (duplicate) {
-                skipped++;
-                log.innerHTML += `<div style="color:#e67e22;">Übersprungen: Duplikat "${newRes.topic}"</div>`;
-            } else if (newRes.topic && newRes.subject && newRes.grade && newRes.competence) {
-                resources.push(newRes);
-                if (newRes.tool) tools.add(newRes.tool.toLowerCase());
-                imported++;
-            } else {
-                errors.push(`Ungültig: ${newRes.topic || 'unbekannt'}`);
-                log.innerHTML += `<div style="color:#e74c3c;">Fehler: Unvollständig "${newRes.topic}"</div>`;
+        function parseCSV(lines) {
+            const result = { header: [], data: [] };
+            let headerLine = lines[0];
+            let dataLines = lines.slice(1);
+            let inQuotes = false, cell = '';
+            for (let i = 0; i < headerLine.length; i++) {
+                const c = headerLine[i];
+                if (c === '"' && headerLine[i+1] === '"') { cell += '"'; i++; }
+                else if (c === '"') inQuotes = !inQuotes;
+                else if (c === ',' && !inQuotes) { result.header.push(cell.trim()); cell = ''; }
+                else cell += c;
             }
-        } catch (err) {
-            errors.push(`Zeile ${index + 2}: ${err.message}`);
+            result.header.push(cell.trim());
+            for (let line of dataLines) {
+                const row = {}; inQuotes = false; cell = ''; let col = 0;
+                for (let i = 0; i < line.length; i++) {
+                    const c = line[i];
+                    if (c === '"' && line[i+1] === '"') { cell += '"'; i++; }
+                    else if (c === '"') inQuotes = !inQuotes;
+                    else if (c === ',' && !inQuotes) { row[normalizeHeader(result.header[col++] || '')] = cell.trim(); cell = ''; }
+                    else cell += c;
+                }
+                row[normalizeHeader(result.header[col] || '')] = cell.trim();
+                if (row.Thema) result.data.push(row);
+            }
+            return result;
         }
 
-        const percent = ((index + 1) / data.length) * 100;
-        progressBar.style.width = percent + '%';
-        status.textContent = `${index + 1} von ${data.length}`;
-        log.scrollTop = log.scrollHeight;
+        function normalizeHeader(str) {
+            return str.replace(/Digitales Hilfsmittel/g, 'Digitales_Hilfsmittel').replace(/Beschreibung/g, 'Beschreibung').replace(/[^a-zA-Z0-9_]/g, '_');
+        }
 
-        setTimeout(() => processChunk(index + 1), 1); // Chunked für UI
-    };
+        function importWithProgress(data) {
+            let imported = 0, skipped = 0, errors = [];
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;font-family:Segoe UI;';
+            modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);"><h3 style="margin:0 0 16px;color:#6b46c1;">Import...</h3><div style="background:#f0f0f0;height:12px;border-radius:6px;overflow:hidden;margin:16px 0;"><div id="pb" style="background:#6b46c1;width:0%;height:100%;transition:width .2s;"></div></div><p id="st">0 von ${data.length}</p><p id="log" style="max-height:120px;overflow-y:auto;font-size:13px;"></p></div>`;
+            document.body.appendChild(modal);
+            const pb = modal.querySelector('#pb'), st = modal.querySelector('#st'), log = modal.querySelector('#log');
 
-    processChunk(0);
-}
+            const process = (i) => {
+                if (i >= data.length) {
+                    modal.remove();
+                    showAlert(`Fertig!\n${imported} hinzugefügt\n${skipped} übersprungen\n${errors.length} Fehler`);
+                    localStorage.setItem('resources', JSON.stringify(resources));
+                    updateToolFilter(); applyFilters();
+                    return;
+                }
+                const row = data[i];
+                try {
+                    const r = {
+                        topic: row.Thema?.trim(), subject: row.Unterrichtsfach?.trim(), grade: row.Klassenstufe?.trim(),
+                        competence: row.Kompetenzbereich?.trim(), tool: row.Digitales_Hilfsmittel?.trim(),
+                        description: row.Beschreibung?.trim(), favorite: false,
+                        lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    };
+                    const dup = resources.some(x => x.topic === r.topic && x.subject === r.subject && x.grade === r.grade);
+                    if (dup) { skipped++; log.innerHTML += `<div style="color:#e67e22;">Duplikat: ${r.topic}</div>`; }
+                    else if (r.topic && r.subject && r.grade && r.competence) { resources.push(r); if (r.tool) tools.add(r.tool.toLowerCase()); imported++; }
+                    else { errors.push(r.topic || 'unbekannt'); log.innerHTML += `<div style="color:#e74c3c;">Fehler: ${r.topic}</div>`; }
+                } catch (e) { errors.push(`Zeile ${i+2}`); }
+                pb.style.width = ((i+1)/data.length*100) + '%';
+                st.textContent = `${i+1} von ${data.length}`;
+                log.scrollTop = log.scrollHeight;
+                setTimeout(() => process(i+1), 1);
+            };
+            process(0);
+        }
 
-function showAlert(message) {
-    const modal = document.createElement('div');
-    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10001;`;
-    modal.innerHTML = `
-        <div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-            <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">${message}</p>
-            <button onclick="this.closest('[style*=\"z-index:10001\"]').remove()" 
-                    style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
-                OK
-            </button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
+        function showAlert(msg) {
+            const m = document.createElement('div');
+            m.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10001;';
+            m.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);"><p style="white-space:pre-line;margin:0 0 16px;">${msg}</p><button onclick="this.closest('[style*=\"z-index:10001\"]').remove()" style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">OK</button></div>`;
+            document.body.appendChild(m);
+        }
 
-        // === BEISPIEL-CSV VORLAGE ===
         function exportTemplate() {
-            const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel-Beschreibung";
-            const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'beispiel-lerndashboard.csv';
-            link.click();
+            const t = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispiel";
+            const b = new Blob(['\uFEFF' + t], { type: 'text/csv;charset=utf-8;' });
+            const l = document.createElement('a');
+            l.href = URL.createObjectURL(b);
+            l.download = 'vorlage.csv';
+            l.click();
         }
 
-// === PDF-EXPORT PERFEKT (wie im Browser) ===
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    if (resources.length === 0) { alert("Keine Daten!"); return; }
-
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
-
-    // Titel
-    doc.setFontSize(18);
-    doc.setTextColor(107, 70, 193);
-    doc.text('LernDashboard – Ressourcen', pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    // Export-Datum
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, y);
-    y += 15;
-
-    // **GLEICHE SCHRIFTGRÖSSE + FARBE VOR DEM LOOP**
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0);
-
-    resources.forEach((r, i) => {
-        if (y > 270) { doc.addPage(); y = 20; }
-
-        // 1. Überschrift: Thema + Nummer (schwarz, 11pt, fett)
-        doc.text(`${i+1}. ${r.topic}`, 15, y);
-
-        // 2. Details – FARBE + TRENNZEICHEN
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-
-        const x = 15;
-        let currentX = x;
-
-        // Fach (grau)
-        doc.setTextColor(100);
-        doc.text(r.subject || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.subject || '—'} | `);
-
-        // Klasse (grau)
-        doc.text(r.grade || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.grade || '—'} | `);
-
-        // Tool: hellgrün
-        doc.setTextColor(39, 174, 96);
-        doc.text(r.tool || '—', currentX, y + 5);
-        currentX += doc.getTextWidth(`${r.tool || '—'} | `);
-
-        // Kompetenz: magenta
-        doc.setTextColor(233, 30, 99);
-        doc.text(r.competence || '—', currentX, y + 5);
-
-        // ZULETZT BEARBEITET
-        if (r.lastModified) {
-            doc.setTextColor(100);
-            doc.text(` Zuletzt bearbeitet: ${r.lastModified}`, 15, y + 10);
-            y += 5;
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            if (!resources.length) { showAlert("Keine Daten!"); return; }
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const w = doc.internal.pageSize.getWidth();
+            let y = 20;
+            doc.setFontSize(18); doc.setTextColor(107, 70, 193);
+            doc.text('LernDashboard – Ressourcen', w / 2, y, { align: 'center' }); y += 15;
+            doc.setFontSize(10); doc.setTextColor(100);
+            doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, 15, y); y += 15;
+            doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+            resources.forEach((r, i) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                doc.text(`${i+1}. ${r.topic}`, 15, y);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                let x = 15; doc.setTextColor(100); doc.text(r.subject || '—', x, y + 5); x += doc.getTextWidth(`${r.subject || '—'} | `);
+                doc.text(r.grade || '—', x, y + 5); x += doc.getTextWidth(`${r.grade || '—'} | `);
+                doc.setTextColor(39, 174, 96); doc.text(r.tool || '—', x, y + 5);
+                doc.setTextColor(233, 30, 99); doc.text(r.competence || '—', x + doc.getTextWidth(`${r.tool || '—'} | `), y + 5);
+                if (r.lastModified) { doc.setTextColor(100); doc.text(`Zuletzt: ${r.lastModified}`, 15, y + 10); y += 5; }
+                doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+                y += 18;
+            });
+            doc.save('lerndashboard.pdf');
         }
 
-        // Nächster Eintrag: zurück zu 11pt + fett + schwarz
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0);
-        y += 18;
-    });
-
-    doc.save('lerndashboard_ressourcen.pdf');
-}
-        
+        // === INIT ===
         ['filterSubject','filterGrade','filterTool','filterCompetence'].forEach(id => {
             document.getElementById(id).addEventListener('change', applyFilters);
         });
         document.getElementById('searchTopic').addEventListener('input', applyFilters);
-
         populateSubjectDropdowns();
         applyFilters();
     </script>
