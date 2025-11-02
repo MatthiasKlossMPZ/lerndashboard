@@ -1084,22 +1084,6 @@ window.addEventListener('message', function(event) {
                 resource.tool = resource.tool.toLowerCase();
                 tools.add(resource.tool);
             }
-            else if (event.data?.action === 'updateResource') {
-    const { index, tool } = event.data;
-    const resource = event.data.resource;
-
-    if (index >= 0 && index < resources.length) {
-        if (resource.tool) {
-            resource.tool = resource.tool.toLowerCase();
-            tools.add(resource.tool);
-        }
-        resources[index] = resource;
-        localStorage.setItem('resources', JSON.stringify(resources));
-        applyFilters();
-        updateToolFilter();
-        showEditConfirmation(); // ← **HIER: NACH allen UI-Updates**
-    }
-}
             resources.push(resource);
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
@@ -1118,6 +1102,7 @@ window.addEventListener('message', function(event) {
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
             updateToolFilter();
+            showEditConfirmation(); // JETZT WIRD SIE GESTARTET!
         }
     }
 });
