@@ -1030,120 +1030,66 @@ function deleteResource(i) {
     populateDropdowns();
     applyFilters();
 
-    // === DEIN BESTEHENDER CODE (bis applyFilters()) ===
+<script>
+    // === DATEN & KONFIG ===
+    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+    let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+    const subjects = ["AWT", /* ... */];
+    const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
+    const competences = [/* ... */];
 
-    // === LÖSCH-MODAL ===
-    let deleteIndex = -1;
-    function showDeleteModal(index) { /* ... */ }
-    function closeDeleteModal() { /* ... */ }
-    function confirmDelete() { /* ... */ }
-    function escapeHtml(text) { /* ... */ }
-    function deleteResource(i) { showDeleteModal(i); }
+    // === HILFSFUNKTIONEN ===
+    function escapeJs(str) { /* ... */ }
+    function setFilterAndApply(/* ... */) { /* ... */ }
 
-    // === MODAL SYSTEM (NEU + BEARBEITEN) ===
-    let modalMode = 'new';
-    let editIndex = -1;
+    // === DARK MODE ===
+    function toggleDarkMode() { /* ... */ }
+    if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
 
-    function openModal(mode = 'new', index = -1) {
-        modalMode = mode;
-        editIndex = index;
-        const modal = document.getElementById('resourceModal');
-        const title = document.getElementById('modalTitle');
-        const saveBtn = document.getElementById('saveButtonText');
-        const form = document.getElementById('resourceForm');
+    // === DROPDOWNS ===
+    function populateDropdowns() { /* ... */ }
+    function updateToolFilter() { /* ... */ }
 
-        populateModalDropdowns();
+    // === STATISTIK ===
+    function updateStats() { /* ... */ }
+    function updateSubjectBarStats() { /* ... */ }
 
-        if (mode === 'edit' && index >= 0 && resources[index]) {
-            const r = resources[index];
-            title.textContent = 'Ressource bearbeiten';
-            saveBtn.textContent = 'Aktualisieren';
-            document.getElementById('modalTopic').value = r.topic;
-            document.getElementById('modalSubject').value = r.subject;
-            document.getElementById('modalGrade').value = r.grade;
-            document.getElementById('modalCompetence').value = r.competence;
-            document.getElementById('modalTool').value = r.tool || '';
-            document.getElementById('modalDescription').value = r.description || '';
-        } else {
-            title.textContent = 'Neue Ressource';
-            saveBtn.textContent = 'Speichern';
-            form.reset();
-        }
+    // === FILTER & ANZEIGE ===
+    function applyFilters() { /* ... */ }
+    function resetFilters() { /* ... */ }
 
-        modal.style.display = 'flex';
-        setTimeout(() => document.getElementById('modalTopic').focus(), 100);
-    }
+    function showAlert(message) { /* ... */ }
+    function toggleFavorite(i) { /* ... */ }
+    function displayResources(list) { /* ... */ }
 
-    function closeModal() {
-        const modal = document.getElementById('resourceModal');
-        const inner = modal.querySelector('.modal-content');
-        inner.classList.add('modal-closing');
-        setTimeout(() => {
-            modal.style.display = 'none';
-            inner.classList.remove('modal-closing');
-            editIndex = -1;
-            modalMode = 'new';
-        }, 200);
-    }
+    // === AUTOCOMPLETE ===
+    const searchInput = document.getElementById('searchTopic');
+    const suggestions = document.getElementById('suggestions');
+    if (searchInput && suggestions) { /* ... */ }
 
-    function populateModalDropdowns() {
-        const addOpts = (id, opts) => {
-            const sel = document.getElementById(id);
-            sel.innerHTML = '<option value="">– Auswählen –</option>';
-            opts.forEach(o => sel.add(new Option(o, o)));
-        };
-        addOpts('modalSubject', subjects);
-        addOpts('modalGrade', grades);
-        addOpts('modalCompetence', competences);
-    }
+    // === CSV-IMPORT ===
+    function importCSV(event) { /* ... */ }
+    function parseCSV(lines) { /* ... */ }
+    function normalizeHeader(str) { /* ... */ }
+    function importWithProgress(data, header) { /* ... */ }
+    function exportTemplate() { /* ... */ }
+    function exportCSV() { /* ... */ }
+    function exportPDF() { /* ... */ }
+    function autoBackup() { /* ... */ }
 
-    document.getElementById('resourceForm').onsubmit = function(e) {
-        e.preventDefault();
-        const topic = document.getElementById('modalTopic').value.trim();
-        if (!topic) return;
-
-        const newRes = {
-            topic,
-            subject: document.getElementById('modalSubject').value,
-            grade: document.getElementById('modalGrade').value,
-            competence: document.getElementById('modalCompetence').value,
-            tool: document.getElementById('modalTool').value.trim().toLowerCase(),
-            description: document.getElementById('modalDescription').value.trim(),
-            favorite: modalMode === 'edit' ? resources[editIndex]?.favorite ?? false : false,
-            lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        };
-
-        if (modalMode === 'edit') {
-            resources[editIndex] = newRes;
-            showAlert('Ressource aktualisiert!');
-        } else {
-            resources.push(newRes);
-            if (newRes.tool) tools.add(newRes.tool);
-            showAlert('Ressource hinzugefügt!');
-        }
-
-        localStorage.setItem('resources', JSON.stringify(resources));
-        updateToolFilter();
-        applyFilters();
-        closeModal();
-    };
-
-    // ESC für beide Modals
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            if (document.getElementById('resourceModal').style.display === 'flex') closeModal();
-            if (document.getElementById('deleteModal').style.display === 'flex') closeDeleteModal();
-        }
+    // === INIT ===
+    ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', applyFilters);
     });
+    const searchEl = document.getElementById('searchTopic');
+    if (searchEl) searchEl.addEventListener('input', applyFilters);
+    if (!navigator.onLine) showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
+    window.addEventListener('online', () => showAlert('Internetverbindung wiederhergestellt.'));
+    window.addEventListener('offline', () => showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.'));
 
-    // Button-Umleitung
-    function openNewResourcePopup() { openModal('new'); }
-    function editResource(i) { openModal('edit', i); }
-
-    // === INIT (am Ende) ===
     populateDropdowns();
     applyFilters();
-
 </script>
 
      <!-- UNIVERSAL-MODAL FÜR NEU + BEARBEITEN -->
@@ -1201,21 +1147,50 @@ function deleteResource(i) {
         v1.2.2 – © Matthias Kloß MPZ NB
     </div>
 
-    <!-- Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
+// === MODAL SYSTEM ===
+    let modalMode = 'new';
+    let editIndex = -1;
+
+    function openModal(mode = 'new', index = -1) { /* ... */ }
+    function closeModal() { /* ... */ }
+    function populateModalDropdowns() { /* ... */ }
+
+    document.getElementById('resourceForm').onsubmit = function(e) { /* ... */ };
+
+    // === LÖSCH-MODAL ===
+    let deleteIndex = -1;
+    function showDeleteModal(index) { /* ... */ }
+    function closeDeleteModal() { /* ... */ }
+    function confirmDelete() { /* ... */ }
+    function escapeHtml(text) { /* ... */ }
+    function deleteResource(i) { showDeleteModal(i); }
+
+    // === BUTTONS ===
+    function openNewResourcePopup() { openModal('new'); }
+    function editResource(i) { openModal('edit', i); }
+
+    // === ESC ===
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (document.getElementById('resourceModal').style.display === 'flex') closeModal();
+            if (document.getElementById('deleteModal').style.display === 'flex') closeDeleteModal();
+        }
+    });
+
+    // === SERVICE WORKER ===
+    if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js').then(reg => {
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker?.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showAlert('Aktualisierung wird geladen...');
-                setTimeout(() => window.location.reload(), 1200);
-              }
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker?.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showAlert('Aktualisierung wird geladen...');
+                        setTimeout(() => window.location.reload(), 1200);
+                    }
+                });
             });
-          });
         });
-      }
-    </script>
+    }
+</script>
 </body>
 </html>
