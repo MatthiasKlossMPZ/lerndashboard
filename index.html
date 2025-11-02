@@ -228,8 +228,12 @@
 .modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.65); z-index: 10002;
-    display: flex; justify-content: center; align-items: center;
+    display: none; /* statt flex */
+    justify-content: center; align-items: center;
     animation: fadeIn 0.25s ease;
+}
+.modal.show {
+    display: flex; /* wird per JS hinzugefügt */
 }
 .modal-content {
     background: var(--card); padding: 24px; border-radius: 16px;
@@ -593,48 +597,50 @@
     }
 
     function displayResources(list) {
-        const c = document.getElementById('resourcesList');
-        if (!c) return;
-        c.innerHTML = '';
-        list.forEach((r, i) => {
-            const realIndex = resources.findIndex(res =>
-                res.topic === r.topic &&
-                res.subject === r.subject &&
-                res.grade === r.grade &&
-                res.competence === r.competence &&
-                (res.tool || '') === (r.tool || '') &&
-                (res.description || '') === (r.description || '')
-            );
-            const d = document.createElement('div');
-            d.className = 'resource-item';
-            d.dataset.index = realIndex >= 0 ? realIndex : i;
-            d.innerHTML = `
-                <div class="resource-content">
-                    <strong>${r.topic}</strong>
-                    <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
-                    <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
-                    <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
-                    ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
-                    ${r.description ? `<div class="description">${r.description}</div>` : ''}
-                    ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
+    const c = document.getElementById('resourcesList');
+    if (!c) return;
+    c.innerHTML = '';
+    list.forEach((r, i) => {
+        const realIndex = resources.findIndex(res =>
+            res.topic === r.topic &&
+            res.subject === r.subject &&
+            res.grade === r.grade &&
+            res.competence === r.competence &&
+            (res.tool || '') === (r.tool || '') &&
+            (res.description || '') === (r.description || '')
+        );
+        const safeIndex = realIndex >= 0 ? realIndex : i;
+
+        const d = document.createElement('div');
+        d.className = 'resource-item';
+        d.dataset.index = safeIndex;
+        d.innerHTML = `
+            <div class="resource-content">
+                <strong>${r.topic}</strong>
+                <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
+                <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
+                <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
+                ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
+                ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
+            </div>
+            <div class="action-icons">
+                <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}"
+                     onclick="toggleFavorite(${safeIndex})">
+                    <svg><use xlink:href="#star-icon"/></svg>
                 </div>
-                <div class="action-icons">
-                    <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}"
-                         onclick="toggleFavorite(${realIndex})">
-                        <svg><use xlink:href="#star-icon"/></svg>
-                    </div>
-                    <div class="action-icon edit-icon"
-                         onclick="editResource(${realIndex})">
-                        <svg><use xlink:href="#edit-icon"/></svg>
-                    </div>
-                    <div class="action-icon delete-icon"
-                         onclick="deleteResource(${realIndex})">
-                        <svg><use xlink:href="#delete-icon"/></svg>
-                    </div>
-                </div>`;
-            c.appendChild(d);
-        });
-    }
+                <div class="action-icon edit-icon"
+                     onclick="editResource(${safeIndex})">
+                    <svg><use xlink:href="#edit-icon"/></svg>
+                </div>
+                <div class="action-icon delete-icon"
+                     onclick="deleteResource(${safeIndex})">
+                    <svg><use xlink:href="#delete-icon"/></svg>
+                </div>
+            </div>`;
+        c.appendChild(d);
+    });
+}
 
     function deleteResource(i) {
         showDeleteModal(i);
@@ -658,11 +664,14 @@
             });
             suggestions.style.display = 'block';
         };
-        document.addEventListener('click', e => {
-            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-                suggestions.style.display = 'none';
-            }
-        });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('resourceModal');
+        const delModal = document.getElementById('deleteModal');
+        if (modal.classList.contains('show')) closeModal();
+        if (delModal.classList.contains('show')) closeDeleteModal();
+    }
+});
     }
 
     // === CSV-IMPORT ===
@@ -883,84 +892,68 @@
         }, 800);
     }
 
-    // === MODAL SYSTEM ===
-    let modalMode = 'new';
-    let editIndex = -1;
+   // === MODAL SYSTEM ===
+let modalMode = 'new';
+let editIndex = -1;
 
-    function openModal(mode = 'new', index = -1) {
-        modalMode = mode;
-        editIndex = index;
-        const modal = document.getElementById('resourceModal');
-        const title = document.getElementById('modalTitle');
-        const form = document.getElementById('resourceForm');
+function openModal(mode = 'new', index = -1) {
+    modalMode = mode;
+    editIndex = index;
+    const modal = document.getElementById('resourceModal');
+    const title = document.getElementById('modalTitle');
 
-        populateModalDropdowns();
+    populateModalDropdowns();
 
-        if (mode === 'edit' && index >= 0) {
-            const r = resources[index];
-            title.textContent = 'Ressource bearbeiten';
-            document.getElementById('modalTopic').value = r.topic || '';
-            document.getElementById('modalSubject').value = r.subject || '';
-            document.getElementById('modalGrade').value = r.grade || '';
-            document.getElementById('modalCompetence').value = r.competence || '';
-            document.getElementById('modalTool').value = r.tool || '';
-            document.getElementById('modalDescription').value = r.description || '';
-        } else {
-            title.textContent = 'Neue Ressource';
-            form.reset();
-        }
-        modal.style.display = 'flex';
+    if (mode === 'edit' && index >= 0 && resources[index]) {
+        const r = resources[index];
+        title.textContent = 'Ressource bearbeiten';
+        document.getElementById('modalTopic').value = r.topic || '';
+        document.getElementById('modalSubject').value = r.subject || '';
+        document.getElementByIndex('modalGrade').value = r.grade || '';
+        document.getElementById('modalCompetence').value = r.competence || '';
+        document.getElementById('modalTool').value = r.tool || '';
+        document.getElementById('modalDescription').value = r.description || '';
+    } else {
+        title.textContent = 'Neue Ressource';
+        document.getElementById('resourceForm').reset();
     }
+    modal.classList.add('show'); // statt style.display = 'flex'
+}
 
-    function closeModal() {
-        document.getElementById('resourceModal').style.display = 'none';
-    }
+function closeModal() {
+    document.getElementById('resourceModal').classList.remove('show');
+}
 
-    function populateModalDropdowns() {
-        const addOptions = (id, options) => {
-            const select = document.getElementById(id);
-            if (select) {
-                select.innerHTML = '';
-                options.forEach(opt => select.add(new Option(opt, opt)));
-            }
-        };
-        addOptions('modalSubject', subjects);
-        addOptions('modalGrade', grades);
-        addOptions('modalCompetence', competences);
-    }
+// === LÖSCH-MODAL ===
+let deleteIndex = -1;
 
-    document.getElementById('resourceForm').onsubmit = function(e) {
-        e.preventDefault();
-        const newRes = {
-            topic: document.getElementById('modalTopic').value.trim(),
-            subject: document.getElementById('modalSubject').value,
-            grade: document.getElementById('modalGrade').value,
-            competence: document.getElementById('modalCompetence').value,
-            tool: document.getElementById('modalTool').value.trim(),
-            description: document.getElementById('modalDescription').value.trim(),
-            favorite: modalMode === 'edit' ? resources[editIndex].favorite : false,
-            lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        };
+function showDeleteModal(index) {
+    if (index < 0 || index >= resources.length) return;
+    deleteIndex = index;
+    const r = resources[index];
+    document.getElementById('deleteModalText').textContent = 
+        `Soll "${r.topic}" wirklich gelöscht werden?\n\nFach: ${r.subject}, Klasse: ${r.grade}`;
+    document.getElementById('deleteModal').classList.add('show');
+}
 
-        if (!newRes.topic || !newRes.subject || !newRes.grade || !newRes.competence) {
-            showAlert('Bitte alle Pflichtfelder ausfüllen!');
-            return;
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+}
+
+function confirmDelete() {
+    if (deleteIndex >= 0 && deleteIndex < resources.length) {
+        const tool = resources[deleteIndex].tool?.toLowerCase();
+        resources.splice(deleteIndex, 1);
+        if (tool && !resources.some(r => r.tool?.toLowerCase() === tool)) {
+            tools.delete(tool);
         }
-
-        if (modalMode === 'new') {
-            resources.push(newRes);
-            if (newRes.tool) tools.add(newRes.tool.toLowerCase());
-        } else {
-            resources[editIndex] = newRes;
-            if (newRes.tool) tools.add(newRes.tool.toLowerCase());
-            else tools.delete(resources[editIndex].tool?.toLowerCase());
-        }
-
         localStorage.setItem('resources', JSON.stringify(resources));
         updateToolFilter();
         applyFilters();
-        closeModal();
-    };
+    }
+    closeDeleteModal();
+    deleteIndex = -1;
+}
 
     // === LÖSCH-MODAL ===
     let deleteIndex = -1;
@@ -1025,59 +1018,59 @@
     applyFilters();
     </script>
 
-    <!-- UNIVERSAL-MODAL FÜR NEU + BEARBEITEN -->
-    <div id="resourceModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3 id="modalTitle" style="margin:0 0 16px; color:var(--primary); font-size:18px;">Neue Ressource</h3>
-            <form id="resourceForm">
-                <div class="form-group">
-                    <label>Thema *</label>
-                    <input type="text" id="modalTopic" required placeholder="z.B. Klimawandel">
-                </div>
-                <div class="form-group">
-                    <label>Unterrichtsfach *</label>
-                    <select id="modalSubject" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Klassenstufe *</label>
-                    <select id="modalGrade" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Kompetenzbereich *</label>
-                    <select id="modalCompetence" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Digitales Hilfsmittel</label>
-                    <input type="text" id="modalTool" placeholder="z.B. GeoGebra, Canva">
-                </div>
-                <div class="form-group">
-                    <label>Beschreibung (optional)</label>
-                    <textarea id="modalDescription" rows="3" placeholder="Kurze Beschreibung..."></textarea>
-                </div>
-                <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
-                    <button type="button" onclick="closeModal()" class="btn-cancel">Abbrechen</button>
-                    <button type="submit" class="btn-save">
-                        <span id="saveButtonText">Speichern</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- LÖSCH-MODAL -->
-    <div id="deleteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:10001; justify-content:center; align-items:center;">
-        <div style="background:var(--card); padding:24px; border-radius:16px; max-width:380px; width:90%; box-shadow:0 12px 40px rgba(0,0,0,0.3); text-align:center; animation:modalFadeIn 0.25s ease;">
-            <h3 style="margin:0 0 12px; color:var(--primary); font-size:18px;">Löschen bestätigen</h3>
-            <p id="deleteModalText" style="margin:12px 0; color:var(--text); line-height:1.5; font-size:14.5px;"></p>
-            <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
-                <button onclick="confirmDelete()" style="background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:600; min-width:100px;">Löschen</button>
-                <button onclick="closeDeleteModal()" style="background:#95a5a6; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:600; min-width:100px;">Abbrechen</button>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="version-info">
         v1.2.2 – © Matthias Kloß MPZ NB
     </div>
+    <!-- UNIVERSAL-MODAL FÜR NEU + BEARBEITEN -->
+<div id="resourceModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="margin:0 0 16px; color:var(--primary); font-size:18px;">Neue Ressource</h3>
+        <form id="resourceForm">
+            <div class="form-group">
+                <label>Thema *</label>
+                <input type="text" id="modalTopic" required placeholder="z.B. Klimawandel">
+            </div>
+            <div class="form-group">
+                <label>Unterrichtsfach *</label>
+                <select id="modalSubject" required></select>
+            </div>
+            <div class="form-group">
+                <label>Klassenstufe *</label>
+                <select id="modalGrade" required></select>
+            </div>
+            <div class="form-group">
+                <label>Kompetenzbereich *</label>
+                <select id="modalCompetence" required></select>
+            </div>
+            <div class="form-group">
+                <label>Digitales Hilfsmittel</label>
+                <input type="text" id="modalTool" placeholder="z.B. GeoGebra, Canva">
+            </div>
+            <div class="form-group">
+                <label>Beschreibung (optional)</label>
+                <textarea id="modalDescription" rows="3" placeholder="Kurze Beschreibung..."></textarea>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
+                <button type="button" onclick="closeModal()" class="btn-cancel">Abbrechen</button>
+                <button type="submit" class="btn-save">
+                    <span id="saveButtonText">Speichern</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- LÖSCH-MODAL -->
+<div id="deleteModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3 style="margin:0 0 12px; color:var(--primary); font-size:18px;">Löschen bestätigen</h3>
+        <p id="deleteModalText" style="margin:12px 0; color:var(--text); line-height:1.5; font-size:14.5px;"></p>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+            <button onclick="confirmDelete()" class="btn-save" style="background:var(--danger);">Löschen</button>
+            <button onclick="closeDeleteModal()" class="btn-cancel">Abbrechen</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
