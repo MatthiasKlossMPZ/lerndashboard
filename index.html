@@ -486,6 +486,9 @@
             <button class="btn print" onclick="window.print()">Drucken</button>
             <label class="btn import">Import<input type="file" accept=".csv" class="file-input" onchange="importCSV(event)"></label>
             <button class="btn template" onclick="exportTemplate()">Vorlage</button>
+            <button class="btn" onclick="autoBackup()" style="background:#2ecc71; color:white;">
+    Backup jetzt
+</button>
         </div>
 
 <button class="new-resource-btn" onclick="openNewResourcePopup()">
@@ -974,6 +977,13 @@ function openNewResourcePopup() {
         footer();
         doc.save('LernDashboard_Ressourcen.pdf');
     }
+        function autoBackup() {
+    const date = new Date().toISOString().slice(0,10); // z. B. 2025-11-02
+    exportCSV(); // Startet den normalen CSV-Export
+    setTimeout(() => {
+        showAlert(`Backup erstellt!\n\nDatei wird heruntergeladen:\nlerndashboard_ressourcen_${date}.zip\n\nTipp: Speichern Sie sie sicher ab!`);
+    }, 800);
+}
 
     // === INIT ===
     ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
