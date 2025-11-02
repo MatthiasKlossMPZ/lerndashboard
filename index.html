@@ -183,36 +183,38 @@
     }
     .version-info:hover { opacity: 1; }
 
-        /* ==================== MOBILE OPTIMIERUNGEN ==================== */
+/* ==================== MOBILE OPTIMIERUNGEN – FINAL ==================== */
 @media (max-width: 768px) {
-    body { padding: 12px; }
-    
-    /* Logo-Header: vertikal stapeln */
+    body { 
+        padding: 10px; 
+        overflow-x: hidden; /* Verhindert horizontales Scrollen */
+    }
+
+    /* --- HEADER --- */
     .logo-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 16px;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        margin-bottom: 18px;
     }
     .logo-left, .logo-right {
         width: 100%;
         justify-content: center;
     }
-    .logo-right svg {
-        height: 60px !important;
-    }
-    .logo-left svg {
-        height: 90px !important;
-    }
-    .logo-title {
-        align-items: center;
-    }
-    .title-main { font-size: 20px; }
-    .title-sub { font-size: 13px; }
+    .logo-left svg { height: 85px !important; }
+    .logo-right svg { height: 55px !important; }
+    .title-main { font-size: 19px; }
+    .title-sub { font-size: 12.5px; }
 
-    /* Filter: vertikal stapeln, schmaler */
+    /* --- FILTER --- */
+    .filter-container { 
+        padding: 12px; 
+        margin-bottom: 14px;
+    }
     .filters {
         flex-direction: column;
+        gap: 10px;
         align-items: stretch;
     }
     .filter-group, .search-container {
@@ -221,92 +223,97 @@
         flex: 1;
     }
     .search-container {
-        margin-right: 0;
-        margin-bottom: 8px;
+        margin: 0;
     }
     .reset-btn {
-        margin-left: 0;
+        margin: 8px 0 0 0;
         align-self: stretch;
-        margin-top: 8px;
+        padding: 10px;
     }
 
-    /* Sidebar: unter den Inhalt, nicht daneben */
+    /* --- CONTENT: Ressourcen VOR Sidebar --- */
     .content-wrapper {
-        flex-direction: column;
-        gap: 16px;
-    }
-    .sidebar {
-        width: 100%;
-        position: static;
-        padding: 14px;
+        flex-direction: column !important;
+        gap: 18px;
     }
 
-    /* Export-Buttons: Zeilenumbruch */
+    /* --- SIDEBAR: KEIN STICKY MEHR, VOLLBREITE --- */
+    .sidebar {
+        width: 100% !important;
+        position: static !important;   /* WICHTIG: sticky deaktivieren */
+        top: auto !important;
+        padding: 14px;
+        order: 2; /* Sidebar NACH Ressourcen */
+        margin-top: 10px;
+        z-index: 1; /* Sicherstellen, dass nichts überlagert */
+    }
+    .resources-container {
+        order: 1;
+        min-width: 0;
+    }
+
+    /* --- EXPORT BUTTONS --- */
     .export-buttons {
-        justify-content: center;
         flex-wrap: wrap;
+        gap: 8px;
+        justify-content: stretch;
     }
     .btn {
-        flex: 1 1 100px;
-        min-width: 80px;
+        flex: 1 1 45%;
+        min-width: 0;
         font-size: 13px;
-        padding: 8px 10px;
+        padding: 9px 8px;
+        white-space: nowrap;
     }
 
-    /* Neue Ressource Button */
+    /* --- NEUE RESSOURCE BUTTON --- */
     .new-resource-btn {
         max-width: 100%;
-        font-size: 16px;
-        padding: 12px 20px;
+        font-size: 15.5px;
+        padding: 13px 18px;
+        margin: 18px auto;
     }
 
-    /* Stats Grid: kleiner */
+    /* --- STATS --- */
     .stats {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
-    .stat-card span {
-        font-size: 18px;
-    }
+    .stat-card span { font-size: 17px; }
 
-    /* Resource Item: kompakter */
+    /* --- RESSOURCEN --- */
     .resource-item {
-        padding: 12px;
-    }
-    .resource-content {
+        padding: 11px;
         font-size: 14px;
     }
-    .action-icons {
-        gap: 6px;
-    }
-    .action-icon {
-        width: 32px;
-        height: 32px;
-    }
-    .action-icon svg {
-        width: 16px;
-        height: 16px;
+    .action-icons { gap: 5px; }
+    .action-icon { width: 30px; height: 30px; }
+    .action-icon svg { width: 15px; height: 15px; }
+
+    /* --- VERSION INFO --- */
+    .version-info {
+        position: fixed;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        text-align: center;
+        font-size: 9.5px;
+        padding: 3px 6px;
+        z-index: 10;
     }
 
-    /* Version-Info: kleiner und zentriert */
-    .version-info {
-        bottom: 6px;
-        right: 6px;
-        left: 6px;
-        text-align: center;
-        font-size: 10px;
-        padding: 3px 6px;
+    /* --- TOUCH OPTIMIERUNG --- */
+    .btn, .action-icon, .tag, .reset-btn, .new-resource-btn, select, input {
+        min-height: 44px;
+        touch-action: manipulation;
     }
 }
 
-/* Sehr kleine Bildschirme (z. B. iPhone SE) */
+/* Sehr kleine Bildschirme */
 @media (max-width: 380px) {
-    .stats {
-        grid-template-columns: 1fr;
-    }
-    .filter-group select, .search-input {
-        font-size: 14px;
-        padding: 7px 8px;
-    }
+    .stats { grid-template-columns: 1fr; }
+    .export-buttons { flex-direction: column; }
+    .btn { flex: 1 1 auto; }
 }
     </style>
 </head>
