@@ -747,7 +747,7 @@ function openNewResourcePopup() {
     if (popup) {
         popup.focus();
     } else {
-        alert('Popup wurde blockiert – bitte erlauben!');
+        showAlert('Popup wurde blockiert – bitte erlauben!');
     }
 }
 
@@ -805,8 +805,9 @@ showConfirm('Sicher löschen?', () => {
                 return `${row.Thema || ''} | ${row.Unterrichtsfach || ''} | ${row.Klassenstufe || ''} | ${row.Digitales_Hilfsmittel || ''}`;
             }).join('\n');
             const total = data.length;
-            if (!confirm(`Vorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\nImportieren? (${total} Ressourcen)`)) return;
-            importWithProgress(data, header);
+            showConfirm(
+    `Importieren?\n\nVorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\n(${total} Ressourcen)`,
+    () => importWithProgress(data, header)
         };
         reader.readAsText(file, 'UTF-8');
     }
