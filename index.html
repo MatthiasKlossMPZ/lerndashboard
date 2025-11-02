@@ -657,6 +657,7 @@
         list.forEach((r, i) => {
             const d = document.createElement('div');
             d.className = 'resource-item';
+            d.dataset.index = resources.indexOf(r); // WICHTIG!
             d.innerHTML = `
                 <div class="resource-content">
                     <strong>${r.topic}</strong>
@@ -665,6 +666,7 @@
                     <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
                     ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
                     ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                    ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
                 </div>
                 <div class="action-icons">
                     <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" onclick="toggleFavorite(${i})" aria-label="Favorit">
@@ -980,22 +982,39 @@ window.addEventListener('offline', () => {
     populateDropdowns();
     applyFilters();
 
-    // === POPUP-KOMMUNIKATION ===
-    window.addEventListener('message', function(event) {
-        if (event.data?.action === 'updateResource') {
-            const { index, resource } = event.data;
-            if (index >= 0 && index < resources.length) {
-                if (resource.tool) {
-                    resource.tool = resource.tool.toLowerCase();
-                    tools.add(resource.tool);
-                }
-                resources[index] = resource;
-                localStorage.setItem('resources', JSON.stringify(resources));
-                applyFilters();
-                updateToolFilter();
+// === POPUP-KOMMUNIKATION (NEU + UPDATE) ===
+window.addEventListener('message', function(event) {
+    // NEUE RESSOURCE HINZUFÜGEN
+    if (event.data?.action === 'addResource') {
+        const resource = event.data.resource;
+        if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
+            if (resource.tool) {
+                resource.tool = resource.tool.toLowerCase();
+                tools.add(resource.tool);
             }
+            resources.push(resource);
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters();
+            updateToolFilter();
+            showAlert('Ressource erfolgreich hinzugefügt!');
         }
-    });
+    }
+    // RESSOURCE AKTUALISIEREN
+    else if (event.data?.action === 'updateResource') {
+        const { index, resource } = event.data;
+        if (index >= 0 && index < resources.length) {
+            if (resource.tool) {
+                resource.tool = resource.tool.toLowerCase();
+                tools.add(resource.tool);
+            }
+            resources[index] = resource;
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters();
+            updateToolFilter();
+            showAlert('Ressource erfolgreich aktualisiert!');
+        }
+    }
+});
 </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
