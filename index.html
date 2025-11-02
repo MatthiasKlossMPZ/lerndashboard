@@ -586,10 +586,6 @@ function openNewResourcePopup() {
         alert('Popup wurde blockiert – bitte erlauben!');
     }
 }
-
-    function deleteResource(i) {
-  openDeleteModal(i);  // ← Nur öffnen!
-}
         
     // === AUTOCOMPLETE ===
     const searchInput = document.getElementById('searchTopic');
@@ -859,6 +855,33 @@ window.addEventListener('offline', () => {
     populateDropdowns();
     applyFilters();
 
+            // === LÖSCH-MODAL (einmalig!) ===
+    let deleteIndex = null;
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+
+    function openDeleteModal(index) {
+      deleteIndex = index;
+      deleteModal.style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      deleteModal.style.display = 'none';
+      deleteIndex = null;
+    }
+
+    cancelDelete.onclick = closeDeleteModal;
+    confirmDelete.onclick = () => {
+      if (deleteIndex !== null) {
+        resources.splice(deleteIndex, 1);
+        localStorage.setItem('resources', JSON.stringify(resources));
+        applyFilters();
+      }
+      closeDeleteModal();
+    };
+        
+
     // === POPUP-KOMMUNIKATION ===
     window.addEventListener('message', function(event) {
         if (event.data?.action === 'updateResource') {
@@ -872,38 +895,10 @@ window.addEventListener('offline', () => {
                 localStorage.setItem('resources', JSON.stringify(resources));
                 applyFilters();
                 updateToolFilter();
-                    applyFilters();
-    updateToolFilter();
-});
-
-// === LÖSCH-MODAL (einmalig!) ===
-let deleteIndex = null;
-const deleteModal = document.getElementById('deleteModal');
-const cancelDelete = document.getElementById('cancelDelete');
-const confirmDelete = document.getElementById('confirmDelete');
-
-function openDeleteModal(index) {
-  deleteIndex = index;
-  deleteModal.style.display = 'flex';
-}
-
-function closeDeleteModal() {
-  deleteModal.style.display = 'none';
-  deleteIndex = null;
-}
-
-cancelDelete.onclick = closeDeleteModal;
-confirmDelete.onclick = () => {
-  if (deleteIndex !== null) {
-    resources.splice(deleteIndex, 1);
-    localStorage.setItem('resources', JSON.stringify(resources));
-    applyFilters();
-  }
-  closeDeleteModal();
-};
             }
         }
     });
+
 </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
