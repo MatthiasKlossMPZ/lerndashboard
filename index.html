@@ -852,10 +852,8 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
     showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
 });
-    populateDropdowns();
-    applyFilters();
 
-            // === LÖSCH-MODAL (einmalig!) ===
+    // === LÖSCH-MODAL (einmalig!) ===
     let deleteIndex = null;
     const deleteModal = document.getElementById('deleteModal');
     const cancelDelete = document.getElementById('cancelDelete');
@@ -880,7 +878,10 @@ window.addEventListener('offline', () => {
       }
       closeDeleteModal();
     };
-        
+
+    // === INIT ===
+    populateDropdowns();
+    applyFilters();
 
     // === POPUP-KOMMUNIKATION ===
     window.addEventListener('message', function(event) {
