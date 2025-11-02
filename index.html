@@ -454,149 +454,149 @@
         <symbol id="star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
     </svg>
 
-    <script>
-    // === DATEN & KONFIG ===
-    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
-    const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
-    const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
-    const competences = [
-        "Suchen, Verarbeiten und Aufbewahren",
-        "Kommunizieren und Kooperieren",
-        "Produzieren und Präsentieren",
-        "Schützen und sicher Agieren",
-        "Problemlösen und Handeln",
-        "Analysieren und Reflektieren"
-    ];
+   <script>
+// === DATEN & KONFIG ===
+let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
+const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
+const competences = [
+    "Suchen, Verarbeiten und Aufbewahren",
+    "Kommunizieren und Kooperieren",
+    "Produzieren und Präsentieren",
+    "Schützen und sicher Agieren",
+    "Problemlösen und Handeln",
+    "Analysieren und Reflektieren"
+];
 
-    // === HILFSFUNKTIONEN ===
-    function escapeJs(str) {
-        if (!str) return '';
-        return str.replace(/'/g, "\\'").replace(/"/g, "\\\"");
+// === HILFSFUNKTIONEN ===
+function escapeJs(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, "\\\"");
+}
+function setFilterAndApply(filterId, value) {
+    const select = document.getElementById(filterId);
+    if (select) {
+        select.value = value;
+        applyFilters();
+        document.querySelector('.filter-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    function setFilterAndApply(filterId, value) {
-        const select = document.getElementById(filterId);
+}
+
+// === DARK MODE ===
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+}
+if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
+
+// === DROPDOWNS ===
+function populateDropdowns() {
+    const addOptions = (id, options) => {
+        const select = document.getElementById(id);
         if (select) {
-            select.value = value;
-            applyFilters();
-            document.querySelector('.filter-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            select.innerHTML = '<option value="">Alle</option>';
+            options.forEach(opt => select.add(new Option(opt, opt)));
         }
-    }
-
-    // === DARK MODE ===
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-    }
-    if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
-
-    // === DROPDOWNS ===
-    function populateDropdowns() {
-        const addOptions = (id, options) => {
-            const select = document.getElementById(id);
-            if (select) {
-                select.innerHTML = '<option value="">Alle</option>';
-                options.forEach(opt => select.add(new Option(opt, opt)));
-            }
-        };
-        addOptions('filterSubject', subjects);
-        addOptions('filterGrade', grades);
-        addOptions('filterCompetence', competences);
-        updateToolFilter();
-    }
-    function updateToolFilter() {
-        const s = document.getElementById('filterTool');
-        if (s) {
-            s.innerHTML = '<option value="">Alle</option>';
-            [...tools].sort().forEach(t => {
-                const display = t.charAt(0).toUpperCase() + t.slice(1);
-                s.add(new Option(display, t));
-            });
-        }
-    }
-
-    // === STATISTIK ===
-    function updateStats() {
-        const els = {
-            statTotal: resources.length,
-            statFavorites: resources.filter(r => r.favorite).length,
-            statTools: tools.size,
-            statSubjects: new Set(resources.map(r => r.subject)).size
-        };
-        Object.entries(els).forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
+    };
+    addOptions('filterSubject', subjects);
+    addOptions('filterGrade', grades);
+    addOptions('filterCompetence', competences);
+    updateToolFilter();
+}
+function updateToolFilter() {
+    const s = document.getElementById('filterTool');
+    if (s) {
+        s.innerHTML = '<option value="">Alle</option>';
+        [...tools].sort().forEach(t => {
+            const display = t.charAt(0).toUpperCase() + t.slice(1);
+            s.add(new Option(display, t));
         });
-        updateSubjectBarStats();
     }
-    function updateSubjectBarStats() {
-        const count = resources.reduce((a, r) => (a[r.subject] = (a[r.subject] || 0) + 1, a), {});
-        const container = document.getElementById('statsFach');
-        if (!container) return;
-        container.innerHTML = '';
-        const max = Math.max(...Object.values(count)) || 1;
-        Object.entries(count)
-            .sort((a, b) => b[1] - a[1])
-            .forEach(([k, v]) => {
-                const div = document.createElement('div');
-                div.className = 'stat-bar';
-                div.innerHTML = `
-                    <label>${k} <span class="bar-value">${v}</span></label>
-                    <div class="bar-container">
-                        <div class="bar" style="width:${(v / max * 100)}%"></div>
-                    </div>`;
-                container.appendChild(div);
-            });
-    }
+}
 
-    // === FILTER & ANZEIGE ===
-    function applyFilters() {
-        const f = {
-            subject: document.getElementById('filterSubject')?.value.toLowerCase() || '',
-            grade: document.getElementById('filterGrade')?.value.toLowerCase() || '',
-            competence: document.getElementById('filterCompetence')?.value.toLowerCase() || '',
-            tool: document.getElementById('filterTool')?.value.toLowerCase() || '',
-            favorite: document.getElementById('filterFavorite')?.value || '',
-            topic: document.getElementById('searchTopic')?.value.toLowerCase() || ''
-        };
-        const filtered = resources.filter(r =>
-            (!f.subject || r.subject.toLowerCase() === f.subject) &&
-            (!f.grade || r.grade.toLowerCase() === f.grade) &&
-            (!f.competence || r.competence.toLowerCase() === f.competence) &&
-            (!f.tool || (r.tool && r.tool.toLowerCase() === f.tool)) &&
-            (f.favorite === '' || r.favorite === (f.favorite === 'true')) &&
-            (!f.topic || r.topic.toLowerCase().includes(f.topic))
-        );
-        displayResources(filtered);
-        updateStats();
-    }
-    function resetFilters() {
-        ['filterSubject','filterGrade','filterCompetence','filterTool','filterFavorite'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
+// === STATISTIK ===
+function updateStats() {
+    const els = {
+        statTotal: resources.length,
+        statFavorites: resources.filter(r => r.favorite).length,
+        statTools: tools.size,
+        statSubjects: new Set(resources.map(r => r.subject)).size
+    };
+    Object.entries(els).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    });
+    updateSubjectBarStats();
+}
+function updateSubjectBarStats() {
+    const count = resources.reduce((a, r) => (a[r.subject] = (a[r.subject] || 0) + 1, a), {});
+    const container = document.getElementById('statsFach');
+    if (!container) return;
+    container.innerHTML = '';
+    const max = Math.max(...Object.values(count)) || 1;
+    Object.entries(count)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([k, v]) => {
+            const div = document.createElement('div');
+            div.className = 'stat-bar';
+            div.innerHTML = `
+                <label>${k} <span class="bar-value">${v}</span></label>
+                <div class="bar-container">
+                    <div class="bar" style="width:${(v / max * 100)}%"></div>
+                </div>`;
+            container.appendChild(div);
         });
-        const search = document.getElementById('searchTopic');
-        if (search) search.value = '';
-        applyFilters();
-    }
+}
 
-    function showAlert(message) {
-        const modal = document.createElement('div');
-        modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10001;`;
-        modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-            <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">${message}</p>
-            <button onclick="this.parentElement.parentElement.remove()" style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">OK</button>
-        </div>`;
-        document.body.appendChild(modal);
-    }
+// === FILTER & ANZEIGE ===
+function applyFilters() {
+    const f = {
+        subject: document.getElementById('filterSubject')?.value.toLowerCase() || '',
+        grade: document.getElementById('filterGrade')?.value.toLowerCase() || '',
+        competence: document.getElementById('filterCompetence')?.value.toLowerCase() || '',
+        tool: document.getElementById('filterTool')?.value.toLowerCase() || '',
+        favorite: document.getElementById('filterFavorite')?.value || '',
+        topic: document.getElementById('searchTopic')?.value.toLowerCase() || ''
+    };
+    const filtered = resources.filter(r =>
+        (!f.subject || r.subject.toLowerCase() === f.subject) &&
+        (!f.grade || r.grade.toLowerCase() === f.grade) &&
+        (!f.competence || r.competence.toLowerCase() === f.competence) &&
+        (!f.tool || (r.tool && r.tool.toLowerCase() === f.tool)) &&
+        (f.favorite === '' || r.favorite === (f.favorite === 'true')) &&
+        (!f.topic || r.topic.toLowerCase().includes(f.topic))
+    );
+    displayResources(filtered);
+    updateStats();
+}
+function resetFilters() {
+    ['filterSubject','filterGrade','filterCompetence','filterTool','filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const search = document.getElementById('searchTopic');
+    if (search) search.value = '';
+    applyFilters();
+}
 
-    function toggleFavorite(i) {
-        resources[i].favorite = !resources[i].favorite;
-        localStorage.setItem('resources', JSON.stringify(resources));
-        applyFilters();
-    }
+function showAlert(message) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10001;`;
+    modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">${message}</p>
+        <button onclick="this.parentElement.parentElement.remove()" style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">OK</button>
+    </div>`;
+    document.body.appendChild(modal);
+}
 
-    function displayResources(list) {
+function toggleFavorite(i) {
+    resources[i].favorite = !resources[i].favorite;
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+}
+
+function displayResources(list) {
     const c = document.getElementById('resourcesList');
     if (!c) return;
     c.innerHTML = '';
@@ -642,259 +642,269 @@
     });
 }
 
-    function deleteResource(i) {
-        showDeleteModal(i);
-    }
+function deleteResource(i) {
+    showDeleteModal(i);
+}
 
-    // === AUTOCOMPLETE ===
-    const searchInput = document.getElementById('searchTopic');
-    const suggestions = document.getElementById('suggestions');
-    if (searchInput && suggestions) {
-        searchInput.oninput = e => {
-            suggestions.innerHTML = '';
-            const v = e.target.value.toLowerCase().trim();
-            if (!v) { suggestions.style.display = 'none'; return; }
-            const m = [...new Set(resources.map(r => r.topic).filter(t => t.toLowerCase().includes(v)))].slice(0, 6);
-            if (!m.length) { suggestions.style.display = 'none'; return; }
-            m.forEach(t => {
-                const d = document.createElement('div');
-                d.textContent = t;
-                d.onclick = () => { searchInput.value = t; suggestions.style.display = 'none'; applyFilters(); };
-                suggestions.appendChild(d);
-            });
-            suggestions.style.display = 'block';
-        };
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        const modal = document.getElementById('resourceModal');
-        const delModal = document.getElementById('deleteModal');
-        if (modal.classList.contains('show')) closeModal();
-        if (delModal.classList.contains('show')) closeDeleteModal();
-    }
-});
-    }
+// === AUTOCOMPLETE ===
+const searchInput = document.getElementById('searchTopic');
+const suggestions = document.getElementById('suggestions');
+if (searchInput && suggestions) {
+    searchInput.oninput = e => {
+        suggestions.innerHTML = '';
+        const v = e.target.value.toLowerCase().trim();
+        if (!v) { suggestions.style.display = 'none'; return; }
+        const m = [...new Set(resources.map(r => r.topic).filter(t => t.toLowerCase().includes(v)))].slice(0, 6);
+        if (!m.length) { suggestions.style.display = 'none'; return; }
+        m.forEach(t => {
+            const d = document.createElement('div');
+            d.textContent = t;
+            d.onclick = () => { searchInput.value = t; suggestions.style.display = 'none'; applyFilters(); };
+            suggestions.appendChild(d);
+        });
+        suggestions.style.display = 'block';
+    };
+    document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
 
-    // === CSV-IMPORT ===
-    function importCSV(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            let lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l);
-            if (lines.length < 1) { showAlert("CSV-Datei ist leer!"); return; }
-            const parsed = parseCSV(lines);
-            if (!parsed || parsed.data.length === 0) { showAlert("Keine gültigen Daten gefunden!"); return; }
-            const { header, data } = parsed;
-            const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich'];
-            const missing = required.filter(col => !header.includes(col));
-            if (missing.length > 0) {
-                showAlert(`Fehlende Spalten: ${missing.join(', ')}\n\nGefundene Spalten: ${header.join(', ')}`);
-                return;
-            }
-            const previewLines = data.slice(0, 8).map(row => {
-                return `${row.Thema || ''} | ${row.Unterrichtsfach || ''} | ${row.Klassenstufe || ''} | ${row.Digitales_Hilfsmittel || ''}`;
-            }).join('\n');
-            const total = data.length;
-            if (!confirm(`Vorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\nImportieren? (${total} Ressourcen)`)) return;
-            importWithProgress(data, header);
-        };
-        reader.readAsText(file, 'UTF-8');
-    }
+// === CSV-IMPORT (funktioniert!) ===
+function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        let lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l);
+        if (lines.length < 1) { showAlert("CSV-Datei ist leer!"); return; }
+        const parsed = parseCSV(lines);
+        if (!parsed || parsed.data.length === 0) { showAlert("Keine gültigen Daten gefunden!"); return; }
+        const { header, data } = parsed;
+        const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich'];
+        const missing = required.filter(col => !header.includes(col));
+        if (missing.length > 0) {
+            showAlert(`Fehlende Spalten: ${missing.join(', ')}\n\nGefundene Spalten: ${header.join(', ')}`);
+            return;
+        }
+        const previewLines = data.slice(0, 8).map(row => {
+            return `${row.Thema || ''} | ${row.Unterrichtsfach || ''} | ${row.Klassenstufe || ''} | ${row.Digitales_Hilfsmittel || ''}`;
+        }).join('\n');
+        const total = data.length;
+        if (!confirm(`Vorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\nImportieren? (${total} Ressourcen)`)) return;
+        importWithProgress(data, header);
+    };
+    reader.readAsText(file, 'UTF-8');
+}
 
-    function parseCSV(lines) {
-        const result = { header: [], data: [] };
-        let headerLine = lines[0];
-        let dataLines = lines.slice(1);
-        const headerCells = [];
+function parseCSV(lines) {
+    const result = { header: [], data: [] };
+    let headerLine = lines[0];
+    let dataLines = lines.slice(1);
+    const headerCells = [];
+    let inQuotes = false;
+    let cell = '';
+    for (let i = 0; i < headerLine.length; i++) {
+        const char = headerLine[i];
+        if (char === '"') { inQuotes = !inQuotes; continue; }
+        if (char === ',' && !inQuotes) { headerCells.push(cell.trim()); cell = ''; } else { cell += char; }
+    }
+    headerCells.push(cell.trim());
+    result.header = headerCells;
+    for (let line of dataLines) {
+        const row = {};
         let inQuotes = false;
         let cell = '';
-        for (let i = 0; i < headerLine.length; i++) {
-            const char = headerLine[i];
-            if (char === '"') { inQuotes = !inQuotes; continue; }
-            if (char === ',' && !inQuotes) { headerCells.push(cell.trim()); cell = ''; } else { cell += char; }
+        let colIndex = 0;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                if (i + 1 < line.length && line[i + 1] === '"') { cell += '"'; i++; } else { inQuotes = !inQuotes; }
+                continue;
+            }
+            if (char === ',' && !inQuotes) {
+                const headerKey = result.header[colIndex] || `col${colIndex}`;
+                row[normalizeHeader(headerKey)] = cell.trim();
+                cell = ''; colIndex++;
+            } else { cell += char; }
         }
-        headerCells.push(cell.trim());
-        result.header = headerCells;
-        for (let line of dataLines) {
-            const row = {};
-            let inQuotes = false;
-            let cell = '';
-            let colIndex = 0;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    if (i + 1 < line.length && line[i + 1] === '"') { cell += '"'; i++; } else { inQuotes = !inQuotes; }
-                    continue;
-                }
-                if (char === ',' && !inQuotes) {
-                    const headerKey = result.header[colIndex] || `col${colIndex}`;
-                    row[normalizeHeader(headerKey)] = cell.trim();
-                    cell = ''; colIndex++;
-                } else { cell += char; }
-            }
-            const headerKey = result.header[colIndex] || `col${colIndex}`;
-            row[normalizeHeader(headerKey)] = cell.trim();
-            if (row.Thema) result.data.push(row);
+        const headerKey = result.header[colIndex] || `col${colIndex}`;
+        row[normalizeHeader(headerKey)] = cell.trim();
+        if (row.Thema) result.data.push(row);
+    }
+    return result;
+}
+
+function normalizeHeader(str) {
+    return str
+        .replace(/Digitales Hilfsmittel/g, 'Digitales_Hilfsmittel')
+        .replace(/Beschreibung/g, 'Beschreibung')
+        .replace(/[^a-zA-Z0-9_]/g, '_');
+}
+
+function importWithProgress(data, header) {
+    let imported = 0, skipped = 0, errors = [];
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;font-family:Segoe UI,sans-serif;`;
+    modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 16px;color:#6b46c1;">Import läuft...</h3>
+        <div style="background:#f0f0f0;height:12px;border-radius:6px;overflow:hidden;margin:16px 0;"><div id="progressBar" style="background:#6b46c1;width:0%;height:100%;transition:width 0.2s;"></div></div>
+        <p id="status" style="margin:8px 0;font-size:14px;color:#555;">0 von ${data.length}</p>
+        <p id="log" style="max-height:120px;overflow-y:auto;font-size:13px;color:#333;margin-top:12px;"></p>
+    </div>`;
+    document.body.appendChild(modal);
+    const progressBar = modal.querySelector('#progressBar');
+    const status = modal.querySelector('#status');
+    const log = modal.querySelector('#log');
+    const processChunk = (index) => {
+        if (index >= data.length) {
+            modal.remove();
+            const summary = `Import abgeschlossen!\n\n${imported} hinzugefügt\n${skipped} übersprungen\n${errors.length} Fehler`;
+            showAlert(summary + (errors.length > 0 ? '\n\nFehler: ' + errors.slice(0, 5).join('; ') : ''));
+            localStorage.setItem('resources', JSON.stringify(resources));
+            updateToolFilter();
+            applyFilters();
+            return;
         }
-        return result;
-    }
-
-    function normalizeHeader(str) {
-        return str
-            .replace(/Digitales Hilfsmittel/g, 'Digitales_Hilfsmittel')
-            .replace(/Beschreibung/g, 'Beschreibung')
-            .replace(/[^a-zA-Z0-9_]/g, '_');
-    }
-
-    function importWithProgress(data, header) {
-        let imported = 0, skipped = 0, errors = [];
-        const modal = document.createElement('div');
-        modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;font-family:Segoe UI,sans-serif;`;
-        modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-            <h3 style="margin:0 0 16px;color:#6b46c1;">Import läuft...</h3>
-            <div style="background:#f0f0f0;height:12px;border-radius:6px;overflow:hidden;margin:16px 0;"><div id="progressBar" style="background:#6b46c1;width:0%;height:100%;transition:width 0.2s;"></div></div>
-            <p id="status" style="margin:8px 0;font-size:14px;color:#555;">0 von ${data.length}</p>
-            <p id="log" style="max-height:120px;overflow-y:auto;font-size:13px;color:#333;margin-top:12px;"></p>
-        </div>`;
-        document.body.appendChild(modal);
-        const progressBar = modal.querySelector('#progressBar');
-        const status = modal.querySelector('#status');
-        const log = modal.querySelector('#log');
-        const processChunk = (index) => {
-            if (index >= data.length) {
-                modal.remove();
-                const summary = `Import abgeschlossen!\n\n${imported} hinzugefügt\n${skipped} übersprungen\n${errors.length} Fehler`;
-                showAlert(summary + (errors.length > 0 ? '\n\nFehler: ' + errors.slice(0, 5).join('; ') : ''));
-                localStorage.setItem('resources', JSON.stringify(resources));
-                updateToolFilter();
-                applyFilters();
-                return;
+        const row = data[index];
+        try {
+            const newRes = {
+                topic: (row.Thema || '').trim(),
+                subject: (row.Unterrichtsfach || '').trim(),
+                grade: (row.Klassenstufe || '').trim(),
+                competence: (row.Kompetenzbereich || '').trim(),
+                tool: (row.Digitales_Hilfsmittel || '').trim(),
+                description: (row.Beschreibung || '').trim(),
+                favorite: false,
+                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            };
+            const duplicate = resources.some(r => r.topic === newRes.topic && r.subject === newRes.subject && r.grade === newRes.grade);
+            if (duplicate) {
+                skipped++;
+                log.innerHTML += `<div style="color:#e67e22;">Übersprungen: Duplikat "${newRes.topic}"</div>`;
+            } else if (newRes.topic && newRes.subject && newRes.grade && newRes.competence) {
+                resources.push(newRes);
+                if (newRes.tool) tools.add(newRes.tool.toLowerCase());
+                imported++;
+            } else {
+                errors.push(`Ungültig: ${newRes.topic || 'unbekannt'}`);
+                log.innerHTML += `<div style="color:#e74c3c;">Fehler: Unvollständig "${newRes.topic}"</div>`;
             }
-            const row = data[index];
-            try {
-                const newRes = {
-                    topic: (row.Thema || '').trim(),
-                    subject: (row.Unterrichtsfach || '').trim(),
-                    grade: (row.Klassenstufe || '').trim(),
-                    competence: (row.Kompetenzbereich || '').trim(),
-                    tool: (row.Digitales_Hilfsmittel || '').trim(),
-                    description: (row.Beschreibung || '').trim(),
-                    favorite: false,
-                    lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                };
-                const duplicate = resources.some(r => r.topic === newRes.topic && r.subject === newRes.subject && r.grade === newRes.grade);
-                if (duplicate) {
-                    skipped++;
-                    log.innerHTML += `<div style="color:#e67e22;">Übersprungen: Duplikat "${newRes.topic}"</div>`;
-                } else if (newRes.topic && newRes.subject && newRes.grade && newRes.competence) {
-                    resources.push(newRes);
-                    if (newRes.tool) tools.add(newRes.tool.toLowerCase());
-                    imported++;
-                } else {
-                    errors.push(`Ungültig: ${newRes.topic || 'unbekannt'}`);
-                    log.innerHTML += `<div style="color:#e74c3c;">Fehler: Unvollständig "${newRes.topic}"</div>`;
-                }
-            } catch (err) {
-                errors.push(`Zeile ${index + 2}: ${err.message}`);
-            }
-            const percent = ((index + 1) / data.length) * 100;
-            progressBar.style.width = percent + '%';
-            status.textContent = `${index + 1} von ${data.length}`;
-            log.scrollTop = log.scrollHeight;
-            setTimeout(() => processChunk(index + 1), 1);
-        };
-        processChunk(0);
-    }
+        } catch (err) {
+            errors.push(`Zeile ${index + 2}: ${err.message}`);
+        }
+        const percent = ((index + 1) / data.length) * 100;
+        progressBar.style.width = percent + '%';
+        status.textContent = `${index + 1} von ${data.length}`;
+        log.scrollTop = log.scrollHeight;
+        setTimeout(() => processChunk(index + 1), 1);
+    };
+    processChunk(0);
+}
 
-    function exportTemplate() {
-        const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispielsatz";
-        const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'beispiel-lerndashboard.csv';
+function exportTemplate() {
+    const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Deutsch,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispielsatz";
+    const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'beispiel-lerndashboard.csv';
+    link.click();
+}
+
+function exportCSV() {
+    if (resources.length === 0) { showAlert("Keine Daten!"); return; }
+    const date = new Date().toISOString().slice(0,10);
+    let chunkSize = 500;
+    let chunks = [];
+    for (let i = 0; i < resources.length; i += chunkSize) {
+        let chunk = resources.slice(i, i + chunkSize).map(r => {
+            return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
+        }).join('\n');
+        chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
+    }
+    let zip = new JSZip();
+    chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
+    zip.generateAsync({type: "blob"}).then(content => {
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `lerndashboard_ressourcen_${date}.zip`;
         link.click();
-    }
+    });
+}
 
-    function exportCSV() {
-        if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-        const date = new Date().toISOString().slice(0,10);
-        let chunkSize = 500;
-        let chunks = [];
-        for (let i = 0; i < resources.length; i += chunkSize) {
-            let chunk = resources.slice(i, i + chunkSize).map(r => {
-                return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
-            }).join('\n');
-            chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
-        }
-        let zip = new JSZip();
-        chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
-        zip.generateAsync({type: "blob"}).then(content => {
-            let link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = `lerndashboard_ressourcen_${date}.zip`;
-            link.click();
-        });
-    }
-
-    function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        let y = 25;
-        let pageNumber = 1;
-        doc.setFontSize(20);
-        doc.setTextColor(107, 70, 193);
-        doc.text('LernDashboard', pageWidth / 2, y, { align: 'center' });
-        y += 8;
-        doc.setFontSize(12);
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    if (resources.length === 0) { showAlert("Keine Daten!"); return; }
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let y = 25;
+    let pageNumber = 1;
+    doc.setFontSize(20);
+    doc.setTextColor(107, 70, 193);
+    doc.text('LernDashboard', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text('Digitale Unterrichtsideen', pageWidth / 2, y, { align: 'center' });
+    y += 15;
+    const footer = () => {
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, pageHeight - 10);
+        doc.text(`Seite ${pageNumber}`, pageWidth - 30, pageHeight - 10);
+    };
+    resources.forEach((r, i) => {
+        if (y > 260) { footer(); doc.addPage(); y = 25; pageNumber++; }
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0);
+        doc.text(`${i+1}. ${r.topic}`, 15, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        let x = 15;
         doc.setTextColor(100);
-        doc.text('Digitale Unterrichtsideen', pageWidth / 2, y, { align: 'center' });
-        y += 15;
-        const footer = () => {
-            doc.setFontSize(9);
+        doc.text(r.grade || '—', x, y + 6); x += 35;
+        doc.setTextColor(233, 30, 99);
+        doc.text(r.competence || '—', x, y + 6); x += 70;
+        doc.setTextColor(39, 174, 96);
+        doc.text(r.tool || '—', x, y + 6);
+        if (r.lastModified) {
             doc.setTextColor(150);
-            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, pageHeight - 10);
-            doc.text(`Seite ${pageNumber}`, pageWidth - 30, pageHeight - 10);
-        };
-        resources.forEach((r, i) => {
-            if (y > 260) { footer(); doc.addPage(); y = 25; pageNumber++; }
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-            doc.text(`${i+1}. ${r.topic}`, 15, y);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            let x = 15;
-            doc.setTextColor(100);
-            doc.text(r.grade || '—', x, y + 6); x += 35;
-            doc.setTextColor(233, 30, 99);
-            doc.text(r.competence || '—', x, y + 6); x += 70;
-            doc.setTextColor(39, 174, 96);
-            doc.text(r.tool || '—', x, y + 6);
-            if (r.lastModified) {
-                doc.setTextColor(150);
-                doc.setFontSize(9);
-                doc.text(`Zuletzt: ${r.lastModified}`, 15, y + 11);
-            }
-            y += 20;
-        });
-        footer();
-        doc.save('LernDashboard_Ressourcen.pdf');
-    }
+            doc.setFontSize(9);
+            doc.text(`Zuletzt: ${r.lastModified}`, 15, y + 11);
+        }
+        y += 20;
+    });
+    footer();
+    doc.save('LernDashboard_Ressourcen.pdf');
+}
 
-    function autoBackup() {
-        exportCSV();
-        setTimeout(() => {
-            showAlert(`Backup erstellt!\n\nDatei wird heruntergeladen:\nlerndashboard_ressourcen_*.zip\n\nTipp: Speichern Sie sie sicher ab!`);
-        }, 800);
-    }
+function autoBackup() {
+    exportCSV();
+    setTimeout(() => {
+        showAlert(`Backup erstellt!\n\nDatei wird heruntergeladen:\nlerndashboard_ressourcen_*.zip\n\nTipp: Speichern Sie sie sicher ab!`);
+    }, 800);
+}
 
-   // === MODAL SYSTEM ===
+// === MODAL SYSTEM ===
 let modalMode = 'new';
 let editIndex = -1;
+
+function populateModalDropdowns() {
+    const addOptions = (id, options) => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '';
+            options.forEach(opt => select.add(new Option(opt, opt)));
+        }
+    };
+    addOptions('modalSubject', subjects);
+    addOptions('modalGrade', grades);
+    addOptions('modalCompetence', competences);
+}
 
 function openModal(mode = 'new', index = -1) {
     modalMode = mode;
@@ -909,7 +919,7 @@ function openModal(mode = 'new', index = -1) {
         title.textContent = 'Ressource bearbeiten';
         document.getElementById('modalTopic').value = r.topic || '';
         document.getElementById('modalSubject').value = r.subject || '';
-        document.getElementByIndex('modalGrade').value = r.grade || '';
+        document.getElementById('modalGrade').value = r.grade || '';
         document.getElementById('modalCompetence').value = r.competence || '';
         document.getElementById('modalTool').value = r.tool || '';
         document.getElementById('modalDescription').value = r.description || '';
@@ -917,7 +927,7 @@ function openModal(mode = 'new', index = -1) {
         title.textContent = 'Neue Ressource';
         document.getElementById('resourceForm').reset();
     }
-    modal.classList.add('show'); // statt style.display = 'flex'
+    modal.classList.add('show');
 }
 
 function closeModal() {
@@ -955,69 +965,73 @@ function confirmDelete() {
     deleteIndex = -1;
 }
 
-    // === LÖSCH-MODAL ===
-    let deleteIndex = -1;
+// === BUTTONS ===
+function openNewResourcePopup() { openModal('new'); }
+function editResource(i) { openModal('edit', i); }
 
-    function showDeleteModal(index) {
-        deleteIndex = index;
-        const r = resources[index];
-        document.getElementById('deleteModalText').textContent = 
-            `Soll "${r.topic}" wirklich gelöscht werden?\n\nFach: ${r.subject}, Klasse: ${r.grade}`;
-        document.getElementById('deleteModal').style.display = 'flex';
+// === FORM SUBMIT ===
+document.getElementById('resourceForm').onsubmit = function(e) {
+    e.preventDefault();
+    const newRes = {
+        topic: document.getElementById('modalTopic').value.trim(),
+        subject: document.getElementById('modalSubject').value,
+        grade: document.getElementById('modalGrade').value,
+        competence: document.getElementById('modalCompetence').value,
+        tool: document.getElementById('modalTool').value.trim(),
+        description: document.getElementById('modalDescription').value.trim(),
+        favorite: modalMode === 'edit' ? resources[editIndex].favorite : false,
+        lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    };
+
+    if (!newRes.topic || !newRes.subject || !newRes.grade || !newRes.competence) {
+        showAlert('Bitte alle Pflichtfelder ausfüllen!');
+        return;
     }
 
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').style.display = 'none';
+    if (modalMode === 'new') {
+        resources.push(newRes);
+        if (newRes.tool) tools.add(newRes.tool.toLowerCase());
+    } else {
+        resources[editIndex] = newRes;
+        if (newRes.tool) tools.add(newRes.tool.toLowerCase());
+        else if (resources[editIndex].tool) tools.delete(resources[editIndex].tool.toLowerCase());
     }
 
-    function confirmDelete() {
-        if (deleteIndex >= 0) {
-            const tool = resources[deleteIndex].tool?.toLowerCase();
-            resources.splice(deleteIndex, 1);
-            if (tool && !resources.some(r => r.tool?.toLowerCase() === tool)) {
-                tools.delete(tool);
-            }
-            localStorage.setItem('resources', JSON.stringify(resources));
-            updateToolFilter();
-            applyFilters();
-        }
-        closeDeleteModal();
-    }
-
-    // === BUTTONS ===
-    function openNewResourcePopup() { openModal('new'); }
-    function editResource(i) { openModal('edit', i); }
-
-    // === ESC ===
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('resourceModal');
-            const delModal = document.getElementById('deleteModal');
-            if (modal.style.display === 'flex') closeModal();
-            if (delModal.style.display === 'flex') closeDeleteModal();
-        }
-    });
-
-    // === INIT ===
-    ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', applyFilters);
-    });
-    const searchEl = document.getElementById('searchTopic');
-    if (searchEl) searchEl.addEventListener('input', applyFilters);
-    if (!navigator.onLine) {
-        showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
-    }
-    window.addEventListener('online', () => {
-        showAlert('Internetverbindung wiederhergestellt.');
-    });
-    window.addEventListener('offline', () => {
-        showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
-    });
-    populateDropdowns();
+    localStorage.setItem('resources', JSON.stringify(resources));
+    updateToolFilter();
     applyFilters();
-    </script>
+    closeModal();
+};
 
+// === ESC ===
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('resourceModal');
+        const delModal = document.getElementById('deleteModal');
+        if (modal.classList.contains('show')) closeModal();
+        if (delModal.classList.contains('show')) closeDeleteModal();
+    }
+});
+
+// === INIT ===
+['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyFilters);
+});
+const searchEl = document.getElementById('searchTopic');
+if (searchEl) searchEl.addEventListener('input', applyFilters);
+if (!navigator.onLine) {
+    showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
+}
+window.addEventListener('online', () => {
+    showAlert('Internetverbindung wiederhergestellt.');
+});
+window.addEventListener('offline', () => {
+    showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
+});
+populateDropdowns();
+applyFilters();
+</script>
     
     <div class="version-info">
         v1.2.2 – © Matthias Kloß MPZ NB
