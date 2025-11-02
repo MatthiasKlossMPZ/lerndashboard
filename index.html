@@ -1113,6 +1113,20 @@ window.addEventListener('message', function(event) {
         }
     }
 });
+             if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker?.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showAlert('Aktualisierung wird geladen...');
+            setTimeout(() => window.location.reload(), 1200);
+          }
+        });
+      });
+    });
+  }
+ </script>  <!-- ← ENDE SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
      <!-- Version-Info -->
@@ -1218,19 +1232,6 @@ window.addEventListener('message', function(event) {
     </div>
 </div>
     
-     if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker?.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showAlert('Aktualisierung wird geladen...');
-            setTimeout(() => window.location.reload(), 1200);
-          }
-        });
-      });
-    });
-  }
-</script>
+
 </body>
 </html>
