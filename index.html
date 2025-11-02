@@ -1053,6 +1053,12 @@ function showEditConfirmation() {
         anim.classList.remove('edit-active');
     }, 1600);
 }
+        // === HINZUFÜGEN BESTÄTIGUNG ===
+function showAddConfirmation() {
+    const anim = document.getElementById('addAnimation');
+    anim.classList.add('add-active');
+    setTimeout(() => anim.classList.remove('add-active'), 1600);
+}
     // === INIT ===
     ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
         const el = document.getElementById(id);
@@ -1088,6 +1094,7 @@ window.addEventListener('message', function(event) {
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
             updateToolFilter();
+            showAddConfirmation(); // HINZUFÜGEN
         }
     }
     // RESSOURCE AKTUALISIEREN
@@ -1102,12 +1109,10 @@ window.addEventListener('message', function(event) {
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
             updateToolFilter();
-            showEditConfirmation(); 
-            showAddConfirmation();
+            showEditConfirmation(); // BEARBEITEN
         }
     }
 });
-</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
      <!-- Version-Info -->
@@ -1151,6 +1156,8 @@ window.addEventListener('message', function(event) {
         .delete-active > div { transform: scale(1) !important; opacity: 1 !important; }
         .edit-active { display: flex !important; }
          .edit-active > div { transform: scale(1) !important; opacity: 1 !important; }
+        .add-active { display: flex !important; }
+         .add-active > div { transform: scale(1) !important; opacity: 1 !important; }
     </style>
 <!-- === BEARBEITUNGS-BESTÄTIGUNG (ANIMATION – OHNE TON) === -->
 <div id="editAnimation" style="
