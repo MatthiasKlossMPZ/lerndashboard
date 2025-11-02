@@ -649,6 +649,7 @@
 
 function showAlert(message, callback) {
     const modal = document.createElement('div');
+    modal.className = 'modal-outer';
     modal.style.cssText = `
         position:fixed;top:0;left:0;width:100%;height:100%;
         background:rgba(0,0,0,0.6);display:flex;justify-content:center;
@@ -660,23 +661,41 @@ function showAlert(message, callback) {
             text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);
         ">
             <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">
-                ${message}
+                ${message.replace(/\n/g, '<br>')}
             </p>
             <div style="display:flex;gap:10px;justify-content:center;">
-                <button onclick="this.closest('.modal-outer')?.remove(); ${callback ? callback + '()' : ''}" 
+                <button id="alert-ok-btn" 
                         style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
                     OK
                 </button>
                 ${callback ? `
-                <button onclick="this.closest('.modal-outer')?.remove()" 
+                <button id="alert-cancel-btn" 
                         style="background:#95a5a6;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
                     Abbrechen
                 </button>` : ''}
             </div>
         </div>
     `;
-    modal.className = 'modal-outer';
     document.body.appendChild(modal);
+
+    const removeModal = () => modal.remove();
+
+    // Jetzt mit korrekten IDs!
+    modal.querySelector('#alert-ok-btn')?.addEventListener('click', () => {
+        removeModal();
+        if (callback) callback();
+    });
+
+    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', removeModal);
+
+    // Optional: ESC zum Abbrechen
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            removeModal();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
 }
 
 function toggleFavorite(i) {
