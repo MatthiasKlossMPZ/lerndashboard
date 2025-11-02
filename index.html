@@ -668,20 +668,22 @@
                     ${r.description ? `<div class="description">${r.description}</div>` : ''}
                     ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
                 </div>
-                <div class="action-icons">
-                    <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" onclick="toggleFavorite(${i})" aria-label="Favorit">
-                        <svg><use xlink:href="#star-icon"/></svg>
-                    </div>
-                    <div class="action-icon edit-icon" onclick="editResource(${i})" aria-label="Bearbeiten">
-                        <svg><use xlink:href="#edit-icon"/></svg>
-                    </div>
-                    <div class="action-icon delete-icon" onclick="deleteResource(${i})" aria-label="Löschen">
-                        <svg><use xlink:href="#delete-icon"/></svg>
-                    </div>
-                </div>`;
-            c.appendChild(d);
-        });
-    }
+          <div class="action-icons">
+            <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" 
+                 onclick="toggleFavorite(${resources.indexOf(r)})">
+                <svg><use xlink:href="#star-icon"/></svg>
+            </div>
+            <div class="action-icon edit-icon" 
+                 onclick="editResource(${resources.indexOf(r)})">
+                <svg><use xlink:href="#edit-icon"/></svg>
+            </div>
+            <div class="action-icon delete-icon" 
+                 onclick="deleteResource(${resources.indexOf(r)})">
+                <svg><use xlink:href="#delete-icon"/></svg>
+            </div>
+        </div>`;
+    c.appendChild(d);
+});
 
     // === BEARBEITEN ===
     function editResource(i) {
