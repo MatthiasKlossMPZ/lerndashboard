@@ -778,9 +778,9 @@ function deleteResource(i) {
     const resource = resources[i];
     if (!resource) return;
 
-    // 1. Animation starten
+    // 1. Animation starten – RICHTIGE ELEMENT!
     const anim = document.getElementById('deleteAnimation');
-    document.getElementById('deleteAnimation').classList.add('delete-active');
+    anim.classList.add('delete-active');
 
     // 2. Ton (optional)
     try {
@@ -791,15 +791,12 @@ function deleteResource(i) {
 
     // 3. Nach 1,6s löschen + aufräumen
     setTimeout(() => {
-        // Ressource löschen
         resources.splice(i, 1);
         localStorage.setItem('resources', JSON.stringify(resources));
-
-        // Liste aktualisieren
         applyFilters();
 
-        // Animation beenden
-        document.body.classList.remove('delete-active');
+        // Animation beenden – RICHTIGE ELEMENT!
+        anim.classList.remove('delete-active');
     }, 1600);
 }
 
