@@ -906,6 +906,19 @@ function populateModalDropdowns() {
     addOptions('modalCompetence', competences);
 }
 
+function populateModalDropdowns() {
+    const addOptions = (id, options) => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '';
+            options.forEach(opt => select.add(new Option(opt, opt)));
+        }
+    };
+    addOptions('modalSubject', subjects);
+    addOptions('modalGrade', grades);
+    addOptions('modalCompetence', competences);
+}
+
 function openModal(mode = 'new', index = -1) {
     modalMode = mode;
     editIndex = index;
