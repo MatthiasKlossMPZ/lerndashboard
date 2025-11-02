@@ -660,40 +660,52 @@ function toggleFavorite(i) {
     applyFilters();
 }
 
-    function displayResources(list) {
-        const c = document.getElementById('resourcesList');
-        if (!c) return;
-        c.innerHTML = '';
-        list.forEach((r, i) => {
-            const d = document.createElement('div');
-            d.className = 'resource-item';
-            d.dataset.index = resources.indexOf(r); // WICHTIG!
-            d.innerHTML = `
-                <div class="resource-content">
-                    <strong>${r.topic}</strong>
-                    <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
-                    <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
-                    <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
-                    ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
-                    ${r.description ? `<div class="description">${r.description}</div>` : ''}
-                    ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
+function displayResources(list) {
+    const c = document.getElementById('resourcesList');
+    if (!c) return;
+    c.innerHTML = '';
+    list.forEach((r, i) => {
+        // SICHERER INDEX: Vergleich aller Felder
+        const realIndex = resources.findIndex(res => 
+            res.topic === r.topic && 
+            res.subject === r.subject && 
+            res.grade === r.grade && 
+            res.competence === r.competence &&
+            (res.tool || '') === (r.tool || '') &&
+            (res.description || '') === (r.description || '')
+        );
+
+        const d = document.createElement('div');
+        d.className = 'resource-item';
+        d.dataset.index = realIndex >= 0 ? realIndex : i; // Fallback
+
+        d.innerHTML = `
+            <div class="resource-content">
+                <strong>${r.topic}</strong>
+                <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
+                <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
+                <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
+                ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
+                ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
+            </div>
+            <div class="action-icons">
+                <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}"
+                     onclick="toggleFavorite(${realIndex})">
+                    <svg><use xlink:href="#star-icon"/></svg>
                 </div>
-          <div class="action-icons">
-            <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}" 
-                 onclick="toggleFavorite(${resources.indexOf(r)})">
-                <svg><use xlink:href="#star-icon"/></svg>
-            </div>
-            <div class="action-icon edit-icon" 
-                 onclick="editResource(${resources.indexOf(r)})">
-                <svg><use xlink:href="#edit-icon"/></svg>
-            </div>
-            <div class="action-icon delete-icon" 
-                 onclick="deleteResource(${resources.indexOf(r)})">
-                <svg><use xlink:href="#delete-icon"/></svg>
-            </div>
-        </div>`;
-    c.appendChild(d);
-});
+                <div class="action-icon edit-icon"
+                     onclick="editResource(${realIndex})">
+                    <svg><use xlink:href="#edit-icon"/></svg>
+                </div>
+                <div class="action-icon delete-icon"
+                     onclick="deleteResource(${realIndex})">
+                    <svg><use xlink:href="#delete-icon"/></svg>
+                </div>
+            </div>`;
+        c.appendChild(d);
+    });
+}
 
     // === BEARBEITEN ===
     function editResource(i) {
