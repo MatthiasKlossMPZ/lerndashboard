@@ -2,191 +2,241 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Neue Ressource – LernDashboard</title>
+    <title>Neue Ressource</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        :root { 
-            --primary: #6b46c1; 
-            --card: #ffffff; 
-            --bg: #f5f7fa; 
-            --shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        :root {
+            --primary: #6b46c1;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #333;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .dark { 
-            --bg: #1a1a1a; 
-            --card: #2d2d2d; 
-            color: #e0e0e0; 
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            color: #333; 
-            padding: 20px; 
-            margin: 0; 
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
         }
-        .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: var(--card); 
-            padding: 24px; 
-            border-radius: 16px; 
-            box-shadow: var(--shadow); 
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 24px;
+            font-size: 22px;
         }
-        h2 { 
-            color: var(--primary); 
-            margin: 0 0 20px; 
-            text-align: center; 
-            font-size: 22px; 
-            font-weight: 700;
+        .form-group {
+            margin-bottom: 16px;
         }
-        .form-group { 
-            margin-bottom: 16px; 
-        }
-        label { 
-            display: block; 
-            margin-bottom: 6px; 
-            font-weight: 600; 
-            font-size: 14px; 
-            color: #444;
-        }
-        input, select, textarea { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            border-radius: 8px; 
-            font-size: 14px; 
-            background: #fff;
-        }
-        textarea { 
-            min-height: 100px; 
-            resize: vertical; 
-        }
-        .buttons { 
-            display: flex; 
-            gap: 12px; 
-            justify-content: flex-end; 
-            margin-top: 20px; 
-        }
-        button { 
-            padding: 10px 18px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600; 
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
             font-size: 14px;
-            transition: all 0.2s ease;
         }
-        .save { 
-            background: var(--primary); 
-            color: white; 
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
         }
-        .save:hover { 
-            background: #7e5be0; 
-            transform: translateY(-1px); 
+        textarea {
+            min-height: 80px;
+            resize: vertical;
         }
-        .cancel { 
-            background: #95a5a6; 
-            color: white; 
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
         }
-        .cancel:hover { 
-            background: #7f8c8d; 
-            transform: translateY(-1px); 
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        .btn-save {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .required::after {
+            content: " *";
+            color: #e74c3c;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Neue Lernressource hinzufügen</h2>
-        
-        <div class="form-group">
-            <label>Thema *</label>
-            <input type="text" id="topic" required placeholder="z.B. Klimawandel">
-        </div>
-        
-        <div class="form-group">
-            <label>Fach *</label>
-            <select id="subject" required></select>
-        </div>
-        
-        <div class="form-group">
-            <label>Klasse *</label>
-            <select id="grade" required></select>
-        </div>
-        
-        <div class="form-group">
-            <label>Kompetenz *</label>
-            <select id="competence" required></select>
-        </div>
-        
-        <div class="form-group">
-            <label>Tool</label>
-            <input type="text" id="tool" placeholder="z.B. GeoGebra">
-        </div>
-        
-        <div class="form-group">
-            <label>Beschreibung</label>
-            <textarea id="description" placeholder="Lernziele, Ablauf, Tipps..."></textarea>
-        </div>
-
-        <div class="buttons">
-            <button type="button" class="cancel" onclick="window.close()">Abbrechen</button>
-            <button type="button" class="save" id="saveBtn">Speichern</button>
-        </div>
+        <h1>Neue Ressource hinzufügen</h1>
+        <form id="resourceForm">
+            <div class="form-group">
+                <label for="topic" class="required">Thema</label>
+                <input type="text" id="topic" required>
+            </div>
+            <div class="form-group">
+                <label for="subject" class="required">Fach</label>
+                <select id="subject" required>
+                    <option value="">– Fach wählen –</option>
+                    <option>AWT</option><option>Biologie</option><option>Chemie</option>
+                    <option>Deutsch</option><option>Englisch</option><option>Geografie</option>
+                    <option>Geschichte</option><option>Informatik</option><option>Kunst</option>
+                    <option>Mathematik</option><option>Musik</option><option>Physik</option>
+                    <option>Sport</option><option>Wirtschaft</option>
+                    <!-- Füge alle Fächer aus index.html hinzu -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="grade" class="required">Klasse</label>
+                <select id="grade" required>
+                    <option value="">– Klasse wählen –</option>
+                    <option>Klasse 1</option><option>Klasse 2</option><option>Klasse 3</option>
+                    <option>Klasse 4</option><option>Klasse 5</option><option>Klasse 6</option>
+                    <option>Klasse 7</option><option>Klasse 8</option><option>Klasse 9</option>
+                    <option>Klasse 10</option><option>Klasse 11</option><option>Klasse 12</option><option>Klasse 13</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="competence" class="required">Kompetenzbereich</label>
+                <select id="competence" required>
+                    <option value="">– Kompetenz wählen –</option>
+                    <option>Suchen, Verarbeiten und Aufbewahren</option>
+                    <option>Kommunizieren und Kooperieren</option>
+                    <option>Produzieren und Präsentieren</option>
+                    <option>Schützen und sicher Agieren</option>
+                    <option>Problemlösen und Handeln</option>
+                    <option>Analysieren und Reflektieren</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tool">Digitales Tool</label>
+                <input type="text" id="tool" placeholder="z.B. GeoGebra, Padlet">
+            </div>
+            <div class="form-group">
+                <label for="description">Beschreibung (optional)</label>
+                <textarea id="description" placeholder="Kurze Beschreibung der Aktivität..."></textarea>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn-cancel" onclick="cancel()">Abbrechen</button>
+                <button type="button" class="btn-save" onclick="saveAndClose()">Speichern</button>
+            </div>
+        </form>
     </div>
 
     <script>
-        const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
-        const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
-        const competences = [
-            "Suchen, Verarbeiten und Aufbewahren",
-            "Kommunizieren und Kooperieren",
-            "Produzieren und Präsentieren",
-            "Schützen und sicher Agieren",
-            "Problemlösen und Handeln",
-            "Analysieren und Reflektieren"
-        ];
+        // === SCHÖNE BESTÄTIGUNG MIT CHECKMARK ===
+        function showAlert(message, callback) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                background:rgba(0,0,0,0.6);display:flex;justify-content:center;
+                align-items:center;z-index:10001;font-family:Segoe UI,sans-serif;
+            `;
+            modal.innerHTML = `
+                <div style="
+                    background:#fff;padding:32px;border-radius:16px;max-width:400px;
+                    text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);
+                ">
+                    <div style="color:#27ae60;font-size:42px;margin-bottom:16px;">Checkmark</div>
+                    <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
+                        ${message.replace(/\n/g, '<br>')}
+                    </p>
+                    <button id="alert-ok-btn"
+                            style="background:#6b46c1;color:white;border:none;padding:12px 32px;
+                                   border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
+                        OK
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
 
-        function populate(selectId, options) {
-            const s = document.getElementById(selectId);
-            options.forEach(v => s.add(new Option(v, v)));
+            const okBtn = modal.querySelector('#alert-ok-btn');
+            okBtn.focus();
+
+            const closeModal = () => {
+                modal.remove();
+                if (callback) callback();
+            };
+
+            okBtn.addEventListener('click', closeModal);
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
         }
 
-        populate('subject', subjects);
-        populate('grade', grades);
-        populate('competence', competences);
-
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            const r = {
+        // === SPEICHERN UND SCHLIEßEN ===
+        function saveAndClose() {
+            const resource = {
                 topic: document.getElementById('topic').value.trim(),
                 subject: document.getElementById('subject').value,
                 grade: document.getElementById('grade').value,
                 competence: document.getElementById('competence').value,
-                tool: document.getElementById('tool').value.trim().toLowerCase(),
+                tool: document.getElementById('tool').value.trim(),
                 description: document.getElementById('description').value.trim(),
                 favorite: false,
-                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                lastModified: new Date().toLocaleDateString('de-DE')
             };
 
-            if (!r.topic || !r.subject || !r.grade || !r.competence) {
-                alert("Bitte alle Pflichtfelder ausfüllen!");
+            // Validierung
+            if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
+                showAlert('Bitte alle Pflichtfelder ausfüllen!');
                 return;
             }
 
-            if (window.opener) {
+            // 1. Daten an Hauptfenster senden
+            if (window.opener && !window.opener.closed) {
                 window.opener.postMessage({
                     action: 'addResource',
-                    resource: r
+                    resource: resource
                 }, '*');
             }
 
-            alert("Ressource erfolgreich gespeichert!");
-            setTimeout(() => window.close(), 300);
-        });
+            // 2. Browser-Warnung SOFORT deaktivieren
+            const disableWarning = (e) => {
+                e.preventDefault();
+                e.returnValue = '';
+            };
+            window.addEventListener('beforeunload', disableWarning);
 
-        // Dark Mode synchronisieren
-        if (window.opener && window.opener.document.body.classList.contains('dark')) {
-            document.body.classList.add('dark');
+            // 3. Schöne Bestätigung
+            showAlert('Ressource erfolgreich gespeichert!', () => {
+                window.removeEventListener('beforeunload', disableWarning);
+                setTimeout(() => window.close(), 50);
+            });
         }
+
+        // === ABBRECHEN ===
+        function cancel() {
+            if (confirm('Änderungen verwerfen?')) {
+                window.close();
+            }
+        }
+
+        // Fokus auf erstes Feld
+        window.onload = () => document.getElementById('topic').focus();
     </script>
 </body>
 </html>
