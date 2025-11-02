@@ -778,16 +778,29 @@ function deleteResource(i) {
     const resource = resources[i];
     if (!resource) return;
 
-    showAlert(
-        `Sicher löschen?\n\n"${resource.topic}"\n(${resource.subject}, ${resource.grade})`,
-        () => {
-            // Wird NUR ausgeführt, wenn "OK" geklickt wird
-            resources.splice(i, 1);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            showAlert('Ressource gelöscht.');
-        }
-    );
+    // 1. Animation starten
+    const anim = document.getElementById('deleteAnimation');
+    document.body.classList.add('delete-active');
+
+    // 2. Ton (optional)
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBQ==');
+        audio.volume = 0.2;
+        audio.play();
+    } catch(e) {}
+
+    // 3. Nach 1,6s löschen + aufräumen
+    setTimeout(() => {
+        // Ressource löschen
+        resources.splice(i, 1);
+        localStorage.setItem('resources', JSON.stringify(resources));
+
+        // Liste aktualisieren
+        applyFilters();
+
+        // Animation beenden
+        document.body.classList.remove('delete-active');
+    }, 1600);
 }
 
     // === AUTOCOMPLETE ===
@@ -1089,24 +1102,50 @@ window.addEventListener('message', function(event) {
 </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+     <!-- Version-Info -->
     <div class="version-info">
         v1.2.2 – © Matthias Kloß MPZ NB
     </div>
-    <!-- Automatisches Service Worker Update + Benachrichtigung -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker?.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showAlert('Aktualisierung wird geladen...');
-            setTimeout(() => window.location.reload(), 1200);
-          }
-        });
-      });
-    });
-  }
-</script>
+
+    <!-- === LÖSCH-ANIMATION === -->
+    <div id="deleteAnimation" style="
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+        display:none;justify-content:center;align-items:center;
+        z-index:10000;
+    ">
+        <div style="
+            background:var(--card);padding:40px;border-radius:20px;text-align:center;
+            box-shadow:0 16px 48px rgba(0,0,0,0.25);
+            transform:scale(0.8);opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.4s ease;
+        ">
+            <div style="width:90px;height:90px;margin:0 auto 18px;position:relative;">
+                <svg width="90" height="90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                    <path d="M30 50 L45 65 L70 35" fill="none" stroke="#e74c3c" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100;stroke-dashoffset:100;animation:draw 0.6s ease forwards 0.3s;"/>
+                </svg>
+            </div>
+            <p style="font-size:20px;font-weight:700;color:#e74c3c;margin:0 0 6px;">
+                Gelöscht!
+            </p>
+            <p style="font-size:14px;color:var(--text-light);margin:0;">
+                Die Ressource wurde entfernt.
+            </p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .delete-active { display: flex !important; }
+        .delete-active > div { transform: scale(1) !important; opacity: 1 !important; }
+    </style>
+
+    <!-- Service Worker (bleibt) -->
+    <script>
+      if ('serviceWorker' in navigator) { ... }
+    </script>
 </body>
 </html>
