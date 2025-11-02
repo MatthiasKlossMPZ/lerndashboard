@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Ressource bearbeiten</title>
+    <style>
+        :root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; padding: 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 24px; border-radius: 16px; box-shadow: var(--shadow); }
+        h2 { color: var(--primary); margin-top: 0; text-align: center; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        textarea { min-height: 100px; resize: vertical; }
+        .buttons { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+        button { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .save { background: var(--primary); color: white; }
+        .cancel { background: #95a5a6; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ressource bearbeiten</h2>
+        <form id="editForm">
+            <div class="form-group"><label>Thema *</label><input type="text" id="editTopic" required></div>
+            <div class="form-group"><label>Fach *</label><select id="editSubject" required></select></div>
+            <div class="form-group"><label>Klasse *</label><select id="editGrade" required></select></div>
+            <div class="form-group"><label>Kompetenz *</label><select id="editCompetence" required></select></div>
+            <div class="form-group"><label>Tool</label><input type="text" id="editTool"></div>
+            <div class="form-group"><label>Beschreibung</label><textarea id="editDescription"></textarea></div>
+            <div class="buttons">
+                <button type="button" class="cancel" onclick="window.close()">Abbrechen</button>
+                <button type="submit" class="save">Speichern</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const index = urlParams.get('index');
+        const data = JSON.parse(decodeURIComponent(urlParams.get('data') || '{}'));
+
+        const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
+        const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
+        const competences = [
+            "Suchen, Verarbeiten und Aufbewahren",
+            "Kommunizieren und Kooperieren",
+            "Produzieren und Präsentieren",
+            "Schützen und sicher Agieren",
+            "Problemlösen und Handeln",
+            "Analysieren und Reflektieren"
+        ];
+
+        function populate(selectId, options) {
+            const s = document.getElementById(selectId);
+            options.forEach(v => s.add(new Option(v, v)));
+        }
+
+        populate('editSubject', subjects);
+        populate('editGrade', grades);
+        populate('editCompetence', competences);
+
+        if (data) {
+            document.getElementById('editTopic').value = data.topic || '';
+            document.getElementById('editSubject').value = data.subject || '';
+            document.getElementById('editGrade').value = data.grade || '';
+            document.getElementById('editCompetence').value = data.competence || '';
+            document.getElementById('editTool').value = data.tool || '';
+            document.getElementById('editDescription').value = data.description || '';
+        }
+
+        document.getElementById('editForm').onsubmit = e => {
+            e.preventDefault();
+            const updated = {
+                topic: document.getElementById('editTopic').value.trim(),
+                subject: document.getElementById('editSubject').value,
+                grade: document.getElementById('editGrade').value,
+                competence: document.getElementById('editCompetence').value,
+                tool: document.getElementById('editTool').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                favorite: data.favorite || false,
+                lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            };
+
+            // Rückgabe an Elternfenster
+            window.opener.postMessage({
+                action: 'updateResource',
+                index: index,
+                resource: updated
+            }, '*');
+
+            window.close();
+        };
+
+        // Dark Mode synchronisieren
+        if (window.opener && window.opener.document.body.classList.contains('dark')) {
+            document.body.classList.add('dark');
+        }
+    </script>
+</body>
+</html>
