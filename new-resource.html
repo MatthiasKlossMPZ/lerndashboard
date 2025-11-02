@@ -265,71 +265,34 @@
 
     <script>
         // === SPEICHERN MIT ANIMATION ===
-        function saveAndClose() {
-            const resource = {
-                topic: document.getElementById('topic').value.trim(),
-                subject: document.getElementById('subject').value,
-                grade: document.getElementById('grade').value,
-                competence: document.getElementById('competence').value,
-                tool: document.getElementById('tool').value.trim(),
-                description: document.getElementById('description').value.trim(),
-                favorite: false,
-                lastModified: new Date().toLocaleDateString('de-DE')
-            };
+function saveAndClose() {
+    const resource = {
+        topic: document.getElementById('topic').value.trim(),
+        subject: document.getElementById('subject').value,
+        grade: document.getElementById('grade').value,
+        competence: document.getElementById('competence').value,
+        tool: document.getElementById('tool').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        favorite: false,
+        lastModified: new Date().toLocaleDateString('de-DE')
+    };
 
-            // Validierung
-            if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
-                alert('Bitte alle Pflichtfelder ausfüllen!');
-                return;
-            }
+    if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
+        alert('Bitte alle Pflichtfelder ausfüllen!');
+        return;
+    }
 
-            // 1. Daten senden
-            if (window.opener && !window.opener.closed) {
-                window.opener.postMessage({
-                    action: 'addResource',
-                    resource: resource
-                }, '*');
-            }
+    // Nur Daten senden → Dashboard zeigt Animation
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({
+            action: 'addResource',
+            resource: resource
+        }, '*');
+    }
 
-            // 2. Browser-Warnung deaktivieren
-            const disableWarning = (e) => {
-                e.preventDefault();
-                e.returnValue = '';
-            };
-            window.addEventListener('beforeunload', disableWarning);
-
-            // 3. Animation starten
-            document.body.classList.add('success-active');
-
-            // 4. Ton (optional)
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBQ==');
-                audio.volume = 0.3;
-                audio.play();
-            } catch(e) {}
-
-            // 5. Nach 1,8s schließen
-            setTimeout(() => {
-                window.removeEventListener('beforeunload', disableWarning);
-                window.close();
-            }, 1800);
-        }
-
-        // === ABBRECHEN ===
-        function cancel() {
-            if (confirm('Änderungen verwerfen?')) {
-                window.close();
-            }
-        }
-
-        // Fokus + Dark Mode Sync
-        window.onload = () => {
-            document.getElementById('topic').focus();
-            // Sync Dark Mode mit Haupt-App
-            if (window.opener && window.opener.document.body.classList.contains('dark')) {
-                document.body.classList.add('dark');
-            }
-        };
+    // Sofort schließen – ohne Animation, ohne Ton
+    window.close();
+}
     </script>
 </body>
 </html>
