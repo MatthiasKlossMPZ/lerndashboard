@@ -655,6 +655,7 @@ function showAlert(message, callback) {
         background:rgba(0,0,0,0.6);display:flex;justify-content:center;
         align-items:center;z-index:10001;
     `;
+
     modal.innerHTML = `
         <div style="
             background:#fff;padding:24px;border-radius:16px;max-width:400px;
@@ -676,6 +677,34 @@ function showAlert(message, callback) {
             </div>
         </div>
     `;
+
+    document.body.appendChild(modal);
+
+    const removeModal = () => {
+        modal.remove();
+        document.removeEventListener('keydown', escHandler);
+    };
+
+    // Klick außerhalb
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) removeModal();
+    });
+
+    // OK Button
+    modal.querySelector('#alert-ok-btn')?.addEventListener('click', () => {
+        removeModal();
+        if (callback) callback();
+    });
+
+    // Abbrechen Button
+    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', removeModal);
+
+    // ESC Taste
+    const escHandler = (e) => {
+        if (e.key === 'Escape') removeModal();
+    };
+    document.addEventListener('keydown', escHandler);
+}
     document.body.appendChild(modal);
 
     const removeModal = () => modal.remove();
