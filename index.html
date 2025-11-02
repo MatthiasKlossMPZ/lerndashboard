@@ -491,8 +491,7 @@
 </button>
         </div>
 
-        
-<button class="new-resource-btn" onclick="openNewResourcePopup()">
+        <button class="new-resource-btn" onclick="openNewResourcePopup()">
     Neue Ressource
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
 </button>
@@ -937,14 +936,17 @@ showConfirm('Sicher löschen?', () => {
             let chunk = resources.slice(i, i + chunkSize).map(r => {
                 return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
             }).join('\n');
-            chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
-        }
+            const header = 'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n';
+chunks.forEach((chunk, i) => {
+    zip.file(`ressourcen_teil_${i+1}.csv`, header + chunk);
+});
         let zip = new JSZip();
         chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
         zip.generateAsync({type: "blob"}).then(content => {
             let link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = 'lerndashboard_ressourcen.zip';
+ const date = new Date().toISOString().slice(0,10);
+link.download = `lerndashboard_ressourcen_${date}.zip`;
             link.click();
         });
     }
@@ -1059,26 +1061,33 @@ window.addEventListener('message', function(event) {
     }
 });
 </script>
+    <!-- 1. jsPDF laden -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+    <!-- 2. HIER EINFÜGEN: jsPDF global verfügbar machen -->
+    <script>
+      window.jsPDF = window.jspdf.jsPDF;
+    </script>
+
+    <!-- 3. Dein restlicher Code bleibt unverändert -->
     <div class="version-info">
         v1.2.2 – © Matthias Kloß MPZ NB
     </div>
     <!-- Automatisches Service Worker Update + Benachrichtigung -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker?.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showAlert('Aktualisierung wird geladen...');
-            setTimeout(() => window.location.reload(), 1200);
-          }
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js').then(reg => {
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker?.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showAlert('Aktualisierung wird geladen...');
+                setTimeout(() => window.location.reload(), 1200);
+              }
+            });
+          });
         });
-      });
-    });
-  }
-</script>
+      }
+    </script>
 </body>
 </html>
