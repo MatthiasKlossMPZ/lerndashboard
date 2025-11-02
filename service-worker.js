@@ -1,10 +1,12 @@
-const CACHE_NAME = 'lerndashboard-v18'; // ← neue Version! 30.9.
+const CACHE_NAME = 'lerndashboard-v17'; // ← neue Version!
 const urlsToCache = [
   '/',
   'index.html',
   'new-resource.html',
+  'edit-resource.html',
   'manifest.json',
   'icon-192.png',
+  'icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
 ];
