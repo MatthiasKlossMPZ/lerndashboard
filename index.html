@@ -780,7 +780,7 @@ function deleteResource(i) {
 
     // 1. Animation starten
     const anim = document.getElementById('deleteAnimation');
-    document.body.classList.add('delete-active');
+    document.getElementById('deleteAnimation').classList.add('delete-active');
 
     // 2. Ton (optional)
     try {
