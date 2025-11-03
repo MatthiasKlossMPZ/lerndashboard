@@ -264,7 +264,8 @@
     </div>
 
     <script>
-        // === SPEICHERN MIT ANIMATION ===
+<script>
+// === SPEICHERN MIT ANIMATION ===
 function saveAndClose() {
     const resource = {
         topic: document.getElementById('topic').value.trim(),
@@ -276,23 +277,36 @@ function saveAndClose() {
         favorite: false,
         lastModified: new Date().toLocaleDateString('de-DE')
     };
-
     if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
         alert('Bitte alle Pflichtfelder ausfüllen!');
         return;
     }
-
-    // Nur Daten senden → Dashboard zeigt Animation
     if (window.opener && !window.opener.closed) {
         window.opener.postMessage({
             action: 'addResource',
             resource: resource
         }, '*');
     }
-
-    // Sofort schließen – ohne Animation, ohne Ton
     window.close();
 }
-    </script>
-</body>
-</html>
+
+// === ABBRECHEN ===
+function cancel() {
+    const hasInput = 
+        document.getElementById('topic').value.trim() ||
+        document.getElementById('subject').value ||
+        document.getElementById('grade').value ||
+        document.getElementById('competence').value ||
+        document.getElementById('tool').value.trim() ||
+        document.getElementById('description').value.trim();
+
+    if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
+        return;
+    }
+
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ action: 'cancelAddResource' }, '*');
+    }
+    window.close();
+}
+</script>
