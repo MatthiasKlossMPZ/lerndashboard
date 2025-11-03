@@ -1460,54 +1460,47 @@ window.addEventListener('message', function(event) {
 });
 // === SERVICE WORKER UPDATE – ROBUST & SICHER ===
 if ('serviceWorker' in navigator) {
-    let registration = null;
-    let updatePromptShown = false;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => {
+        console.log('✅ Service Worker registriert:', reg);
 
-    // Registrieren
-    navigator.serviceWorker.register('service-worker.js')
-        .then(reg => {
-            console.log('%cSW registriert', 'color: green;', reg);
-            registration = reg;
-            trackInstalling(reg);
-            checkForWaitingWorker(reg); // Sofort prüfen
-        })
-        .catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
-
-    // Prüfen, ob bereits ein waiting Worker existiert
-    function checkForWaitingWorker(reg) {
-        if (reg.waiting && !updatePromptShown) {
-            showUpdatePrompt(reg);
-        }
-    }
-
-    // Neue Installation verfolgen
-    function trackInstalling(reg) {
-        const newWorker = reg.installing;
-        if (!newWorker) return;
-
-        newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !updatePromptShown) {
-                showUpdatePrompt(reg);
+        // Wenn ein neuer Service Worker gefunden wird
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('🆕 Neues Update verfügbar');
+              showUpdatePopup(newWorker);
             }
+          });
         });
+      });
+
+    // Nachrichten vom Service Worker empfangen
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data.type === 'UPDATED') {
+        console.log('🔄 Update aktiviert, Seite neu laden');
+        showUpdatePopup();
+      }
+    });
+  });
+}
+
+function showUpdatePopup(newWorker) {
+  // Du kannst das ersetzen durch ein eigenes modales Popup oder UI-Komponente
+  const wantsReload = confirm('Ein Update ist verfügbar! Möchtest du die App neu laden?');
+  if (wantsReload) {
+    // Wenn es einen neuen Worker gibt, sag ihm, er soll sofort übernehmen
+    if (newWorker) {
+      newWorker.postMessage({ action: 'skipWaiting' });
     }
 
-    // Periodische Prüfung alle 30 Sekunden (falls SW extern aktualisiert)
-    setInterval(() => {
-        if (registration) {
-            registration.update().then(() => {
-                checkForWaitingWorker(registration);
-            });
-        }
-    }, 30_000);
-
-    // Bei Fokus (Tab aktiv) → prüfen
-    window.addEventListener('focus', () => {
-        if (registration) {
-            registration.update().then(() => checkForWaitingWorker(registration));
-        }
-    });
+    // Seite neu laden, um den neuen SW zu aktivieren
+    window.location.reload();
+  }
 }
+
 
 // === UPDATE-PROMPT ===
 function showUpdatePrompt(reg) {
