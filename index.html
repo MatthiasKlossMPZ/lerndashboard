@@ -716,11 +716,8 @@ function showAlert(message, callback, cancelText = 'Abbrechen') {
         if (callback) callback();
     });
 
-    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', () => {
-        removeModal();
-    });
+    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', removeModal);
 
-    // ESC = Abbrechen
     const escHandler = (e) => {
         if (e.key === 'Escape') {
             removeModal();
@@ -1222,43 +1219,54 @@ window.addEventListener('message', function(event) {
     }
 });
 if ('serviceWorker' in navigator) {
+  let updateReg = null; // Speichere Registrierung für später
+
+  // 1. Registriere SW
   navigator.serviceWorker.register('service-worker.js')
     .then(reg => {
       console.log('SW registered:', reg);
+      updateReg = reg;
 
-      // 1. Sofort prüfen: Gibt es schon einen wartenden SW?
+      // Sofort prüfen: Gibt es schon einen wartenden SW?
       if (reg.waiting) {
-        showUpdatePrompt(reg);
+        waitForDOM(() => showUpdatePrompt(reg));
       }
 
-      // 2. Update gefunden → warte auf Installation
+      // Update gefunden → warte auf Installation
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showUpdatePrompt(reg);
-          }
-        });
-      });
-
-      // 3. Auch nach 'load' nochmal prüfen (für Edge-Cases)
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.getRegistration().then(currentReg => {
-          if (currentReg && currentReg.waiting && !document.querySelector('#updateModal')) {
-            showUpdatePrompt(currentReg);
+            waitForDOM(() => showUpdatePrompt(reg));
           }
         });
       });
     })
     .catch(err => console.error('SW registration failed:', err));
+
+  // 2. Beim Laden prüfen
+  window.addEventListener('load', () => {
+    if (updateReg && updateReg.waiting && !document.querySelector('.modal-outer')) {
+      showUpdatePrompt(updateReg);
+    }
+  });
+}
+
+// Hilfsfunktion: Warte, bis DOM bereit ist
+function waitForDOM(callback) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', callback);
+  } else {
+    callback();
+  }
 }
 
 // === UPDATE-PROMPT ===
 function showUpdatePrompt(reg) {
   // Verhindere doppelte Popups
-  if (document.querySelector('#updateModal')) return;
+  if (document.querySelector('.modal-outer')) return;
 
   showAlert(
     'Neue Version verfügbar!\n\nJetzt aktualisieren?',
