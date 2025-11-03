@@ -1458,107 +1458,80 @@ window.addEventListener('message', function(event) {
         }
     }
 });
-// === SERVICE WORKER UPDATE MIT 100% SICHEREM POPUP ===
+// === SERVICE WORKER UPDATE – ROBUST & SICHER ===
 if ('serviceWorker' in navigator) {
-  let updateReg = null;
+    let registration = null;
+    let updatePromptShown = false;
 
-  navigator.serviceWorker.register('service-worker.js')
-    .then(reg => {
-      console.log('%cSW registriert', 'color: green; font-weight: bold;', reg);
-      updateReg = reg;
+    // Registrieren
+    navigator.serviceWorker.register('service-worker.js')
+        .then(reg => {
+            console.log('%cSW registriert', 'color: green;', reg);
+            registration = reg;
+            trackInstalling(reg);
+            checkForWaitingWorker(reg); // Sofort prüfen
+        })
+        .catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
 
-      // 1. Sofort prüfen
-      checkForUpdate(reg);
+    // Prüfen, ob bereits ein waiting Worker existiert
+    function checkForWaitingWorker(reg) {
+        if (reg.waiting && !updatePromptShown) {
+            showUpdatePrompt(reg);
+        }
+    }
 
-      // 2. Update gefunden
-      reg.addEventListener('updatefound', () => {
-        console.log('%cUpdate gefunden!', 'color: orange; font-weight: bold;');
+    // Neue Installation verfolgen
+    function trackInstalling(reg) {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
         newWorker.addEventListener('statechange', () => {
-          console.log('%cSW-State:', 'color: blue;', newWorker.state);
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            checkForUpdate(reg);
-          }
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !updatePromptShown) {
+                showUpdatePrompt(reg);
+            }
         });
-      });
-    })
-    .catch(err => console.error('%cSW Fehler:', 'color: red;', err));
-
-  // 3. Nach load nochmal prüfen
-  window.addEventListener('load', () => {
-    console.log('%cSeite geladen – prüfe Update', 'color: purple;');
-    if (updateReg) checkForUpdate(updateReg);
-  });
-}
-
-// Prüft, ob Update wartet – und zeigt Popup NUR wenn DOM bereit
-function checkForUpdate(reg) {
-  if (!reg.waiting) {
-    console.log('%cKein wartender SW', 'color: gray;');
-    return;
-  }
-  if (document.querySelector('.modal-outer')) {
-    console.log('%cPopup bereits offen', 'color: gray;');
-    return;
-  }
-
-  console.log('%cWartender SW gefunden – zeige Popup in 1 Sekunde', 'color: red; font-weight: bold;');
-
-  // WARTE 1 SEKUNDE + DOM + 3 VERSUCHE
-  setTimeout(() => {
-    if (document.body) {
-      showUpdatePrompt(reg);
-    } else {
-      setTimeout(() => showUpdatePrompt(reg), 500);
     }
-  }, 1000);
+
+    // Periodische Prüfung alle 30 Sekunden (falls SW extern aktualisiert)
+    setInterval(() => {
+        if (registration) {
+            registration.update().then(() => {
+                checkForWaitingWorker(registration);
+            });
+        }
+    }, 30_000);
+
+    // Bei Fokus (Tab aktiv) → prüfen
+    window.addEventListener('focus', () => {
+        if (registration) {
+            registration.update().then(() => checkForWaitingWorker(registration));
+        }
+    });
 }
 
 // === UPDATE-PROMPT ===
 function showUpdatePrompt(reg) {
-  if (document.querySelector('.modal-outer')) return;
+    if (updatePromptShown || document.querySelector('.modal-outer')) return;
+    updatePromptShown = true;
 
-  console.log('%cZEIGE POPUP JETZT!', 'color: lime; font-size: 16px; font-weight: bold;');
-
-  showAlert(
-    'Neue Version verfügbar!\n\nJetzt aktualisieren?',
-    () => {
-      console.log('%cUser klickt OK – skipWaiting', 'color: green;');
-      const waitingWorker = reg.waiting || reg.installing;
-      if (waitingWorker) {
-        waitingWorker.postMessage({ action: 'skipWaiting' });
-      }
-      setTimeout(() => {
-        console.log('%cReload in 600ms', 'color: cyan;');
-        window.location.reload();
-      }, 600);
-    },
-    'Später'
-  );
-
-  // Rotes Badge als Backup
-  const badge = document.createElement('div');
-  badge.innerHTML = 'UPDATE';
-  badge.style.cssText = `
-    position:fixed;top:10px;right:10px;z-index:99999;
-    background:#e74c3c;color:white;padding:8px 16px;
-    border-radius:30px;font-size:14px;font-weight:bold;
-    box-shadow:0 4px 12px rgba(0,0,0,0.4);cursor:pointer;
-    animation: pulse 1.5s infinite;
-  `;
-  badge.onclick = () => {
-    const waitingWorker = reg.waiting || reg.installing;
-    if (waitingWorker) waitingWorker.postMessage({ action: 'skipWaiting' });
-    setTimeout(() => window.location.reload(), 600);
-  };
-  document.body.appendChild(badge);
-
-  const style = document.createElement('style');
-  style.textContent = `@keyframes pulse {0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}`;
-  document.head.appendChild(style);
+    showAlert(
+        'Neue Version verfügbar!\n\nJetzt aktualisieren?',
+        () => {
+            const worker = reg.waiting;
+            if (worker) {
+                worker.postMessage({ action: 'skipWaiting' });
+            }
+            // Warte auf Bestätigung, dann reload
+            setTimeout(() => window.location.reload(), 600);
+        },
+        'Später'
+    );
 }
+
+// === skipWaiting empfangen ===
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+});
  </script>  <!-- ← ENDE SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
