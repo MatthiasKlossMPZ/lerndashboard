@@ -1220,25 +1220,45 @@ window.addEventListener('message', function(event) {
         }
     }
 });
-             if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker?.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showAlert('Aktualisierung wird geladen...');
-            setTimeout(() => window.location.reload(), 1200);
-          }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => {
+        console.log('SW registered:', reg);
+
+        // Update-Listener
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // NEU: Zeige schicken Prompt statt auto-reload
+              showUpdatePrompt(reg);
+            }
+          });
         });
-      });
-    });
-  }
+      })
+      .catch(err => console.error('SW registration failed:', err));
+  });
+}
+
+// NEU: Schicker Update-Prompt (integriert in dein showAlert)
+function showUpdatePrompt(reg) {
+  showAlert('Neue Version verfügbar!\n\nJetzt aktualisieren?', () => {
+    // Sende Message an waiting SW
+    const waitingWorker = reg.waiting;
+    if (waitingWorker) {
+      waitingWorker.postMessage({ action: 'skipWaiting' });
+    }
+    // Reload nach kurzer Wartezeit
+    setTimeout(() => window.location.reload(), 500);
+  });
+}
  </script>  <!-- ← ENDE SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
      <!-- Version-Info -->
     <div class="version-info">
-        v1.2.6 – © Matthias Kloß MPZ NB
+        v1.3.0 – © Matthias Kloß MPZ NB
     </div>
 
     <!-- === LÖSCH-ANIMATION === -->
