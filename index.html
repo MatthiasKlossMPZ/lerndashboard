@@ -1226,39 +1226,61 @@ if ('serviceWorker' in navigator) {
       .then(reg => {
         console.log('SW registered:', reg);
 
-        // Update-Listener
+        // 1. Update gefunden → warte auf Installation
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // NEU: Zeige schicken Prompt statt auto-reload
               showUpdatePrompt(reg);
             }
           });
         });
+
+        // 2. Beim Laden prüfen: Gibt es schon einen wartenden SW?
+        if (reg.waiting) {
+          showUpdatePrompt(reg);
+        }
       })
       .catch(err => console.error('SW registration failed:', err));
   });
 }
 
-// NEU: Schicker Update-Prompt (integriert in dein showAlert)
+// === UPDATE-PROMPT FÜR WARTENDEN SW ===
+function checkForWaitingUpdate() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg && reg.waiting) {
+        showUpdatePrompt(reg);
+      }
+    });
+  }
+}
+
+// Beim Laden prüfen, ob ein Update wartet
+window.addEventListener('load', checkForWaitingUpdate);
+
+// === UPDATE-PROMPT FUNKTION ===
 function showUpdatePrompt(reg) {
-  showAlert('Neue Version verfügbar!\n\nJetzt aktualisieren?', () => {
-    // Sende Message an waiting SW
-    const waitingWorker = reg.waiting;
-    if (waitingWorker) {
-      waitingWorker.postMessage({ action: 'skipWaiting' });
-    }
-    // Reload nach kurzer Wartezeit
-    setTimeout(() => window.location.reload(), 500);
-  });
+  if (document.querySelector('#updateModal')) return;
+
+  showAlert(
+    'Neue Version verfügbar!\n\nJetzt aktualisieren?',
+    () => {
+      const waitingWorker = reg.waiting || reg.installing;
+      if (waitingWorker) {
+        waitingWorker.postMessage({ action: 'skipWaiting' });
+      }
+      setTimeout(() => window.location.reload(), 600);
+    },
+    'Später'
+  );
 }
  </script>  <!-- ← ENDE SCRIPT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
      <!-- Version-Info -->
     <div class="version-info">
-        v1.3.0 – © Matthias Kloß MPZ NB
+        v1.3.5 – © Matthias Kloß MPZ NB
     </div>
 
     <!-- === LÖSCH-ANIMATION === -->
