@@ -681,6 +681,7 @@ function updateToolFilter() {
 function showAlert(message, callback) {
     const modal = document.createElement('div');
     modal.className = 'modal-outer';
+    modal.style.zIndex = 99999;
     modal.style.cssText = `
         position:fixed;top:0;left:0;width:100%;height:100%;
         background:rgba(0,0,0,0.6);display:flex;justify-content:center;
@@ -1184,62 +1185,58 @@ window.addEventListener('offline', () => {
     populateDropdowns();
     applyFilters();
 
-// === POPUP-KOMMUNIKATION (NEU + UPDATE) ===
-window.addEventListener('message', function(event) {
-    // NEUE RESSOURCE HINZUFÜGEN
-    if (event.data?.action === 'addResource') {
-        const resource = event.data.resource;
-        if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
-            // Tool: Originalgroßschreibung beibehalten, nur für Filter klein
-            const originalTool = resource.tool?.trim();
-            if (originalTool) {
-                resource.tool = originalTool;
-                tools.add(originalTool.toLowerCase());
-            }
-            resources.push(resource);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            showAddConfirmation();
-        }
-    }
-    // RESSOURCE AKTUALISIEREN
-    else if (event.data?.action === 'updateResource') {
-        const { index, resource } = event.data;
-        if (index >= 0 && index < resources.length && resource) {
-            const originalTool = resource.tool?.trim();
-            if (originalTool) {
-                resource.tool = originalTool;
-                tools.add(originalTool.toLowerCase());
-            }
-            resources[index] = resource;
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            showEditConfirmation();
-        }
-    }
-});
+// === SERVICE WORKER: Update-Erkennung & Popup ===
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js')
       .then(reg => {
-        console.log('SW registered:', reg);
+        console.log('[PWA] Service Worker registriert:', reg);
 
-        // Update-Listener
+        // 🔹 Wenn bereits ein neuer SW "wartet", direkt Prompt zeigen
+        if (reg.waiting) {
+          showUpdatePrompt(reg);
+        }
+
+        // 🔹 Wenn während der Laufzeit ein Update gefunden wird
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
+          if (!newWorker) return;
+
           newWorker.addEventListener('statechange', () => {
+            // Wenn der neue SW installiert ist und bereits ein alter aktiv war:
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // NEU: Zeige schicken Prompt statt auto-reload
+              console.log('[PWA] Neue Version verfügbar.');
               showUpdatePrompt(reg);
             }
           });
         });
+
+        // 🔹 Wenn der aktive Service Worker wechselt (nach skipWaiting)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[PWA] Neuer Service Worker aktiv – Seite wird neu geladen.');
+          window.location.reload();
+        });
       })
-      .catch(err => console.error('SW registration failed:', err));
+      .catch(err => console.error('[PWA] Registrierung fehlgeschlagen:', err));
   });
 }
+
+// === Popup für App-Update ===
+function showUpdatePrompt(reg) {
+  // Sicherheits-Delay, damit UI geladen ist
+  setTimeout(() => {
+    showAlert('🆕 Neue Version verfügbar!\n\nJetzt aktualisieren?', () => {
+      const waitingWorker = reg.waiting;
+      if (waitingWorker) {
+        console.log('[PWA] Sende skipWaiting an neuen SW.');
+        waitingWorker.postMessage({ action: 'skipWaiting' });
+      }
+      // Sicherheits-Reload nach kurzer Zeit
+      setTimeout(() => window.location.reload(), 500);
+    });
+  }, 300);
+}
+
 
 // NEU: Schicker Update-Prompt (integriert in dein showAlert)
 function showUpdatePrompt(reg) {
@@ -1258,7 +1255,7 @@ function showUpdatePrompt(reg) {
 
      <!-- Version-Info -->
     <div class="version-info">
-        v1.3.0 – © Matthias Kloß MPZ NB
+        v1.3.1 – © Matthias Kloß MPZ NB
     </div>
 
     <!-- === LÖSCH-ANIMATION === -->
