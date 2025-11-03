@@ -268,24 +268,25 @@
 
     <script>
         // === ABBRECHEN ===
-        function cancel() {
-            const hasInput = 
-                document.getElementById('topic').value.trim() ||
-                document.getElementById('subject').value ||
-                document.getElementById('grade').value ||
-                document.getElementById('competence').value ||
-                document.getElementById('tool').value.trim() ||
-                document.getElementById('description').value.trim();
+function cancel() {
+    // Nur Pflichtfelder prüfen
+    const topic = document.getElementById('topic').value.trim();
+    const subject = document.getElementById('subject').value;
+    const grade = document.getElementById('grade').value;
+    const competence = document.getElementById('competence').value;
 
-            if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
-                return;
-            }
+    // Mindestens ein Pflichtfeld gefüllt?
+    const hasInput = topic || (subject && subject !== "") || (grade && grade !== "") || (competence && competence !== "");
 
-            if (window.opener && !window.opener.closed) {
-                window.opener.postMessage({ action: 'cancelAddResource' }, '*');
-            }
-            window.close();
-        }
+    if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
+        return; // Abbrechen verhindern
+    }
+
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ action: 'cancelAddResource' }, '*');
+    }
+    window.close();
+}
 
         // === SPEICHERN ===
         function saveAndClose() {
