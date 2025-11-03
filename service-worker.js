@@ -1,4 +1,5 @@
-const CACHE_NAME = 'lerndashboard-v31'; // ← neue Version!
+const CACHE_NAME = 'lerndashboard-v32'; // Erhöhe bei jedem Update!
+
 const urlsToCache = [
   '/',
   'index.html',
@@ -16,26 +17,36 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()) // Sofort aktivieren
   );
 });
 
-// ACTIVATE: Alte Caches löschen
+// ACTIVATE: Alte Caches löschen & sofort übernehmen
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(names => {
-      return Promise.all(
-        names.filter(name => name !== CACHE_NAME)
-              .map(name => caches.delete(name))
-      );
-    }).then(() => self.clients.claim())
+    Promise.all([
+      caches.keys().then(names => {
+        return Promise.all(
+          names.filter(name => name !== CACHE_NAME)
+               .map(name => caches.delete(name))
+        );
+      }),
+      self.clients.claim() // Sofort Clients übernehmen
+    ])
   );
 });
 
-// FETCH: Immer aus Cache, wenn offline
+// FETCH: Aus Cache, fallback to network
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
   );
+});
+
+// NEU: Höre auf Messages vom Client (z.B. für force-skipWaiting)
+self.addEventListener('message', event => {
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
