@@ -112,8 +112,6 @@
         button:active {
             transform: translateY(0);
         }
-
-        /* === ERFOLGS-ANIMATION === */
         #successAnimation {
             position: fixed;
             top: 0; left: 0;
@@ -176,12 +174,9 @@
             color: var(--text-light);
             margin: 0;
         }
-
         @keyframes drawCheck {
             to { stroke-dashoffset: 0; }
         }
-
-        /* Mobile Optimierung */
         @media (max-width: 480px) {
             body { padding: 12px; }
             .container { padding: 20px; }
@@ -217,11 +212,20 @@
                 <label for="grade" class="required">Klasse</label>
                 <select id="grade" required>
                     <option value="">– Klasse wählen –</option>
-                    <script>
-                        for(let i=1; i<=13; i++) document.write(`<option>Klasse ${i}</option>`);
-                    </script>
                 </select>
             </div>
+
+            <!-- Dynamische Klassen einfügen -->
+            <script>
+                const gradeSelect = document.getElementById('grade');
+                for (let i = 1; i <= 13; i++) {
+                    const option = document.createElement('option');
+                    option.value = `Klasse ${i}`;
+                    option.textContent = `Klasse ${i}`;
+                    gradeSelect.appendChild(option);
+                }
+            </script>
+
             <div class="form-group">
                 <label for="competence" class="required">Kompetenzbereich</label>
                 <select id="competence" required>
@@ -249,7 +253,6 @@
         </form>
     </div>
 
-    <!-- === ERFOLGS-ANIMATION === -->
     <div id="successAnimation">
         <div class="success-card">
             <div class="checkmark-circle">
@@ -264,49 +267,52 @@
     </div>
 
     <script>
-<script>
-// === SPEICHERN MIT ANIMATION ===
-function saveAndClose() {
-    const resource = {
-        topic: document.getElementById('topic').value.trim(),
-        subject: document.getElementById('subject').value,
-        grade: document.getElementById('grade').value,
-        competence: document.getElementById('competence').value,
-        tool: document.getElementById('tool').value.trim(),
-        description: document.getElementById('description').value.trim(),
-        favorite: false,
-        lastModified: new Date().toLocaleDateString('de-DE')
-    };
-    if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
-        alert('Bitte alle Pflichtfelder ausfüllen!');
-        return;
-    }
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({
-            action: 'addResource',
-            resource: resource
-        }, '*');
-    }
-    window.close();
-}
+        // === ABBRECHEN ===
+        function cancel() {
+            const hasInput = 
+                document.getElementById('topic').value.trim() ||
+                document.getElementById('subject').value ||
+                document.getElementById('grade').value ||
+                document.getElementById('competence').value ||
+                document.getElementById('tool').value.trim() ||
+                document.getElementById('description').value.trim();
 
-// === ABBRECHEN ===
-function cancel() {
-    const hasInput = 
-        document.getElementById('topic').value.trim() ||
-        document.getElementById('subject').value ||
-        document.getElementById('grade').value ||
-        document.getElementById('competence').value ||
-        document.getElementById('tool').value.trim() ||
-        document.getElementById('description').value.trim();
+            if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
+                return;
+            }
 
-    if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
-        return;
-    }
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({ action: 'cancelAddResource' }, '*');
+            }
+            window.close();
+        }
 
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({ action: 'cancelAddResource' }, '*');
-    }
-    window.close();
-}
-</script>
+        // === SPEICHERN ===
+        function saveAndClose() {
+            const resource = {
+                topic: document.getElementById('topic').value.trim(),
+                subject: document.getElementById('subject').value,
+                grade: document.getElementById('grade').value,
+                competence: document.getElementById('competence').value,
+                tool: document.getElementById('tool').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                favorite: false,
+                lastModified: new Date().toLocaleDateString('de-DE')
+            };
+
+            if (!resource.topic || !resource.subject || !resource.grade || !resource.competence) {
+                alert('Bitte alle Pflichtfelder ausfüllen!');
+                return;
+            }
+
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    action: 'addResource',
+                    resource: resource
+                }, '*');
+            }
+            window.close();
+        }
+    </script>
+</body>
+</html>
