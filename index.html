@@ -1085,30 +1085,34 @@ window.addEventListener('message', function(event) {
     // NEUE RESSOURCE HINZUFÜGEN
     if (event.data?.action === 'addResource') {
         const resource = event.data.resource;
-if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
-    // Tool: Originalgroßschreibung beibehalten, nur für Filter klein speichern
-    const originalTool = resource.tool?.trim();
-    if (originalTool) {
-        resource.tool = originalTool;                    // Original beibehalten (z. B. "GeoGebra")
-        tools.add(originalTool.toLowerCase());          // Nur für Filter: "geogebra"
-    }
-    resources.push(resource);
-    localStorage.setItem('resources', JSON.stringify(resources));
-    applyFilters();
-    updateToolFilter();
-    showAddConfirmation();
-}
-    // RESSOURCE AKTUALISIEREN
-        const originalTool = resource.tool?.trim();
-        if (originalTool) {
-            resource.tool = originalTool;
-            tools.add(originalTool.toLowerCase());
+        if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
+            // Tool: Originalgroßschreibung beibehalten, nur für Filter klein
+            const originalTool = resource.tool?.trim();
+            if (originalTool) {
+                resource.tool = originalTool;
+                tools.add(originalTool.toLowerCase());
+            }
+            resources.push(resource);
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters();
+            updateToolFilter();
+            showAddConfirmation();
         }
+    }
+    // RESSOURCE AKTUALISIEREN
+    else if (event.data?.action === 'updateResource') {
+        const { index, resource } = event.data;
+        if (index >= 0 && index < resources.length && resource) {
+            const originalTool = resource.tool?.trim();
+            if (originalTool) {
+                resource.tool = originalTool;
+                tools.add(originalTool.toLowerCase());
+            }
             resources[index] = resource;
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
             updateToolFilter();
-            showEditConfirmation(); // BEARBEITEN
+            showEditConfirmation();
         }
     }
 });
