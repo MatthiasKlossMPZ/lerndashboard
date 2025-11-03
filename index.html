@@ -518,7 +518,14 @@
     <script>
     // === DATEN & KONFIG ===
     let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+const tools = new Set();
+resources.forEach(r => {
+    if (r.tool) {
+        const trimmed = r.tool.trim();
+        r.tool = trimmed; // Sicherstellen: immer getrimmt
+        tools.add(trimmed.toLowerCase()); // Nur für Filter klein
+    }
+});
 
     const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
     const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
@@ -568,16 +575,17 @@
         updateToolFilter();
     }
 
-    function updateToolFilter() {
-        const s = document.getElementById('filterTool');
-        if (s) {
-            s.innerHTML = '<option value="">Alle</option>';
-            [...tools].sort().forEach(t => {
-                const display = t.charAt(0).toUpperCase() + t.slice(1);
-                s.add(new Option(display, t));
-            });
-        }
+function updateToolFilter() {
+    const s = document.getElementById('filterTool');
+    if (s) {
+        s.innerHTML = '<option value="">Alle</option>';
+        // Original-Tools aus resources holen (für korrekte Großschreibung)
+        const uniqueTools = [...new Set(resources.map(r => r.tool).filter(Boolean))];
+        uniqueTools.sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' })).forEach(tool => {
+            s.add(new Option(tool, tool.toLowerCase()));
+        });
     }
+}
 
     // === STATISTIK ===
     function updateStats() {
