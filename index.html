@@ -729,7 +729,7 @@ function displayResources(list) {
                 <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
                 <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
                 <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
-                ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${r.tool}</span>` : ''}
+               ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${escapeJs(r.tool)}</span>` : ''}
                 ${r.description ? `<div class="description">${r.description}</div>` : ''}
                 ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
             </div>
@@ -1085,26 +1085,25 @@ window.addEventListener('message', function(event) {
     // NEUE RESSOURCE HINZUFÜGEN
     if (event.data?.action === 'addResource') {
         const resource = event.data.resource;
-        if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
-            if (resource.tool) {
-                resource.tool = resource.tool.toLowerCase();
-                tools.add(resource.tool);
-            }
-            resources.push(resource);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            showAddConfirmation(); // HINZUFÜGEN
-        }
+if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
+    // Tool: Originalgroßschreibung beibehalten, nur für Filter klein speichern
+    const originalTool = resource.tool?.trim();
+    if (originalTool) {
+        resource.tool = originalTool;                    // Original beibehalten (z. B. "GeoGebra")
+        tools.add(originalTool.toLowerCase());          // Nur für Filter: "geogebra"
     }
+    resources.push(resource);
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+    updateToolFilter();
+    showAddConfirmation();
+}
     // RESSOURCE AKTUALISIEREN
-    else if (event.data?.action === 'updateResource') {
-        const { index, resource } = event.data;
-        if (index >= 0 && index < resources.length) {
-            if (resource.tool) {
-                resource.tool = resource.tool.toLowerCase();
-                tools.add(resource.tool);
-            }
+        const originalTool = resource.tool?.trim();
+        if (originalTool) {
+            resource.tool = originalTool;
+            tools.add(originalTool.toLowerCase());
+        }
             resources[index] = resource;
             localStorage.setItem('resources', JSON.stringify(resources));
             applyFilters();
