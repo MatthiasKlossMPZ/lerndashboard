@@ -678,7 +678,7 @@ function updateToolFilter() {
         applyFilters();
     }
 
-function showAlert(message, callback) {
+function showAlert(message, callback, cancelText = 'Abbrechen') {
     const modal = document.createElement('div');
     modal.className = 'modal-outer';
     modal.style.cssText = `
@@ -688,21 +688,21 @@ function showAlert(message, callback) {
     `;
     modal.innerHTML = `
         <div style="
-            background:#fff;padding:24px;border-radius:16px;max-width:400px;
+            background:var(--card);padding:24px;border-radius:16px;max-width:400px;
             text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);
         ">
             <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">
                 ${message.replace(/\n/g, '<br>')}
             </p>
             <div style="display:flex;gap:10px;justify-content:center;">
-                <button id="alert-ok-btn" 
-                        style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
+                <button id="alert-ok-btn"
+                        style="background:var(--primary);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
                     OK
                 </button>
                 ${callback ? `
-                <button id="alert-cancel-btn" 
+                <button id="alert-cancel-btn"
                         style="background:#95a5a6;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
-                    Abbrechen
+                    ${cancelText}
                 </button>` : ''}
             </div>
         </div>
@@ -711,15 +711,16 @@ function showAlert(message, callback) {
 
     const removeModal = () => modal.remove();
 
-    // Jetzt mit korrekten IDs!
     modal.querySelector('#alert-ok-btn')?.addEventListener('click', () => {
         removeModal();
         if (callback) callback();
     });
 
-    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', removeModal);
+    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', () => {
+        removeModal();
+    });
 
-    // Optional: ESC zum Abbrechen
+    // ESC = Abbrechen
     const escHandler = (e) => {
         if (e.key === 'Escape') {
             removeModal();
