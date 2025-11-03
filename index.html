@@ -1221,46 +1221,42 @@ window.addEventListener('message', function(event) {
     }
 });
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(reg => {
-        console.log('SW registered:', reg);
+  navigator.serviceWorker.register('service-worker.js')
+    .then(reg => {
+      console.log('SW registered:', reg);
 
-        // 1. Update gefunden → warte auf Installation
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdatePrompt(reg);
-            }
-          });
-        });
-
-        // 2. Beim Laden prüfen: Gibt es schon einen wartenden SW?
-        if (reg.waiting) {
-          showUpdatePrompt(reg);
-        }
-      })
-      .catch(err => console.error('SW registration failed:', err));
-  });
-}
-
-// === UPDATE-PROMPT FÜR WARTENDEN SW ===
-function checkForWaitingUpdate() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg && reg.waiting) {
+      // 1. Sofort prüfen: Gibt es schon einen wartenden SW?
+      if (reg.waiting) {
         showUpdatePrompt(reg);
       }
-    });
-  }
+
+      // 2. Update gefunden → warte auf Installation
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdatePrompt(reg);
+          }
+        });
+      });
+
+      // 3. Auch nach 'load' nochmal prüfen (für Edge-Cases)
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistration().then(currentReg => {
+          if (currentReg && currentReg.waiting && !document.querySelector('#updateModal')) {
+            showUpdatePrompt(currentReg);
+          }
+        });
+      });
+    })
+    .catch(err => console.error('SW registration failed:', err));
 }
 
-// Beim Laden prüfen, ob ein Update wartet
-window.addEventListener('load', checkForWaitingUpdate);
-
-// === UPDATE-PROMPT FUNKTION ===
+// === UPDATE-PROMPT ===
 function showUpdatePrompt(reg) {
+  // Verhindere doppelte Popups
   if (document.querySelector('#updateModal')) return;
 
   showAlert(
@@ -1280,7 +1276,7 @@ function showUpdatePrompt(reg) {
 
      <!-- Version-Info -->
     <div class="version-info">
-        v1.3.7 – © Matthias Kloß MPZ NB
+        v1.3.9 – © Matthias Kloß MPZ NB
     </div>
 
     <!-- === LÖSCH-ANIMATION === -->
