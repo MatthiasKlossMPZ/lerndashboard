@@ -1,26 +1,56 @@
-const VERSION = '1.0.7';
+const VERSION = '1.0.8'; // ← Erhöhe hier für Test (nach Deploy auf 1.0.8)
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
+// DYNAMISCHER PFAD – FIX FÜR LEEREN PATHNAME (LIVE-REPO)
 const REPO_PATH = (() => {
-  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+  const hostname = self.location.hostname;
+  const pathname = self.location.pathname;
+
+  // 1. Lokal (dev)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return self.location.origin + '/';
   }
-  if (self.location.pathname.includes('/lerndashboard-test/')) {
+
+  // 2. Test-Repo (explizit)
+  if (pathname.includes('/lerndashboard-test/')) {
     return 'https://matthiasklossmpz.github.io/lerndashboard-test/';
   }
-  const parts = self.location.pathname.split('/').filter(Boolean);
-  return parts.length > 0 
-    ? self.location.origin + '/' + parts[0] + '/' 
-    : self.location.origin + '/';
+
+  // 3. Live-Repo: Wenn pathname = '/' oder leer → /lerndashboard/
+  if (hostname === 'matthiasklossmpz.github.io' && (pathname === '/' || pathname === '')) {
+    return 'https://matthiasklossmpz.github.io/lerndashboard/';
+  }
+
+  // 4. Allgemein: Erster Ordner nach / (z. B. /lerndashboard/)
+  const parts = pathname.split('/').filter(p => p);
+  if (parts.length > 0) {
+    return self.location.origin + '/' + parts[0] + '/';
+  }
+
+  // Fallback
+  return self.location.origin + '/';
 })();
 
+console.log('SW geladen: REPO_PATH =', REPO_PATH); // Debug in DevTools
+
 const urlsToCache = [
-  './', 'index.html', 'new-resource.html', 'edit-resource.html',
-  'manifest.json', 'icon-192.png', 'icon-512.png',
-  'icon-maskable-192.png', 'icon-maskable-512.png',
-  'libs/jspdf.umd.min.js', 'libs/jspdf.plugin.autotable.min.js',
-  'libs/jszip.min.js', 'libs/exceljs.min.js', 'libs/FileSaver.min.js'
+  './',
+  'index.html',
+  'new-resource.html',
+  'edit-resource.html',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-192.png',
+  'icon-maskable-512.png',
+  'libs/jspdf.umd.min.js',
+  'libs/jspdf.plugin.autotable.min.js',
+  'libs/jszip.min.js',
+  'libs/exceljs.min.js',
+  'libs/FileSaver.min.js'
 ].map(url => new URL(url, REPO_PATH).href);
+
+console.log('Zu cachende URLs:', urlsToCache); // Debug
 
 // === skipWaiting ===
 self.addEventListener('message', event => {
@@ -41,7 +71,7 @@ self.addEventListener('install', event => {
               .then(r => {
                 if (r.ok) return cache.put(url, r);
               })
-              .catch(() => {})
+              .catch(err => console.warn('Fetch failed for', url, err))
           )
         );
       })
@@ -68,7 +98,7 @@ self.addEventListener('activate', event => {
 // === FETCH ===
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  if (url.href.startsWith(REPO_PATH)) {
+  if (url.origin === self.location.origin && url.href.startsWith(REPO_PATH)) {
     event.respondWith(
       caches.match(event.request).then(cached => {
         if (cached) return cached;
@@ -82,7 +112,8 @@ self.addEventListener('fetch', event => {
             });
           }
           return response;
-        }).catch(() => {
+        }).catch(err => {
+          console.warn('Fetch error, fallback to index:', err);
           return caches.match(new URL('./index.html', REPO_PATH));
         });
       })
