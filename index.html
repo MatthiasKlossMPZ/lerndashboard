@@ -10,7 +10,14 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="prefetch" href="edit-resource.html">
     <link rel="prefetch" href="new-resource.html">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- Lokale Bibliotheken (für Offline-Betrieb) -->
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/jspdf.plugin.autotable.min.js"></script>
+<script src="libs/jszip.min.js"></script>
+<script src="libs/exceljs.min.js"></script>
+<script src="libs/FileSaver.min.js"></script>
+
     <style>
     .logo-header {
         display: flex;
@@ -57,7 +64,8 @@
         --text: #333;
         --text-light: #555;
         --favorite: #f39c12;
-    }
+        --level: #00bfff;  
+        }
     .dark {
         --bg: #1a1a1a;
         --card: #2d2d2d;
@@ -74,17 +82,32 @@
         background: var(--bg); color: var(--text);
     }
     .main { width: 100%; }
-    .content-wrapper {
-        display: flex;
-        gap: 20px;
-        margin-top: 20px;
-    }
-    .resources-container { flex: 1; min-width: 0; }
-    .sidebar {
-        width: 320px; background: var(--card); border-radius: 12px;
-        padding: 16px; box-shadow: var(--shadow); height: fit-content;
-        position: sticky; top: 20px; align-self: flex-start;
-    }
+.centered-button-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    width: 100%;
+}
+.resources-container {
+    flex: 1 1 600px;           /* Mindestbreite 600px, wächst */
+    min-width: 0;              /* Verhindert Overflow */
+    order: 1;
+}
+
+.sidebar {
+    width: 340px !important;
+    min-width: 340px;
+    flex: 0 0 340px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    order: 2;
+    margin-left: auto; /* Schiebt Sidebar ans rechte Ende */
+}
     .sidebar h3 { margin: 0 0 16px; color: var(--primary); font-size: 16px; text-align: center; }
     .stat-bar { margin: 12px 0; }
     .stat-bar label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--text-light); }
@@ -120,12 +143,9 @@
         align-self: flex-end;
     }
     .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: normal; transition: 0.2s; }
     .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn.csv { background: #27ae60; } .btn.pdf { background: #e74c3c; } .btn.print { background: #34495e; } .btn.import { background: #f39c12; } .btn.template { background: #9b59b6; }
     .file-input { display: none; }
-    .new-resource-btn { display: block; margin: 20px auto; padding: 14px 28px; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 16px rgba(107,70,193,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 360px; }
-    .new-resource-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(107,70,193,0.4); }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
     .stat-card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); font-weight: 600; }
     .stat-card span { display: block; font-size: 22px; color: var(--primary); margin-top: 6px; }
@@ -150,6 +170,7 @@
     .grade-tag { background: var(--grade); }
     .tool-tag { background: var(--tool); }
     .competence-tag { background: var(--competence); }
+    .level-tag { background: var(--level); }
     .subject-tag { background: var(--subject); }
     .description { margin-top: 10px; font-size: 13px; color: var(--text-light); background: #f8f9fa; padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary); }
     .action-icons { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
@@ -183,6 +204,60 @@
     }
     .version-info:hover { opacity: 1; }
 
+/* === SCHUL-BUTTON: IDENTISCH ZUM NEUE-RESSOURCE-BUTTON (OHNE ICON) === */
+.school-btn {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+    margin: 16px auto 8px !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 14px 20px !important;
+    box-shadow: 0 6px 16px rgba(155, 89, 182, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    width: 100%;
+}
+
+.school-btn:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.4) !important;
+}
+
+.school-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.school-btn:hover::before {
+    left: 100%;
+}
+
+/* Wenn Schulname gesetzt → grün */
+#schoolButton[data-set="true"] {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3) !important;
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.4) !important;
+}
+.content-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+}
 /* ==================== MOBILE OPTIMIERUNGEN – FINAL ==================== */
 @media (max-width: 768px) {
     body { 
@@ -231,12 +306,6 @@
         padding: 10px;
     }
 
-    /* --- CONTENT: Ressourcen VOR Sidebar --- */
-    .content-wrapper {
-        flex-direction: column !important;
-        gap: 18px;
-    }
-
     /* --- SIDEBAR: KEIN STICKY MEHR, VOLLBREITE --- */
     .sidebar {
         width: 100% !important;
@@ -251,8 +320,88 @@
         order: 1;
         min-width: 0;
     }
+/* === MOBILE: Sidebar unter Ressourcen === */
+@media (max-width: 992px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+.resources-container,
+    .sidebar {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        order: unset !important;
+        margin-left: 0 !important;
+    }
+    .sidebar {
+        position: static;
+        top: auto;
+        margin-top: 20px;
+    }
+}
+    /* --- SCHULNAME-BUTTON (MOBILE) --- */
+#schoolButton {
+    font-size: 12.5px;
+    padding: 9px 10px;
+    min-height: 42px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-    /* --- EXPORT BUTTONS --- */
+#schoolButton:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 4px 10px rgba(197, 143, 224, 0.35);
+}
+
+/* === EXPORT-BUTTONS – EINHEITLICHES FARBKONZEPT === */
+.export-buttons .btn {
+    font-weight: 600;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+/* 1. ALLE EXPORT → VIOLETT */
+.btn.csv,
+.btn.pdf,
+.btn.matrix {
+    background: var(--primary);
+    color: white;
+}
+
+/* 2. IMPORT & VORLAGE → BLAU */
+.btn.import,
+.btn.template {
+    background: #2980b9;
+    color: white;
+}
+
+/* 3. DRUCKEN → DUNKELGRAU */
+.btn.print {
+    background: #2c3e50;
+    color: white;
+}
+
+/* 4. BACKUP → GRÜN (wie gewünscht) */
+.btn[onclick="autoBackup()"] {
+    background: #2ecc71;
+    color: white;
+}
+
+/* Hover für alle */
+.export-buttons .btn:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
     .export-buttons {
         flex-wrap: wrap;
         gap: 8px;
@@ -266,13 +415,18 @@
         white-space: nowrap;
     }
 
-    /* --- NEUE RESSOURCE BUTTON --- */
-    .new-resource-btn {
-        max-width: 100%;
-        font-size: 15.5px;
-        padding: 13px 18px;
-        margin: 18px auto;
-    }
+/* --- NEUE RESSOURCE BUTTON (MOBILE) --- */
+.new-resource-btn {
+    max-width: 100%;
+    font-size: 15.5px;
+    padding: 13px 18px;
+    margin: 18px auto;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+}
+
+.new-resource-btn:hover {
+    box-shadow: 0 10px 24px rgba(0, 210, 211, 0.4);
+}
 
     /* --- STATS --- */
     .stats {
@@ -283,8 +437,14 @@
 
     /* --- RESSOURCEN --- */
     .resource-item {
-        padding: 11px;
-        font-size: 14px;
+    margin: 0 0 16px 0;         /* Kein margin links/rechts */
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+    break-inside: avoid;       /* Verhindert Zeilenumbruch in Karten */
     }
     .action-icons { gap: 5px; }
     .action-icon { width: 30px; height: 30px; }
@@ -331,6 +491,48 @@
         cursor: pointer;
     }
 }
+/* === NEUE RESSOURCE – TÜRKIS-GRADIENT (DESKTOP & BASIS) === */
+.new-resource-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 14px 28px;
+    font-size: 17px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d2d3, #48cae4);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 360px;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.new-resource-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.new-resource-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 210, 211, 0.4);
+}
+
+.new-resource-btn:hover::before {
+    left: 100%;
+}
+
 
 /* Sehr kleine Bildschirme */
 @media (max-width: 380px) {
@@ -338,71 +540,109 @@
     .export-buttons { flex-direction: column; }
     .btn { flex: 1 1 auto; }
 }
+/* Filter aktiv: blasses Rot + Akzent OHNE Verschiebung */
+.filter-container.active {
+    background: linear-gradient(135deg, #fff5f5, #ffeaea) !important;
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.08) !important;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-container.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: rgba(255, 0, 0, 0.4);
+    pointer-events: none; /* damit Klicks durchgehen */
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
     </style>
 </head>
 <body>
+<!-- DRUCK-FOOTER: Schulname (unsichtbar) -->
+<div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
+    Schule: <span id="printSchoolNameText"></span>
+</div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
+    
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
         <div class="logo-header">
             <div class="logo-left" onclick="toggleDarkMode()">
                 <!-- APP-LOGO -->
-                <svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: auto; height: 130px; cursor: pointer;">
-                    <defs>
-                        <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#8e67d6"/>
-                            <stop offset="100%" stop-color="#5e3ab0"/>
-                        </linearGradient>
-                        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#f0f4ff"/>
-                            <stop offset="100%" stop-color="#d0e0ff"/>
-                        </linearGradient>
-                    </defs>
-                    <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
-                    <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
-                    <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
-                    <g transform="translate(21,21)">
-                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
-                        <circle cx="3.5" cy="2.5" r="1.5" fill="#fff"/>
-                        <path d="M2.5 4.5h2" stroke="#fff" stroke-width="1"/>
-                        <g transform="translate(9,0)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
-                            <path d="M2 2l3 3m0-3l-3 3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
-                        </g>
-                        <g transform="translate(18,0)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
-                            <circle cx="3.5" cy="3.5" r="2" fill="#fff"/>
-                            <circle cx="4" cy="3" r="0.8" fill="#333"/>
-                        </g>
-                        <g transform="translate(0,9)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
-                            <path d="M2 5v-2l3 1v2l-3 1z" fill="#fff"/>
-                            <circle cx="4.5" cy="1.5" r="1" fill="#fff"/>
-                        </g>
-                        <g transform="translate(9,9)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
-                            <path d="M2.5 2l2.5 1.5v-3z" fill="#fff"/>
-                        </g>
-                        <g transform="translate(18,9)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
-                            <path d="M1.5 2h4M1.5 3.5h4M1.5 5h2" stroke="#fff" stroke-width="0.8"/>
-                        </g>
-                        <g transform="translate(0,18)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
-                            <path d="M1.5 5.5h1v-2h-1zM3 5.5h1v-3h-1zM4.5 5.5h1v-1h-1z" fill="#fff"/>
-                        </g>
-                        <g transform="translate(9,18)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
-                            <circle cx="3.5" cy="3.5" r="2.5" stroke="#fff" stroke-width="0.8" fill="none"/>
-                            <path d="M1.5 3.5h4M3.5 1.5v4" stroke="#fff" stroke-width="0.6"/>
-                        </g>
-                        <g transform="translate(18,18)">
-                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
-                            <path d="M1.5 2h4M1.5 4h4" stroke="#999" stroke-width="0.8"/>
-                            <path d="M1.5 2l.7.7m-.7-.7l1.4 1.4" stroke="#4caf50" stroke-width="1"/>
-                        </g>
-                    </g>
-                    <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
-                </svg>
+<svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: auto; height: 130px; cursor: pointer;">
+    <defs>
+        <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8e67d6"/>
+            <stop offset="100%" stop-color="#5e3ab0"/>
+        </linearGradient>
+        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f0f4ff"/>
+            <stop offset="100%" stop-color="#d0e0ff"/>
+        </linearGradient>
+    </defs>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
+    <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
+    <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
+    <g transform="translate(19.465148,19.604556)">
+        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
+        <circle cx="3.5" cy="2.5" r="1.5" fill="#ffffff"/>
+        <path d="m 2.5,4.5 h 2" stroke="#ffffff" stroke-width="1"/>
+        <g transform="translate(9)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
+            <path d="M 2,2 5,5 M 5,2 2,5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(18)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
+            <circle cx="3.5" cy="3.5" r="2" fill="#ffffff"/>
+            <circle cx="4" cy="3" r="0.8" fill="#333333"/>
+        </g>
+        <g transform="translate(0,9)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
+            <path d="M 2,5 V 3 L 5,4 V 6 L 2,7 Z" fill="#ffffff"/>
+            <circle cx="4.5" cy="1.5" r="1" fill="#ffffff"/>
+        </g>
+        <g transform="translate(9,9)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
+            <path d="M 2.5,2 5,3.5 v -3 z" fill="#ffffff"/>
+        </g>
+        <g transform="translate(18,9)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
+            <path d="m 1.5,2 h 4 m -4,1.5 h 4 M 1.5,5 h 2" stroke="#ffffff" stroke-width="0.8"/>
+        </g>
+        <g transform="translate(0,18)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
+            <path d="m 1.5,5.5 h 1 v -2 h -1 z m 1.5,0 h 1 v -3 H 3 Z m 1.5,0 h 1 v -1 h -1 z" fill="#ffffff"/>
+        </g>
+        <g transform="translate(9,18)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
+            <circle cx="3.5" cy="3.5" r="2.5" stroke="#ffffff" stroke-width="0.8" fill="none"/>
+            <path d="m 1.5,3.5 h 4 m -2,-2 v 4" stroke="#ffffff" stroke-width="0.6"/>
+        </g>
+        <g transform="translate(18,18)">
+            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
+            <path d="m 1.5,2 h 4 m -4,2 h 4" stroke="#999999" stroke-width="0.8"/>
+            <path d="M 1.5,2 2.2,2.7 M 1.5,2 2.9,3.4" stroke="#4caf50" stroke-width="1"/>
+        </g>
+    </g>
+    <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
+</svg>
                 <div class="logo-title">
                     <div class="title-main">LernDashboard</div>
                     <div class="title-sub">Digital</div>
@@ -471,13 +711,24 @@
                     <select id="filterGrade"><option value="">Alle</option></select>
                 </div>
                 <div class="filter-group">
-                    <label>Kompetenz</label>
-                    <select id="filterCompetence"><option value="">Alle</option></select>
-                </div>
-                <div class="filter-group">
-                    <label>Tool</label>
-                    <select id="filterTool"><option value="">Alle</option></select>
-                </div>
+    <label>Kompetenz</label>
+    <select id="filterCompetence"><option value="">Alle</option></select>
+</div>
+<div class="filter-group">
+    <label>Niveaustufe</label>
+    <select id="filterLevel">
+        <option value="">Alle</option>
+        <option value="Niveaustufe 1">Niveaustufe 1</option>
+        <option value="Niveaustufe 2">Niveaustufe 2</option>
+        <option value="Niveaustufe 3">Niveaustufe 3</option>
+        <option value="Niveaustufe 4">Niveaustufe 4</option>
+        <option value="Niveaustufe 5">Niveaustufe 5</option>
+    </select>
+</div>
+<div class="filter-group">
+    <label>Tool</label>
+    <select id="filterTool"><option value="">Alle</option></select>
+</div>
                 <div class="filter-group">
                     <label>Favoriten</label>
                     <select id="filterFavorite">
@@ -502,23 +753,51 @@
             <div class="stat-card"><div>Fächer</div><span id="statSubjects">0</span></div>
         </div>
 
-        <!-- EXPORT -->
+         <!-- EXPORT – HORIZONTAL GRUPPIERT + FILTERABHÄNGIGKEIT KLAR -->
         <div class="export-buttons">
-            <button class="btn csv" onclick="exportCSV()">CSV</button>
-            <button class="btn pdf" onclick="exportPDF()">PDF</button>
-            <button class="btn print" onclick="window.print()">Drucken</button>
-            <label class="btn import"> <input type="file" accept=".csv" class="file-input" onchange="importCSV(event)"> <span>Import</span> </label>
-            <button class="btn template" onclick="exportTemplate()">Vorlage</button>
-            <button class="btn" onclick="autoBackup()" style="background:#2ecc71; color:white;">
-    Backup jetzt
-</button>
-        </div>
+            <!-- GRUPPE 1: Filter-Exporte (CSV, PDF, Matrix) -->
+            <div class="export-group horizontal">
+                <h4 class="export-group-title" id="filterExportTitle">Filter-Exporte</h4>
+                <div class="btn-row">
+                    <button class="btn csv filtered-export" onclick="exportCSV()" 
+                            title="Exportiert gefilterte Ressourcen als CSV (Fach, Klasse, Tool, etc.)">CSV</button>
+                    <button class="btn pdf filtered-export" onclick="exportPDF()" 
+                            title="Exportiert gefilterte Ressourcen als PDF (nur sichtbare Einträge)">PDF</button>
+                    <button class="btn matrix filtered-export" onclick="exportMatrixCSV()" 
+                            style="background:#e67e22;" 
+                            title="Matrix als CSV – basierend auf aktuellen Filtern">Matrix CSV</button>
+                    <button class="btn matrix filtered-export" id="matrixPdfBtn" style="background:#9c27b0; color:white;" title="Matrix als PDF – nur gefilterte Daten" onclick="exportMatrixPDF()">Matrix PDF</button>
+                    <button class="btn matrix filtered-export" onclick="exportMatrixExcel()" 
+                            style="background:#27ae60; color:white; border:2px solid #1e7e34;" 
+                            title="Formatierte Excel-Matrix mit aktuellen Filtern">Matrix Excel</button>
+                </div>
+            </div>
 
-<button class="new-resource-btn" onclick="openNewResourcePopup()">
-    Neue Ressource
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-</button>
+<!-- GRUPPE 2: Datenmanagement (unabhängig von Filtern) -->
+<div class="export-group horizontal">
+    <h4 class="export-group-title">Datenmanagement</h4>
+    <div class="btn-row">
+        <button class="btn print" onclick="printOptimized()"
+                title="Druckt die aktuelle Ansicht (unabhängig von Filtern)">Drucken</button>
+        <label class="btn import" title="Importiert neue Ressourcen aus einer CSV-Datei">
+            <input type="file" id="importFile" accept=".csv,text/csv" class="file-input" onchange="importCSV(event)">
+            <span>Import</span>
+        </label>
+        <button class="btn template" onclick="exportTemplate()"
+                title="Lädt eine leere CSV-Vorlage zum Ausfüllen">Vorlage</button>
+        <button class="btn" onclick="autoBackup()"
+                title="Erstellt sofort ein lokales Backup aller Daten">Backup jetzt</button>
+    </div>
+    </div>
 
+<!-- ZENTRIERTE NEUE-RESSOURCE-BUTTON -->
+<div class="centered-button-wrapper">
+    <button class="new-resource-btn" onclick="openNewResourceWindow()"> Neue Ressource
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 6px;">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+</div>
         <!-- RESSOURCEN + SIDEBAR -->
         <div class="content-wrapper">
             <div class="resources-container">
@@ -526,6 +805,10 @@
             </div>
             <div class="sidebar">
                 <h3>Fächer-Statistik</h3>
+                <div style="margin: 12px 0; text-align:center;">
+                <button id="schoolButton" class="new-resource-btn school-btn" onclick="setSchoolName()">
+                <span id="schoolButtonText">Schule einstellen</span></button>
+                </div>
                 <div id="statsFach"></div>
             </div>
         </div>
@@ -538,20 +821,667 @@
         <symbol id="star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
     </svg>
 
-    <script>
-    // === DATEN & KONFIG ===
-    let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-const tools = new Set();
-resources.forEach(r => {
-    if (r.tool) {
-        const trimmed = r.tool.trim();
-        r.tool = trimmed; // Sicherstellen: immer getrimmt
-        tools.add(trimmed.toLowerCase()); // Nur für Filter klein
+<script>
+// === GLOBALE VARIABLEN (EINZIGER ORT!) ===
+const VERSION = '1.5.3.81';
+const REPO_PATH = (
+  location.hostname === 'localhost' ||
+  location.hostname === '127.0.0.1' ||
+  location.protocol === 'file:'
+) ? '/' : 'https://matthiasklossmpz.github.io/lerndashboard-test';
+
+let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+let dropdownsInitialized = false;
+
+let deferredPrompt = null;
+let targetVersion = null;
+let allowReload = false;          
+let newServiceWorker = null;
+let updateBannerShown = false;
+
+// === DROPDOWN-DATEN ===
+const subjects = ['Deutsch','Mathematik','Englisch','Biologie','Chemie','Physik','Geschichte','Geografie','Politik','Wirtschaft','Informatik','Kunst','Musik','Sport','Ethik','Religion'];
+const grades = ['Klasse 1','Klasse 2','Klasse 3','Klasse 4','Klasse 5','Klasse 6','Klasse 7','Klasse 8','Klasse 9','Klasse 10','Klasse 11','Klasse 12','Klasse 13'];
+const competences = [
+  'Suchen, Verarbeiten und Aufbewahren',
+  'Kommunizieren und Kooperieren',
+  'Produzieren und Präsentieren',
+  'Schützen und sicher Agieren',
+  'Problemlösen und Handeln',
+  'Analysieren und Reflektieren'
+];
+
+// === ALLE FUNKTIONEN ===
+function escapeJs(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, "\\\"");
+}
+
+function getSchoolName() {
+    return localStorage.getItem('schoolName');
+}
+
+function updateSchoolButton() {
+    const btn = document.getElementById('schoolButton');
+    if (!btn) return;
+    const name = getSchoolName();
+    if (name) {
+        btn.textContent = name;
+        btn.title = 'Schulname ändern';
+        btn.dataset.set = 'true';
+    } else {
+        btn.textContent = 'Schule einstellen';
+        btn.title = 'Schulname festlegen';
+        btn.dataset.set = 'false';
+    }
+}
+
+
+// === SCHULNAME MODAL (MODERNES DESIGN) ===
+function setSchoolName() {
+    const current = getSchoolName() || '';
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 20000; padding: 20px; box-sizing: border-box;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: var(--card); padding: 28px; border-radius: 16px;
+            width: 100%; max-width: 420px; box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            transform: scale(0.9); opacity: 0;
+            animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        ">
+            <h3 style="
+                margin: 0 0 16px; font-size: 18px; font-weight: 700; color: var(--text);
+                text-align: center;
+            ">Schulname eingeben</h3>
+            <p style="
+                margin: 0 0 16px; font-size: 14px; color: var(--text-light); text-align: center;
+            ">Wird in Exports und Druckansicht angezeigt.</p>
+            <input type="text" id="schoolNameInput" value="${current}"
+                placeholder="z.B. Grundschule Campus"
+                style="
+                    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: 10px;
+                    font-size: 15px; margin-bottom: 20px; box-sizing: border-box;
+                    transition: border 0.2s, box-shadow 0.2s;
+                "
+                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(107,70,193,0.15)'"
+                onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'"
+            />
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="cancelSchoolBtn" style="
+                    padding: 10px 18px; background: #95a5a6; color: white; border: none;
+                    border-radius: 10px; font-weight: 600; cursor: pointer; min-width: 90px;
+                    transition: all 0.2s;
+                " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Abbrechen
+                </button>
+                <button id="saveSchoolBtn" style="
+                    padding: 10px 18px; background: var(--primary); color: white; border: none;
+                    border-radius: 10px; font-weight: 600; cursor: pointer; min-width: 90px;
+                    position: relative; overflow: hidden; box-shadow: 0 6px 16px rgba(107,70,193,0.3);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 24px rgba(107,70,193,0.4)'"
+                onmouseout="this.style.transform=''; this.style.boxShadow='0 6px 16px rgba(107,70,193,0.3)'">
+                    Speichern
+                    <span style="
+                        content: ''; position: absolute; top: 0; left: -100%;
+                        width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                        transition: left 0.7s;
+                    "></span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Animation einblenden
+    requestAnimationFrame(() => {
+        modal.querySelector('div').style.transform = 'scale(1)';
+        modal.querySelector('div').style.opacity = '1';
+    });
+
+    // Fokus
+    const input = modal.querySelector('#schoolNameInput');
+    setTimeout(() => input.focus(), 100);
+
+    // Buttons
+    modal.querySelector('#cancelSchoolBtn').onclick = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('#saveSchoolBtn').onclick = () => {
+        const name = input.value.trim();
+        if (name) {
+            localStorage.setItem('schoolName', name);
+        } else {
+            localStorage.removeItem('schoolName');
+        }
+        updateSchoolButton();
+        document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
+
+        // Shine-Effekt beim Speichern
+        const shine = modal.querySelector('#saveSchoolBtn span');
+        shine.style.left = '100%';
+        setTimeout(() => {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 300);
+        }, 400);
+    };
+
+    // ESC-Taste
+    const closeOnEsc = (e) => {
+        if (e.key === 'Escape') {
+            modal.querySelector('#cancelSchoolBtn').click();
+            document.removeEventListener('keydown', closeOnEsc);
+        }
+    };
+    document.addEventListener('keydown', closeOnEsc);
+}
+
+// === ANIMATIONEN ===
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalPop {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+function setFilterAndApply(filterId, value) {
+    const select = document.getElementById(filterId);
+    if (select) {
+        select.value = value;
+        applyFilters();
+        document.querySelector('.filter-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function updateToolFilter() {
+    const s = document.getElementById('filterTool');
+    if (s) {
+        s.innerHTML = '<option value="">Alle</option>';
+        const uniqueTools = [...new Set(resources.map(r => r.tool).filter(Boolean))];
+        uniqueTools.sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' })).forEach(tool => {
+            s.add(new Option(tool, tool.toLowerCase()));
+        });
+    }
+}
+
+function updateFilterHighlight() {
+    const container = document.querySelector('.filter-container');
+    if (!container) return;
+    const selects = container.querySelectorAll('select');
+    const search = container.querySelector('#searchTopic');
+    const isActive = Array.from(selects).some(s => s.value && s.value !== '') ||
+                     (search && search.value.trim() !== '');
+    container.classList.toggle('active', isActive);
+}
+
+function updateFilterStatus() {
+    const isFiltered = getFilteredResources().length < resources.length;
+    const title = document.getElementById('filterExportTitle');
+    if (title) {
+        title.textContent = isFiltered ? 'Filter-Exporte (aktiv)' : 'Filter-Exporte';
+        title.style.color = isFiltered ? '#e74c3c' : 'var(--primary)';
+    }
+    document.querySelectorAll('.filtered-export').forEach(btn => {
+        btn.classList.toggle('active', isFiltered);
+    });
+}
+
+function populateDropdowns() {
+    const addOptions = (id, options) => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '<option value="">Alle</option>';
+            options.forEach(opt => select.add(new Option(opt, opt)));
+        }
+    };
+    addOptions('filterSubject', subjects);
+    addOptions('filterGrade', grades);
+    addOptions('filterCompetence', competences);
+    updateToolFilter();
+}
+
+function getFilteredResources() {
+    const f = {
+        subject: document.getElementById('filterSubject')?.value?.toLowerCase() || '',
+        grade: document.getElementById('filterGrade')?.value || '',
+        competence: document.getElementById('filterCompetence')?.value || '',
+        level: document.getElementById('filterLevel')?.value || '',
+        tool: document.getElementById('filterTool')?.value?.toLowerCase() || '',
+        favorite: document.getElementById('filterFavorite')?.value === 'true',
+        topic: document.getElementById('searchTopic')?.value?.toLowerCase().trim() || ''
+    };
+    return resources.filter(r => {
+        const topic = r.topic?.toLowerCase() || '';
+        const subject = r.subject?.toLowerCase() || '';
+        const grade = r.grade || '';
+        const competence = r.competence || '';
+        const level = r.level || '';
+        const tool = r.tool?.toLowerCase() || '';
+        const isFavorite = r.favorite || false;
+        if (f.subject && subject !== f.subject) return false;
+        if (f.grade && grade !== f.grade) return false;
+        if (f.competence && competence !== f.competence) return false;
+        if (f.level && level !== f.level) return false;
+        if (f.tool && tool !== f.tool) return false;
+        if (f.favorite && !isFavorite) return false;
+        if (f.topic && !topic.includes(f.topic)) return false;
+        return true;
+    });
+}
+
+function updateStats() {
+    const filtered = getFilteredResources();
+    document.getElementById('statTotal').textContent = filtered.length;
+    document.getElementById('statFavorites').textContent = filtered.filter(r => r.favorite).length;
+    document.getElementById('statTools').textContent = [...new Set(filtered.map(r => r.tool).filter(Boolean))].length;
+    document.getElementById('statSubjects').textContent = [...new Set(filtered.map(r => r.subject))].length;
+    updateSubjectStats(filtered);
+}
+
+function updateSubjectStats(filtered) {
+    const count = filtered.reduce((a, r) => (a[r.subject] = (a[r.subject] || 0) + 1, a), {});
+    const container = document.getElementById('statsFach');
+    if (!container) return;
+    container.innerHTML = '';
+    const max = Math.max(...Object.values(count)) || 1;
+    Object.entries(count)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([k, v]) => {
+            const div = document.createElement('div');
+            div.className = 'stat-bar';
+            div.innerHTML = `
+                <label>${k} <span class="bar-value">${v}</span></label>
+                <div class="bar-container">
+                    <div class="bar" style="width:${(v / max * 100)}%"></div>
+                </div>`;
+            container.appendChild(div);
+        });
+}
+
+function applyFilters() {
+    const filtered = getFilteredResources();
+    displayResources(filtered);
+    updateStats();
+    updateFilterHighlight();
+    updateFilterStatus();
+}
+
+function resetFilters() {
+    ['filterSubject','filterGrade','filterCompetence','filterLevel','filterTool','filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const search = document.getElementById('searchTopic');
+    if (search) search.value = '';
+    applyFilters();
+}
+
+// === COPYRIGHT + VERSION ANZEIGEN ===
+window.addEventListener('load', () => {
+    const el = document.getElementById('versionInfo');
+    if (el) {
+        el.innerHTML = `© 2025 <strong>Matthias Kloß</strong> | Version ${VERSION}`;
     }
 });
 
-    const subjects = ["AWT", "Astronomie", "Biologie", "Chemie", "Deutsch", "Englisch", "Französisch", "Geografie", "Geschichte", "Gesellschaftskunde", "Informatik", "Italienisch", "Kunst", "Mathematik", "Musik", "Naturwissenschaften", "Physik", "Plattdeutsch", "Russisch", "Spanisch", "Sozialkunde", "Sport", "Wirtschaft"];
-    const grades = Array.from({length: 13}, (_, i) => `Klasse ${i+1}`);
+// === EMPFANGE ÄNDERUNGEN AUS EDIT-POPUP ===
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'UPDATE_RESOURCE') {
+        const { index, data } = event.data;
+
+        if (index >= 0 && index < resources.length) {
+            resources[index] = data;
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters(); // Aktualisiert Dashboard + Matrix
+
+            // Erfolgsanimation
+            const anim = document.getElementById('editAnimation');
+            if (anim) {
+                anim.classList.add('edit-active');
+                setTimeout(() => anim.classList.remove('edit-active'), 1200);
+            }
+        }
+    }
+});
+
+// === PWA INSTALL BANNER ===
+function showPWAInstallBanner() {
+  let banner = document.getElementById('pwaInstallBanner');
+  if (banner) {
+    banner.style.display = 'flex';
+    return;
+  }
+  banner = document.createElement('div');
+  banner.id = 'pwaInstallBanner';
+  banner.style.cssText = `
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:#6b46c1; color:white; padding:12px 20px; border-radius:12px;
+    box-shadow:0 8px 32px rgba(107,70,193,0.4); font-size:14px; z-index:9998;
+    display:flex; align-items:center; gap:10px; animation:slideUp 0.5s ease;
+  `;
+  banner.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    </svg>
+    <strong>App installieren?</strong>
+    <button id="installPwaBtn" style="background:white; color:#6b46c1; border:none; border-radius:8px; padding:4px 12px; margin-left:8px; font-weight:600; cursor:pointer;">Installieren</button>
+    <button id="closePwaBanner" style="background:none; border:none; color:white; font-size:18px; margin-left:8px; cursor:pointer;">×</button>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('installPwaBtn').onclick = async () => {
+    banner.style.display = 'none';
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('PWA Installation:', outcome);
+    deferredPrompt = null;
+  };
+
+  document.getElementById('closePwaBanner').onclick = () => {
+    banner.style.display = 'none';
+    deferredPrompt = null;
+  };
+}  
+
+// === PWA UPDATE BANNER ===
+function showUpdateBanner() {
+  if (updateBannerShown || document.getElementById('updateBanner')) return;
+  updateBannerShown = true;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
+    background: linear-gradient(135deg, #6b46c1, #8e67d6); color: white;
+    padding: 18px 20px; text-align: center; font-family: system-ui, sans-serif;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column;
+    gap: 12px; align-items: center; animation: slideInDown 0.5s ease forwards;
+    transform: translateY(-100%);
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+    padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
+  `;
+  banner.innerHTML = `
+    <div style="font-weight: 700; font-size: 16px;">Neue Version verfügbar!</div>
+    <button id="updateNowBtn" style="
+      background: white; color: #6b46c1; border: none; padding: 12px 32px;
+      border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer;
+      min-width: 160px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    ">Jetzt aktualisieren</button>
+  `;
+  document.body.appendChild(banner);
+  requestAnimationFrame(() => {
+    banner.style.transform = 'translateY(0)';
+  });
+
+  // showUpdateBanner() → Button
+document.getElementById('updateNowBtn').onclick = () => {
+  allowReload = true;
+  newServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+  // Banner ausblenden + reload
+};
+}  
+
+// === SERVICE WORKER REGISTRIERUNG ===
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+      .then(reg => {
+        console.log('SW registriert:', reg.scope);
+
+        function trackInstalling(worker) {
+          newServiceWorker = worker;
+
+          worker.onstatechange = () => {
+            console.log('SW state:', worker.state);
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateBanner();
+            }
+          };
+        }
+
+        // 1. Wartender Worker?
+        if (reg.waiting) {
+          newServiceWorker = reg.waiting;
+          showUpdateBanner();
+          return;
+        }
+
+        // 2. Laufende Installation?
+        if (reg.installing) {
+          trackInstalling(reg.installing);
+        }
+
+        // 3. Zukünftige Updates
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) trackInstalling(newWorker);
+        });
+
+        // 4. Update suchen
+        reg.update();
+      })
+      .catch(err => console.error('SW Fehler:', err));
+  });
+}
+
+// === NUR NACH KICK RELOAD ===
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (allowReload) {
+    window.location.reload();
+  }
+});
+  
+// === PWA INSTALLATION ===
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showPWAInstallBanner();
+});
+
+// === INIT ===
+['filterSubject','filterGrade','filterTool','filterCompetence','filterLevel','filterFavorite'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyFilters);
+});
+const searchEl = document.getElementById('searchTopic');
+if (searchEl) searchEl.addEventListener('input', applyFilters);
+
+populateDropdowns();
+applyFilters();
+applyFilters();
+document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
+
+function exportTemplate() {
+    const template = [
+        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung',
+        'Beispiel: Klimawandel,Geografie,Klasse 7,Analysieren und Reflektieren,Niveaustufe 3,Google Earth,"Beschreibung des Einsatzes..."'
+    ].join('\n');
+
+    const csvBlob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(csvBlob);
+    link.download = 'Lerndashboard_Vorlage.csv';
+    link.click();
+}
+
+function exportCSV() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showAlert("Keine gefilterten Daten zum Exportieren!\nTipp: Filter zurücksetzen oder Daten prüfen.");
+        return;
+    }
+
+    const COLUMNS = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Niveaustufe', 'Digitales_Hilfsmittel', 'Beschreibung'];
+    const csvContent = filtered.map(r => [
+        `"${(r.topic || '').replace(/"/g, '""')}"`,
+        `"${(r.subject || '')}"`,
+        `"${(r.grade || '')}"`,
+        `"${(r.competence || '')}"`,
+        `"${(r.level || '')}"`,
+        `"${(r.tool || '').replace(/"/g, '""')}"`,
+        `"${(r.description || '').replace(/"/g, '""')}"`
+    ].join(',')).join('\n');
+
+    const fullCsv = `${COLUMNS.join(',')}\n${csvContent}`;
+    const csvBlob = new Blob(['\uFEFF' + fullCsv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(csvBlob);
+    link.download = `LernDashboard_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    // Nach dem Download des CSV
+    showFancyAlert('CSV Export erfolgreich!', 'success');}
+
+function exportPDF() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showAlert("Keine gefilterten Daten zum Exportieren!\nTipp: Filter zurücksetzen oder Daten prüfen.");
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        let y = 30;
+        const lineHeight = 6;
+        const startX = 15;
+        let pageNumber = 1;
+
+        // Schulname
+        const schoolName = getSchoolName() || 'Deine Schule';
+        doc.setFontSize(11);
+        doc.setTextColor(schoolName === 'Deine Schule' ? 150 : 80);
+        doc.setFont('helvetica', 'italic');
+        doc.text(schoolName, pageWidth - 15, 15, { align: 'right' });
+
+        // Titel
+        doc.setFontSize(20);
+        doc.setTextColor(107, 70, 193);
+        doc.setFont('helvetica', 'bold');
+        doc.text('LernDashboard Digital', pageWidth / 2, y, { align: 'center' });
+        y += 8;
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text('Gefilterte Unterrichtsideen', pageWidth / 2, y, { align: 'center' });
+        y += 10;
+        doc.setFontSize(9);
+        doc.setTextColor(120);
+        doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, y, { align: 'right' });
+        y += 12;
+
+        const addPageIfNeeded = (h) => {
+            if (y + h > pageHeight - 25) {
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Seite ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+                doc.addPage();
+                pageNumber++;
+                y = 20;
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text('LernDashboard Digital – Fortsetzung', pageWidth / 2, y, { align: 'center' });
+                y += 8;
+            }
+        };
+
+        const tagColors = { subject: [155,89,182], grade: [80,200,120], competence: [255,140,0], level: [0,191,255], tool: [30,144,255] };
+
+        filtered.forEach((r, i) => {
+            const topic = r.topic || '—';
+            const subject = r.subject || '—';
+            const grade = r.grade || '—';
+            const competence = r.competence || '—';
+            const level = r.level || '—';
+            const tool = r.tool || '—';
+            const description = r.description || '';
+
+            doc.setFontSize(11);
+            doc.setTextColor(0);
+            doc.setFont('helvetica', 'bold');
+            const topicLines = doc.splitTextToSize(`${i + 1}. ${topic}`, pageWidth - 30);
+            addPageIfNeeded(topicLines.length * lineHeight + 5);
+            doc.text(topicLines, startX, y);
+            y += topicLines.length * lineHeight + 3;
+
+            let x = startX;
+            const tagHeight = 5, tagPadding = 2, tagGap = 6, textY = y - 0.7;
+            const tags = [{text:subject,type:'subject'},{text:grade,type:'grade'},{text:competence,type:'competence'},{text:level,type:'level'},{text:tool,type:'tool'}];
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'normal');
+            tags.forEach(tag => {
+                if (tag.text === '—') return;
+                const color = tagColors[tag.type];
+                const textWidth = doc.getTextWidth(tag.text);
+                const tagWidth = textWidth + 2 * tagPadding;
+                doc.setFillColor(...color);
+                doc.roundedRect(x, y - tagHeight + 0.8, tagWidth, tagHeight, 1.8, 1.8, 'F');
+                doc.setTextColor(255);
+                doc.text(tag.text, x + tagPadding, textY);
+                x += tagWidth + tagGap;
+            });
+            y += 6;
+
+            if (description) {
+                doc.setFontSize(9);
+                doc.setTextColor(70);
+                doc.setFont('helvetica', 'italic');
+                const descLines = doc.splitTextToSize(description, pageWidth - 30);
+                const descHeight = descLines.length * lineHeight;
+                addPageIfNeeded(descHeight + 8);
+                doc.setFillColor(248, 250, 252);
+                doc.rect(startX - 1, y - 1.5, pageWidth - 30 + 2, descHeight + 3, 'F');
+                doc.text(descLines, startX, y + lineHeight - 1);
+                y += descHeight + 6;
+            } else y += 4;
+
+            doc.setDrawColor(220);
+            doc.setLineWidth(0.3);
+            doc.line(startX, y, pageWidth - 15, y);
+            y += 8;
+        });
+
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Seite ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+        doc.save(`LernDashboard_${new Date().toISOString().slice(0, 10)}.pdf`);
+        showFancyAlert('PDF Export erfolgreich!', 'success');
+    } catch (err) {
+        console.error('PDF-Export fehlgeschlagen:', err);
+        showAlert('Fehler beim PDF-Export. Bitte Seite neu laden.');
+    }
+}
+
+function exportMatrixCSV() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning');
+        return;
+    }
+
+    const subjectFilter = document.getElementById('filterSubject')?.value?.trim() || '';
+    const gradeFilter = document.getElementById('filterGrade')?.value?.trim() || '';
+    const toolFilter = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
+
+    const subjectText = subjectFilter || 'Alle Fächer';
+    const gradeText = gradeFilter || 'Alle Klassen';
+    const toolText = toolFilter ? ` | Tool: ${toolFilter}` : '';
+    const title = `${subjectText} | ${gradeText}${toolText}`;
+
     const competences = [
         "Suchen, Verarbeiten und Aufbewahren",
         "Kommunizieren und Kooperieren",
@@ -561,179 +1491,942 @@ resources.forEach(r => {
         "Analysieren und Reflektieren"
     ];
 
-    // === HILFSFUNKTIONEN ===
-    function escapeJs(str) {
-        if (!str) return '';
-        return str.replace(/'/g, "\\'").replace(/"/g, "\\\"");
-    }
+    const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
 
-    function setFilterAndApply(filterId, value) {
-        const select = document.getElementById(filterId);
-        if (select) {
-            select.value = value;
-            applyFilters();
-            document.querySelector('.filter-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const matrix = {};
+    competences.forEach(c => {
+        matrix[c] = {};
+        levels.forEach(l => matrix[c][l] = new Set());
+    });
+
+    // DEBUG: Zeig an, welche Daten verarbeitet werden
+    console.log("Verarbeite Ressourcen:", filtered.map(r => ({
+        topic: r.topic,
+        competence: r.competence,
+        level: r.level,
+        grade: r.grade,
+        tool: r.tool
+    })));
+
+    filtered.forEach(r => {
+        // NORMALISIERE: trim + exakter String
+        const comp = (r.competence || '').trim();
+        const level = (r.level || '').trim();
+        const topic = (r.topic || '').trim();
+        const tool = (r.tool || '').trim();
+
+        // Prüfe, ob comp und level in den Listen VORHANDEN sind
+        if (!competences.includes(comp)) {
+            console.warn("Kompetenz nicht erkannt:", comp, "(verfügbar:", competences, ")");
+            return;
         }
-    }
+        if (!levels.includes(level)) {
+            console.warn("Niveaustufe nicht erkannt:", level, "(verfügbar:", levels, ")");
+            return;
+        }
+        if (!topic) return;
 
-    // === DARK MODE ===
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-    }
-    if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
+        const entry = `${topic} (${r.grade}${tool ? ` – ${tool}` : ''})`;
+        matrix[comp][level].add(entry);
+    });
 
-    // === DROPDOWNS ===
-    function populateDropdowns() {
-        const addOptions = (id, options) => {
-            const select = document.getElementById(id);
-            if (select) {
-                select.innerHTML = '<option value="">Alle</option>';
-                options.forEach(opt => select.add(new Option(opt, opt)));
-            }
-        };
-        addOptions('filterSubject', subjects);
-        addOptions('filterGrade', grades);
-        addOptions('filterCompetence', competences);
-        updateToolFilter();
-    }
+    // DEBUG: Zeig Matrix an
+    console.log("Matrix-Inhalt:", matrix);
 
-function updateToolFilter() {
-    const s = document.getElementById('filterTool');
-    if (s) {
-        s.innerHTML = '<option value="">Alle</option>';
-        // Original-Tools aus resources holen (für korrekte Großschreibung)
-        const uniqueTools = [...new Set(resources.map(r => r.tool).filter(Boolean))];
-        uniqueTools.sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' })).forEach(tool => {
-            s.add(new Option(tool, tool.toLowerCase()));
+    let csv = '\uFEFF"Titel: ${title}"\n\n';
+    csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
+
+    competences.forEach(comp => {
+        const row = [`"${comp}"`];
+        levels.forEach(level => {
+            const entries = [...matrix[comp][level]];
+            const cell = entries.length > 0 ? entries.join('\n') : '—';
+            row.push(`"${cell}"`);
         });
+        csv += row.join(';') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Matrix_${title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+
+    showFancyAlert('Matrix CSV Export erfolgreich!', 'success');
+}
+// ──────────────────────────────────────────────────────────────
+//  MATRIX → PDF 
+// ──────────────────────────────────────────────────────────────
+async function exportMatrixPDF() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showAlert('Keine Daten für Matrix verfügbar!');
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const leftMargin = 12;
+        const rightMargin = 12;
+        const topMargin = 18;
+        const usableWidth = pageWidth - leftMargin - rightMargin;
+        const compColWidth = usableWidth * 0.22;
+        const levelColWidth = (usableWidth - compColWidth) / 5;
+        let currentY = topMargin;
+
+        // Filter-Infos
+        const subjectFilter = document.getElementById('filterSubject')?.value?.trim() || '';
+        const gradeFilter = document.getElementById('filterGrade')?.value?.trim() || '';
+        const toolFilter = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
+        const subjectText = subjectFilter ? subjectFilter : 'Alle Fächer';
+        const gradeText = gradeFilter ? gradeFilter : 'Alle Klassen';
+        const toolText = toolFilter ? ` | Tool: ${toolFilter}` : '';
+        const title = `${subjectText} | ${gradeText}${toolText}`;
+
+        // Titel
+        doc.setFontSize(16);
+        doc.setTextColor(107, 70, 193);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title, pageWidth / 2, currentY, { align: 'center' });
+        currentY += 7;
+
+        // Schulname & Datum
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont('helvetica', 'italic');
+        const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+        doc.text(schoolName, leftMargin, currentY - 8);
+        doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - rightMargin, currentY - 8, { align: 'right' });
+        currentY += 5;
+
+        const competences = [
+            "Suchen, Verarbeiten und Aufbewahren",
+            "Kommunizieren und Kooperieren",
+            "Produzieren und Präsentieren",
+            "Schützen und sicher Agieren",
+            "Problemlösen und Handeln",
+            "Analysieren und Reflektieren"
+        ];
+        const levels = ["Niveaustufe 1","Niveaustufe 2","Niveaustufe 3","Niveaustufe 4","Niveaustufe 5"];
+        const levelColors = [
+            [76,175,80],[139,195,74],[255,193,7],[255,152,0],[244,67,54]
+        ];
+
+        // Matrix aufbauen
+        const matrix = {};
+        competences.forEach(c => {
+            matrix[c] = {};
+            levels.forEach(l => matrix[c][l] = []);
+        });
+
+        resources.forEach(r => {
+            const s = r.subject?.trim();
+            const g = r.grade?.trim();
+            const t = r.tool?.trim().toLowerCase();
+            const c = r.competence?.trim();
+            const l = r.level?.trim();
+            const topic = r.topic?.trim();
+            if (!c || !l || !topic) return;
+            const match = (!subjectFilter || s === subjectFilter) &&
+                          (!gradeFilter || g === gradeFilter) &&
+                          (!toolFilter || t === toolFilter);
+            if (match) {
+                matrix[c][l].push(`${topic}\nKlasse ${g}${r.tool ? ` – ${r.tool}` : ''}`);
+            }
+        });
+
+        // Hilfsfunktionen
+        const drawLine = (x1,y1,x2,y2) => {
+            doc.setDrawColor(180);
+            doc.setLineWidth(0.25);
+            doc.line(x1,y1,x2,y2);
+        };
+
+        const drawHeader = y => {
+            const h = 11;
+            let x = leftMargin;
+            doc.setFillColor(107,70,193);
+            doc.rect(x, y, compColWidth, h, 'F');
+            doc.setTextColor(255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica','bold');
+            doc.text('Kompetenz', x+4, y+7.5);
+            x += compColWidth;
+            levels.forEach((lvl,i) => {
+                doc.setFillColor(...levelColors[i]);
+                doc.rect(x, y, levelColWidth, h, 'F');
+                doc.setTextColor(255);
+                const lines = doc.splitTextToSize(lvl, levelColWidth-8);
+                const lineH = 3.8;
+                const startY = y + (h - lines.length*lineH)/2 + lineH;
+                doc.text(lines, x + levelColWidth/2, startY, {align:'center'});
+                x += levelColWidth;
+            });
+            doc.setDrawColor(120);
+            doc.setLineWidth(0.5);
+            doc.line(leftMargin, y+h, pageWidth-rightMargin, y+h);
+            return y + h;
+        };
+
+        const drawCenteredText = (lines, x, y, w, h, lineH, bold=false) => {
+            const totalH = lines.length * lineH;
+            const startY = y + (h - totalH)/2 + lineH*0.7;
+            doc.setFont('helvetica', bold?'bold':'normal');
+            doc.text(lines, x+4, startY);
+        };
+
+        // Header
+        let headerBottom = drawHeader(currentY);
+        currentY = headerBottom;
+
+        // Zeilen
+        const COMP_FS = 9.5, LEVEL_FS = 8.0;
+        const LH_COMP = COMP_FS * 1.2 * 0.3528;
+        const LH_LEVEL = LEVEL_FS * 1.2 * 0.3528;
+        const MIN_ROW_H = 16;
+
+        competences.forEach(comp => {
+            const compLines = doc.splitTextToSize(comp, compColWidth-8);
+            const compH = compLines.length * LH_COMP;
+            let maxLevelH = 0;
+            levels.forEach(l => {
+                const raw = matrix[comp][l].length ? matrix[comp][l].join('\n\n') : '—';
+                const lines = doc.splitTextToSize(raw, levelColWidth-8);
+                const h = lines.length * LH_LEVEL;
+                if (h > maxLevelH) maxLevelH = h;
+            });
+            const rowH = Math.max(MIN_ROW_H, Math.max(compH, maxLevelH) + 8);
+
+            if (currentY + rowH > pageHeight - 20) {
+                drawLine(leftMargin, headerBottom-3, leftMargin, currentY);
+                drawLine(pageWidth-rightMargin, headerBottom-3, pageWidth-rightMargin, currentY);
+                doc.addPage();
+                currentY = topMargin;
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Fortsetzung – Seite ${doc.getCurrentPageInfo().pageNumber}`, pageWidth - rightMargin, currentY, {align:'right'});
+                currentY += 8;
+                headerBottom = drawHeader(currentY);
+                currentY = headerBottom;
+            }
+
+            const rowY = currentY;
+            let x = leftMargin;
+            doc.setFillColor(248,249,255);
+            doc.rect(x, rowY, compColWidth, rowH, 'F');
+            doc.setTextColor(0);
+            doc.setFontSize(COMP_FS);
+            drawCenteredText(compLines, x, rowY, compColWidth, rowH, LH_COMP, true);
+            drawLine(x+compColWidth, rowY, x+compColWidth, rowY+rowH);
+            x += compColWidth;
+
+            levels.forEach((lvl, j) => {
+                const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
+                const lines = doc.splitTextToSize(raw, levelColWidth-8);
+                doc.setFillColor(255,255,255);
+                doc.rect(x, rowY, levelColWidth, rowH, 'F');
+                doc.setTextColor(60);
+                doc.setFontSize(LEVEL_FS);
+                drawCenteredText(lines, x, rowY, levelColWidth, rowH, LH_LEVEL);
+                if (j < 4) drawLine(x+levelColWidth, rowY, x+levelColWidth, rowY+rowH);
+                x += levelColWidth;
+            });
+            drawLine(leftMargin, rowY+rowH, pageWidth-rightMargin, rowY+rowH);
+            currentY += rowH;
+        });
+
+        // Abschluss
+        drawLine(leftMargin, headerBottom-3, leftMargin, currentY);
+        drawLine(pageWidth-rightMargin, headerBottom-3, pageWidth-rightMargin, currentY);
+        const totalPages = doc.getNumberOfPages();
+        for (let i=1; i<=totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Seite ${i}`, pageWidth-rightMargin, pageHeight-8, {align:'right'});
+        }
+
+        doc.save(`LernDashboard_Matrix_${new Date().toISOString().slice(0,10)}.pdf`);
+        showFancyAlert('PDF erfolgreich erstellt!', 'success');
+    } catch (err) {
+        console.error('PDF-Erstellung fehlgeschlagen:', err);
+        showAlert('Fehler beim Erstellen der PDF. Bitte Seite neu laden und erneut versuchen.');
     }
 }
 
-    // === STATISTIK ===
-    function updateStats() {
-        const els = {
-            statTotal: resources.length,
-            statFavorites: resources.filter(r => r.favorite).length,
-            statTools: tools.size,
-            statSubjects: new Set(resources.map(r => r.subject)).size
-        };
-        Object.entries(els).forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
+function exportMatrixExcel() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine Daten für die Matrix!', 'warning');
+        return;
+    }
+
+    const competences = [
+        "Suchen, Verarbeiten und Aufbewahren",
+        "Kommunizieren und Kooperieren",
+        "Produzieren und Präsentieren",
+        "Schützen und sicher Agieren",
+        "Problemlösen und Handeln",
+        "Analysieren und Reflektieren"
+    ];
+    const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
+
+    // === FARBEN ===
+    const levelColors = {
+        'Niveaustufe 1': 'FF4CAF50',
+        'Niveaustufe 2': 'FF8BC34A',
+        'Niveaustufe 3': 'FFFFC107',
+        'Niveaustufe 4': 'FFFF9800',
+        'Niveaustufe 5': 'FFF44336'
+    };
+    const headerColor = 'FF6B46C1';
+    const contentColor = 'FFF8F9FA';
+
+    // === FILTER-INFO ===
+    const subjectFilter = document.getElementById('filterSubject')?.value || 'Alle Fächer';
+    const gradeFilter = document.getElementById('filterGrade')?.value || 'Alle Klassen';
+    const competenceFilter = document.getElementById('filterCompetence')?.value || '';
+    const levelFilter = document.getElementById('filterLevel')?.value || '';
+    const toolFilter = document.getElementById('filterTool')?.value || '';
+    let filterParts = [subjectFilter, gradeFilter];
+    if (competenceFilter) filterParts.push(competenceFilter);
+    if (levelFilter) filterParts.push(levelFilter);
+    if (toolFilter) filterParts.push(`Tool: ${toolFilter}`);
+    const filterText = filterParts.join(' | ');
+
+    // === SCHULNAME & DATUM ===
+    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+    const exportDate = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // === Matrix aufbauen ===
+    const matrix = {};
+    competences.forEach(c => matrix[c] = {});
+    levels.forEach(l => competences.forEach(c => matrix[c][l] = []));
+    filtered.forEach(r => {
+        if (r.competence && r.level && matrix[r.competence][r.level]) {
+            const entry = `${r.topic} (${[r.subject, r.grade, r.tool].filter(Boolean).join(', ')})`;
+            const desc = r.description ? `: ${r.description}` : '';
+            matrix[r.competence][r.level].push(entry + desc);
+        }
+    });
+
+    // === Workbook ===
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Kompetenzmatrix');
+
+    // === KOPFZEILE ===
+    const headerTopRow = sheet.addRow(['', '', '', '', '', '']);
+    headerTopRow.height = 35;
+    const schoolCell = headerTopRow.getCell(1);
+    schoolCell.value = schoolName;
+    schoolCell.font = { bold: true, size: 14, color: { argb: headerColor } };
+    schoolCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    schoolCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+
+    sheet.mergeCells('B1:E1');
+    const filterCell = sheet.getCell('B1');
+    filterCell.value = filterText;
+    filterCell.font = { bold: true, size: 14, color: { argb: headerColor } };
+    filterCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    filterCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+
+    const dateCell = headerTopRow.getCell(6);
+    dateCell.value = `Export: ${exportDate}`;
+    dateCell.font = { size: 12, color: { argb: 'FF666666' } };
+    dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    dateCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+
+    sheet.addRow([]);
+    const headerRow = sheet.addRow(['Kompetenzbereich', ...levels]);
+    headerRow.eachCell((cell, colNumber) => {
+        let fillColor = colNumber === 1 ? headerColor : levelColors[levels[colNumber - 2]];
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+    });
+    headerRow.height = 45;
+
+    competences.forEach(comp => {
+        const rowValues = [comp, ...levels.map(l => matrix[comp][l].join('\n\n') || '–')];
+        const row = sheet.addRow(rowValues);
+        const compCell = row.getCell(1);
+        compCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerColor } };
+        compCell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        compCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        compCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            if (colNumber > 1) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: contentColor } };
+                cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+                if (cell.value && cell.value !== '–') cell.value = '\n' + cell.value + '\n';
+                if (cell.value === '–') cell.font = { color: { argb: 'FF999999' }, italic: true };
+                cell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
+            }
         });
-        updateSubjectBarStats();
-    }
 
-    function updateSubjectBarStats() {
-        const count = resources.reduce((a, r) => (a[r.subject] = (a[r.subject] || 0) + 1, a), {});
-        const container = document.getElementById('statsFach');
-        if (!container) return;
-        container.innerHTML = '';
-        const max = Math.max(...Object.values(count)) || 1;
-        Object.entries(count)
-            .sort((a, b) => b[1] - a[1])
-            .forEach(([k, v]) => {
-                const div = document.createElement('div');
-                div.className = 'stat-bar';
-                div.innerHTML = `
-                    <label>${k} <span class="bar-value">${v}</span></label>
-                    <div class="bar-container">
-                        <div class="bar" style="width:${(v / max * 100)}%"></div>
-                    </div>`;
-                container.appendChild(div);
-            });
-    }
-
-    // === FILTER & ANZEIGE ===
-    function applyFilters() {
-        const f = {
-            subject: document.getElementById('filterSubject')?.value.toLowerCase() || '',
-            grade: document.getElementById('filterGrade')?.value.toLowerCase() || '',
-            competence: document.getElementById('filterCompetence')?.value.toLowerCase() || '',
-            tool: document.getElementById('filterTool')?.value.toLowerCase() || '',
-            favorite: document.getElementById('filterFavorite')?.value || '',
-            topic: document.getElementById('searchTopic')?.value.toLowerCase() || ''
-        };
-
-        const filtered = resources.filter(r =>
-            (!f.subject || r.subject.toLowerCase() === f.subject) &&
-            (!f.grade || r.grade.toLowerCase() === f.grade) &&
-            (!f.competence || r.competence.toLowerCase() === f.competence) &&
-            (!f.tool || (r.tool && r.tool.toLowerCase() === f.tool)) &&
-            (f.favorite === '' || r.favorite === (f.favorite === 'true')) &&
-            (!f.topic || r.topic.toLowerCase().includes(f.topic))
-        );
-        displayResources(filtered);
-        updateStats();
-    }
-
-    function resetFilters() {
-        ['filterSubject','filterGrade','filterCompetence','filterTool','filterFavorite'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
+        let maxLines = 1;
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            if (colNumber > 1 && cell.value) {
+                const lines = (cell.value.toString().match(/\n/g) || []).length + 1;
+                if (lines > maxLines) maxLines = lines;
+            }
         });
-        const search = document.getElementById('searchTopic');
-        if (search) search.value = '';
-        applyFilters();
+        row.height = Math.max(70, maxLines * 22);
+    });
+
+    sheet.columns = [{ width: 36 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }];
+
+    // === EXPORT MIT BESTÄTIGUNG ===
+    workbook.xlsx.writeBuffer().then(buffer => {
+        const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
+        saveAs(excelBlob, `Kompetenzmatrix_${new Date().toISOString().slice(0,10)}.xlsx`);
+        showFancyAlert('Excel-Matrix erfolgreich erstellt!', 'success');
+    }).catch(err => {
+        console.error("Export-Fehler:", err);
+        showFancyAlert('Export fehlgeschlagen!', 'error');
+    });
+}
+// === Hilfsfunktion: Base64 → Blob ===
+function base64ToBlob(b64Data, contentType = '', sliceSize = 512) {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+}
+// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD ===
+function autoBackup() {
+    const allResources = JSON.parse(localStorage.getItem('resources') || '[]');
+    
+    if (allResources.length === 0) {
+        showFancyAlert('Keine Daten zum Sichern!', 'warning');
+        return;
     }
 
-function showAlert(message, callback) {
+    // Modal erstellen (unverändert)
     const modal = document.createElement('div');
-    modal.className = 'modal-outer';
     modal.style.cssText = `
-        position:fixed;top:0;left:0;width:100%;height:100%;
-        background:rgba(0,0,0,0.6);display:flex;justify-content:center;
-        align-items:center;z-index:10001;
+        position:fixed; top:0; left:0; width:100%; height:100%;
+        background:rgba(0,0,0,0.6); backdrop-filter:blur(8px);
+        display:flex; justify-content:center; align-items:center;
+        z-index:20000; font-family:Segoe UI,sans-serif;
     `;
     modal.innerHTML = `
         <div style="
-            background:#fff;padding:24px;border-radius:16px;max-width:400px;
-            text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);
+            background:var(--card); padding:32px; border-radius:20px; text-align:center;
+            width:90%; max-width:420px; box-shadow:0 16px 48px rgba(0,0,0,0.3);
+            transform:scale(0.9); opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
         ">
-            <p style="margin:0 0 16px;white-space:pre-line;line-height:1.5;">
-                ${message.replace(/\n/g, '<br>')}
+            <div id="backupIcon" style="width:80px; height:80px; margin:0 auto 20px;">
+                <svg width="80" height="80" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle id="backupCircle" cx="50" cy="50" r="44" fill="none" stroke="#6b46c1" stroke-width="4"
+                            stroke-dasharray="276.46" stroke-dashoffset="276.46"
+                            style="transition:stroke-dashoffset 1s ease;"/>
+                    <path id="backupCheck" d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100; stroke-dashoffset:100;"/>
+                </svg>
+            </div>
+            <p id="backupTitle" style="font-size:19px; font-weight:700; color:var(--text); margin:0 0 8px;">
+                Backup wird erstellt...
             </p>
-            <div style="display:flex;gap:10px;justify-content:center;">
-                <button id="alert-ok-btn" 
-                        style="background:#6b46c1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
-                    OK
-                </button>
-                ${callback ? `
-                <button id="alert-cancel-btn" 
-                        style="background:#95a5a6;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">
-                    Abbrechen
-                </button>` : ''}
+            <p id="backupSubtitle" style="font-size:14px; color:var(--text-light); margin:0;">
+                ${allResources.length} Ressourcen werden gesichert
+            </p>
+            <div style="margin-top:20px; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden;">
+                <div id="backupProgress" style="width:0%; height:100%; background:#6b46c1; border-radius:3px; transition:width 0.8s ease;"></div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 
-    const removeModal = () => modal.remove();
-
-    // Jetzt mit korrekten IDs!
-    modal.querySelector('#alert-ok-btn')?.addEventListener('click', () => {
-        removeModal();
-        if (callback) callback();
+    // Animation: Modal einblenden (unverändert)
+    requestAnimationFrame(() => {
+        modal.querySelector('div').style.transform = 'scale(1)';
+        modal.querySelector('div').style.opacity = '1';
     });
 
-    modal.querySelector('#alert-cancel-btn')?.addEventListener('click', removeModal);
+    // Fortschritt simulieren (unverändert)
+    const progress = modal.querySelector('#backupProgress');
+    const circle = modal.querySelector('#backupCircle');
+    const title = modal.querySelector('#backupTitle');
+    const subtitle = modal.querySelector('#backupSubtitle');
+    const check = modal.querySelector('#backupCheck');
 
-    // Optional: ESC zum Abbrechen
-    const escHandler = (e) => {
-        if (e.key === 'Escape') {
-            removeModal();
-            document.removeEventListener('keydown', escHandler);
+    setTimeout(() => {
+        progress.style.width = '100%';
+        circle.style.strokeDashoffset = '0';
+    }, 100);
+
+    // CSV generieren & downloaden – FRÜHER AUSLÖSEN (nach 300ms, während Animation läuft)
+    setTimeout(() => {
+        const headers = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung'];
+        const csv = [
+            headers.join(','),
+            ...allResources.map(r => [
+                `"${(r.topic||'').replace(/"/g,'""')}"`,
+                `"${r.subject||''}"`,
+                `"${r.grade||''}"`,
+                `"${r.competence||''}"`,
+                `"${r.level||''}"`,
+                `"${(r.tool||'').replace(/"/g,'""')}"`,
+                `"${(r.description||'').replace(/"/g,'""')}"`
+            ].join(','))
+        ].join('\n');
+
+        const csvBlob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(csvBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `LernDashboard_Backup_${new Date().toISOString().slice(0,10)}.csv`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Erfolg anzeigen (unverändert)
+        title.textContent = 'Backup erfolgreich!';
+        title.style.color = '#27ae60';
+        subtitle.textContent = 'Datei wird heruntergeladen...';
+        check.style.strokeDashoffset = '0';
+        check.style.animation = 'draw 0.6s ease forwards';
+
+        // Modal nach 1,5 Sek schließen (unverändert)
+        setTimeout(() => {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 400);
+        }, 1500);
+    }, 300);  // ← Hier früher: 300ms statt 1000ms
+}
+
+// Hilfsfunktion: HTML escapen (sicherer für Inhalte)
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showAlert(msg) {
+    alert(msg);
+}
+
+function printOptimized() {
+    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+    const allResources = resources;
+
+    if (allResources.length === 0) {
+        showFancyAlert('Keine Ressourcen zum Drucken.', 'warning');
+        return;
+    }
+
+    // --- Statistik berechnen ---
+    const subjectCount = allResources.reduce((a, r) => {
+        const s = r.subject || 'Unbekannt';
+        a[s] = (a[s] || 0) + 1;
+        return a;
+    }, {});
+
+    const uniqueTools = new Set(allResources.map(r => r.tool).filter(Boolean)).size;
+    const favorites = allResources.filter(r => r.favorite).length;
+
+    // --- HTML generieren ---
+    let printHtml = `
+        <div class="print-content" style="
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 12mm 10mm;
+            line-height: 1.35;
+            font-size: 10.5pt;
+            color: #000;
+        ">
+            <h1 style="
+                text-align: center;
+                color: #6b46c1;
+                margin: 0 0 8mm;
+                font-size: 16pt;
+                font-weight: 700;
+            ">
+                LernDashboard Digital – Alle Ressourcen
+            </h1>
+            <p style="
+                text-align: center;
+                color: #555;
+                margin: 0 0 12mm;
+                font-size: 10pt;
+            ">
+                Schule: <strong>${escapeHtml(schoolName)}</strong> | 
+                Exportiert: ${new Date().toLocaleDateString('de-DE')}
+            </p>
+    `;
+
+    allResources.forEach((r, i) => {
+        printHtml += `
+            <div class="print-resource" style="
+                margin-bottom: 5mm;
+                padding-bottom: 4mm;
+                border-bottom: 1px solid #ddd;
+                page-break-inside: auto;
+                break-inside: auto;
+            ">
+                <h3 style="
+                    margin: 0 0 1.5mm;
+                    color: #6b46c1;
+                    font-size: 11.5pt;
+                    font-weight: 600;
+                ">
+                    ${i + 1}. ${escapeHtml(r.topic || '–')}
+                </h3>
+                <p style="
+                    margin: 1mm 0;
+                    font-size: 10pt;
+                    line-height: 1.25;
+                    color: #333;
+                ">
+                    <strong>Fach:</strong> ${escapeHtml(r.subject || '–')} | 
+                    <strong>Klasse:</strong> ${escapeHtml(r.grade || '–')} | 
+                    <strong>Kompetenz:</strong> ${escapeHtml(r.competence || '–')}
+                </p>
+                <p style="
+                    margin: 1mm 0;
+                    font-size: 10pt;
+                    line-height: 1.25;
+                    color: #333;
+                ">
+                    <strong>Niveau:</strong> ${escapeHtml(r.level || '–')} | 
+                    <strong>Tool:</strong> ${escapeHtml(r.tool || '–')}
+                </p>
+                ${r.description ? `
+                <div style="
+                    margin: 2mm 0 0;
+                    padding: 2mm 6mm;
+                    background: #f9f9f9;
+                    border-left: 3px solid #6b46c1;
+                    font-size: 10pt;
+                    line-height: 1.3;
+                    border-radius: 0 5px 5px 0;
+                    display: inline-block;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                ">
+                    ${escapeHtml(r.description)}
+                </div>` : ''}
+            </div>
+        `;
+    });
+
+    // --- Statistik ---
+    printHtml += `
+        <div class="print-stats" style="
+            margin-top: 12mm;
+            padding-top: 8mm;
+            border-top: 2px solid #6b46c1;
+            page-break-before: avoid;
+        ">
+            <h2 style="
+                color: #6b46c1;
+                margin: 0 0 5mm;
+                font-size: 13pt;
+                font-weight: 600;
+            ">Statistik</h2>
+            <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 3mm 8mm;
+                font-size: 10pt;
+                margin-bottom: 6mm;
+            ">
+                <div><strong>Gesamt:</strong> ${allResources.length} Ressourcen</div>
+                <div><strong>Favoriten:</strong> ${favorites}</div>
+                <div><strong>Tools:</strong> ${uniqueTools}</div>
+                <div><strong>Fächer:</strong> ${Object.keys(subjectCount).length}</div>
+            </div>
+            <p style="margin: 0 0 3mm; font-size: 10pt;"><strong>Nach Fächern:</strong></p>
+            <ul style="
+                columns: 2;
+                column-gap: 10mm;
+                margin: 0;
+                padding-left: 12mm;
+                font-size: 9.5pt;
+                line-height: 1.25;
+            ">
+    `;
+
+    Object.entries(subjectCount)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([subj, count]) => {
+            printHtml += `<li><strong>${escapeHtml(subj)}:</strong> ${count}</li>`;
+        });
+
+    printHtml += `</ul></div></div>`;
+
+    // --- In .main einfügen ---
+    const mainContainer = document.querySelector('.main');
+    const originalMain = mainContainer.innerHTML;
+
+    mainContainer.innerHTML = printHtml;
+
+    // --- Drucken ---
+    window.print();
+
+    // --- Zurücksetzen ---
+    setTimeout(() => {
+        mainContainer.innerHTML = originalMain;
+    }, 500);
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
         }
-    };
-    document.addEventListener('keydown', escHandler);
+    }
+    result.push(current);
+    return result;
 }
 
-function toggleFavorite(i) {
-    resources[i].favorite = !resources[i].favorite;
-    localStorage.setItem('resources', JSON.stringify(resources)); // JETZT DA!
-    applyFilters();
+// === CSV IMPORT – 100% SICHER & MIT DEBUG ===
+function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csv = e.target.result;
+        if (!csv.trim()) {
+            showAlert('CSV-Datei ist leer!');
+            return;
+        }
+        showImportPreview(csv);
+    };
+    reader.readAsText(file, 'UTF-8');
+    event.target.value = '';
 }
+
+// Vorschau-Popup
+function showImportPreview(csvString) {
+    const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 1) {
+        showAlert('Keine Daten in der CSV gefunden.');
+        return;
+    }
+
+    const headers = parseCSVLine(lines[0]);
+    const data = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
+        if (row['Thema']) data.push(row);
+    }
+
+    if (data.length === 0) {
+        showAlert('Keine gültigen Einträge mit "Thema" gefunden.');
+        return;
+    }
+
+    // Vorschau-Tabelle
+    let previewHtml = `<div style="max-height:300px;overflow-y:auto;margin:10px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">`;
+    previewHtml += `<tr style="background:#6b46c1;color:white;"><th style="padding:6px;">${headers.slice(0, 5).join('</th><th style="padding:6px;">')}</th></tr>`;
+    data.slice(0, 5).forEach(row => {
+        previewHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:6px;">${Object.values(row).slice(0, 5).map(escapeHtml).join('</td><td style="padding:6px;">')}</td></tr>`;
+    });
+    if (data.length > 5) previewHtml += `<tr><td colspan="5" style="text-align:center;color:#666;padding:6px;font-style:italic;">... und ${data.length - 5} weitere</td></tr>`;
+    previewHtml += `</table></div>`;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:20000;`;
+    modal.innerHTML = `
+        <div style="background:var(--card);padding:24px;border-radius:16px;max-width:90%;width:600px;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 12px;color:var(--text);font-size:18px;">Import-Vorschau</h3>
+            <p style="margin:0 0 12px;color:var(--text-light);font-size:14px;">${data.length} Ressourcen gefunden</p>
+            ${previewHtml}
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                <button onclick="this.closest('[style*=\'fixed\']').remove()" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f0f0f0;cursor:pointer;">Abbrechen</button>
+                <button id="confirmImportBtn" style="padding:8px 16px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Importieren</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#confirmImportBtn').onclick = () => {
+        modal.remove();
+        performImport(data);
+    };
+}
+function performImport(data) {
+    let imported = 0;
+    let duplicates = 0;
+
+    data.forEach(entry => {
+        const thema = entry['Thema']?.trim();
+        const fach = entry['Unterrichtsfach'] || '';
+        const klasse = entry['Klassenstufe'] || '';
+        const tool = entry['Digitales_Hilfsmittel'] || '';
+
+        const exists = resources.some(r =>
+            r.topic === thema && r.subject === fach && r.grade === klasse && r.tool === tool
+        );
+
+        if (!exists && thema) {
+            resources.push({
+                topic: thema,
+                subject: fach,
+                grade: klasse,
+                competence: entry['Kompetenzbereich'] || '',
+                level: entry['Niveaustufe'] || '',
+                tool: tool,
+                description: entry['Beschreibung'] || '',
+                favorite: false
+            });
+            imported++;
+        } else if (thema) {
+            duplicates++;
+        }
+    });
+
+    localStorage.setItem('resources', JSON.stringify(resources));
+    populateDropdowns();
+    applyFilters();
+    updateStats();
+    updateToolFilter();
+
+    // Erfolgs-Popup
+    showFancyAlert(
+        imported > 0
+            ? `${imported} Ressource${imported > 1 ? 'n' : ''} importiert!`
+            : 'Keine neuen Ressourcen importiert.',
+        imported > 0 ? 'success' : 'warning',
+        duplicates > 0 ? `${duplicates} Duplikat${duplicates > 1 ? 'e' : ''} übersprungen.` : ''
+    );
+}
+
+function showFancyAlert(title, type = 'info', subtitle = '') {
+    // Entferne alte Modals (sicherheitshalber)
+    document.querySelectorAll('[data-fancy-alert]').forEach(m => m.remove());
+
+    const modal = document.createElement('div');
+    modal.dataset.fancyAlert = 'true';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 30000;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+
+    const colors = {
+        success: '#27ae60',
+        warning: '#f39c12',
+        info: '#6b46c1'
+    };
+
+    modal.innerHTML = `
+        <div style="
+            background: var(--card);
+            padding: 28px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 90%;
+            width: 380px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s ease;
+        ">
+            <div style="margin: 0 auto 16px; width: 64px; height: 64px;">
+                <svg width="64" height="64" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="${colors[type]}" stroke-width="4"
+                            stroke-dasharray="276.46" stroke-dashoffset="276.46"
+                            style="animation: drawCircle 1s ease forwards;"/>
+                    <path d="M30 50 L45 65 L70 35" fill="none" stroke="${colors[type]}" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100; stroke-dashoffset:100; animation: draw 0.6s ease forwards 0.5s;"/>
+                </svg>
+            </div>
+            <p style="font-size: 18px; font-weight: 700; color: ${colors[type]}; margin: 0 0 8px;">
+                ${title}
+            </p>
+            ${subtitle ? `<p style="font-size: 14px; color: var(--text-light); margin: 0 0 20px; line-height: 1.5;">
+                ${subtitle}
+            </p>` : ''}
+            <button id="fancyAlertOK" style="
+                padding: 10px 24px;
+                background: ${colors[type]};
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 15px;
+                cursor: pointer;
+                min-width: 100px;
+                transition: all 0.2s;
+            " onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'">
+                OK
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Button direkt anhängen – KEIN this.closest!
+    modal.querySelector('#fancyAlertOK').onclick = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+    };
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// === INSTALLATIONS-FENSTER AUSLÖSEN ===
+window.addEventListener('load', () => {
+    // Warte kurz, bis SW aktiv ist
+    setTimeout(() => {
+        // LÖSE EINEN FETCH AUS (z. B. Bild laden)
+        fetch(`${REPO_PATH}icon-192.png?t=${Date.now()}`)
+            .then(() => console.log('Fetch ausgelöst → PWA-Install bereit'))
+            .catch(() => {});
+    }, 1000);
+});
 
 function displayResources(list) {
     const c = document.getElementById('resourcesList');
@@ -760,6 +2453,7 @@ function displayResources(list) {
                 <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
                 <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
                 <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
+                <span class="tag level-tag">${r.level || '—'}</span>
                ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${escapeJs(r.tool)}</span>` : ''}
                 ${r.description ? `<div class="description">${r.description}</div>` : ''}
                 ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
@@ -782,6 +2476,25 @@ function displayResources(list) {
     });
 }
 
+function toggleFavorite(i) {
+    if (i >= 0 && i < resources.length) {
+        resources[i].favorite = !resources[i].favorite;
+        localStorage.setItem('resources', JSON.stringify(resources));
+        applyFilters();
+    }
+}
+
+function deleteResource(i) {
+    if (i >= 0 && i < resources.length) {
+        resources.splice(i, 1);
+        localStorage.setItem('resources', JSON.stringify(resources));
+        const anim = document.getElementById('deleteAnimation');
+        anim.classList.add('delete-active');
+        setTimeout(() => anim.classList.remove('delete-active'), 1200);
+        applyFilters();
+    }
+}
+
     // === BEARBEITEN ===
     function editResource(i) {
         const r = resources[i];
@@ -794,10 +2507,9 @@ function displayResources(list) {
             alert('Popup wurde blockiert – bitte erlauben!');
         }
     }
-// === NEUE RESSOURCE IM POPUP ===
-function openNewResourcePopup() {
-    const url = 'new-resource.html';
-    const popup = window.open(url, 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+
+    function openNewResourceWindow() {
+    const popup = window.open('new-resource.html', 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
     if (popup) {
         popup.focus();
     } else {
@@ -805,368 +2517,10 @@ function openNewResourcePopup() {
     }
 }
 
-function deleteResource(i) {
-    const resource = resources[i];
-    if (!resource) return;
-
-    // 1. Animation starten – RICHTIGE ELEMENT!
-    const anim = document.getElementById('deleteAnimation');
-    anim.classList.add('delete-active');
-
-    // 2. Ton (optional)
-    try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBQ==');
-        audio.volume = 0.2;
-        audio.play();
-    } catch(e) {}
-
-    // 3. Nach 1,6s löschen + aufräumen
-    setTimeout(() => {
-        resources.splice(i, 1);
-        localStorage.setItem('resources', JSON.stringify(resources));
-        applyFilters();
-
-        // Animation beenden – RICHTIGE ELEMENT!
-        anim.classList.remove('delete-active');
-    }, 1600);
-}
-
-    // === AUTOCOMPLETE ===
-    const searchInput = document.getElementById('searchTopic');
-    const suggestions = document.getElementById('suggestions');
-    if (searchInput && suggestions) {
-        searchInput.oninput = e => {
-            suggestions.innerHTML = '';
-            const v = e.target.value.toLowerCase().trim();
-            if (!v) { suggestions.style.display = 'none'; return; }
-            const m = [...new Set(resources.map(r => r.topic).filter(t => t.toLowerCase().includes(v)))].slice(0, 6);
-            if (!m.length) { suggestions.style.display = 'none'; return; }
-            m.forEach(t => {
-                const d = document.createElement('div');
-                d.textContent = t;
-                d.onclick = () => { searchInput.value = t; suggestions.style.display = 'none'; applyFilters(); };
-                suggestions.appendChild(d);
-            });
-            suggestions.style.display = 'block';
-        };
-        document.addEventListener('click', e => {
-            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-                suggestions.style.display = 'none';
-            }
-        });
-    }
-
-    // === CSV-IMPORT ===
-    function importCSV(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            let lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l);
-            if (lines.length < 1) { showAlert("CSV-Datei ist leer!"); return; }
-            const parsed = parseCSV(lines);
-            if (!parsed || parsed.data.length === 0) { showAlert("Keine gültigen Daten gefunden!"); return; }
-            const { header, data } = parsed;
-            const required = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich'];
-            const missing = required.filter(col => !header.includes(col));
-            if (missing.length > 0) {
-                showAlert(`Fehlende Spalten: ${missing.join(', ')}\n\nGefundene Spalten: ${header.join(', ')}`);
-                return;
-            }
-            const previewLines = data.slice(0, 8).map(row => {
-                return `${row.Thema || ''} | ${row.Unterrichtsfach || ''} | ${row.Klassenstufe || ''} | ${row.Digitales_Hilfsmittel || ''}`;
-            }).join('\n');
-            const total = data.length;
-            if (!confirm(`Vorschau (max. 8 Zeilen):\n\n${previewLines}\n${total > 8 ? `\n... und ${total - 8} weitere` : ''}\n\nImportieren? (${total} Ressourcen)`)) return;
-            importWithProgress(data, header);
-        };
-        reader.readAsText(file, 'UTF-8');
-    }
-
-    function parseCSV(lines) {
-        const result = { header: [], data: [] };
-        let headerLine = lines[0];
-        let dataLines = lines.slice(1);
-        const headerCells = [];
-        let inQuotes = false;
-        let cell = '';
-        for (let i = 0; i < headerLine.length; i++) {
-            const char = headerLine[i];
-            if (char === '"') { inQuotes = !inQuotes; continue; }
-            if (char === ',' && !inQuotes) { headerCells.push(cell.trim()); cell = ''; } else { cell += char; }
-        }
-        headerCells.push(cell.trim());
-        result.header = headerCells;
-
-        for (let line of dataLines) {
-            const row = {};
-            let inQuotes = false;
-            let cell = '';
-            let colIndex = 0;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    if (i + 1 < line.length && line[i + 1] === '"') { cell += '"'; i++; } else { inQuotes = !inQuotes; }
-                    continue;
-                }
-                if (char === ',' && !inQuotes) {
-                    const headerKey = result.header[colIndex] || `col${colIndex}`;
-                    row[normalizeHeader(headerKey)] = cell.trim();
-                    cell = ''; colIndex++;
-                } else { cell += char; }
-            }
-            const headerKey = result.header[colIndex] || `col${colIndex}`;
-            row[normalizeHeader(headerKey)] = cell.trim();
-            if (row.Thema) result.data.push(row);
-        }
-        return result;
-    }
-
-    function normalizeHeader(str) {
-        return str
-            .replace(/Digitales Hilfsmittel/g, 'Digitales_Hilfsmittel')
-            .replace(/Beschreibung/g, 'Beschreibung')
-            .replace(/[^a-zA-Z0-9_]/g, '_');
-    }
-
-    function importWithProgress(data, header) {
-        let imported = 0, skipped = 0, errors = [];
-        const modal = document.createElement('div');
-        modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;font-family:Segoe UI,sans-serif;`;
-        modal.innerHTML = `<div style="background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-            <h3 style="margin:0 0 16px;color:#6b46c1;">Import läuft...</h3>
-            <div style="background:#f0f0f0;height:12px;border-radius:6px;overflow:hidden;margin:16px 0;"><div id="progressBar" style="background:#6b46c1;width:0%;height:100%;transition:width 0.2s;"></div></div>
-            <p id="status" style="margin:8px 0;font-size:14px;color:#555;">0 von ${data.length}</p>
-            <p id="log" style="max-height:120px;overflow-y:auto;font-size:13px;color:#333;margin-top:12px;"></p>
-        </div>`;
-        document.body.appendChild(modal);
-        const progressBar = modal.querySelector('#progressBar');
-        const status = modal.querySelector('#status');
-        const log = modal.querySelector('#log');
-
-        const processChunk = (index) => {
-            if (index >= data.length) {
-                modal.remove();
-                const summary = `Import abgeschlossen!\n\n${imported} hinzugefügt\n${skipped} übersprungen\n${errors.length} Fehler`;
-                showAlert(summary + (errors.length > 0 ? '\n\nFehler: ' + errors.slice(0, 5).join('; ') : ''));
-                localStorage.setItem('resources', JSON.stringify(resources));
-                updateToolFilter();
-                applyFilters();
-                return;
-            }
-            const row = data[index];
-            try {
-                const newRes = {
-                    topic: (row.Thema || '').trim(),
-                    subject: (row.Unterrichtsfach || '').trim(),
-                    grade: (row.Klassenstufe || '').trim(),
-                    competence: (row.Kompetenzbereich || '').trim(),
-                    tool: (row.Digitales_Hilfsmittel || '').trim(),
-                    description: (row.Beschreibung || '').trim(),
-                    favorite: false,
-                    lastModified: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                };
-                const duplicate = resources.some(r => r.topic === newRes.topic && r.subject === newRes.subject && r.grade === newRes.grade);
-                if (duplicate) {
-                    skipped++;
-                    log.innerHTML += `<div style="color:#e67e22;">Übersprungen: Duplikat "${newRes.topic}"</div>`;
-                } else if (newRes.topic && newRes.subject && newRes.grade && newRes.competence) {
-                    resources.push(newRes);
-                    if (newRes.tool) tools.add(newRes.tool.toLowerCase());
-                    imported++;
-                } else {
-                    errors.push(`Ungültig: ${newRes.topic || 'unbekannt'}`);
-                    log.innerHTML += `<div style="color:#e74c3c;">Fehler: Unvollständig "${newRes.topic}"</div>`;
-                }
-            } catch (err) {
-                errors.push(`Zeile ${index + 2}: ${err.message}`);
-            }
-            const percent = ((index + 1) / data.length) * 100;
-            progressBar.style.width = percent + '%';
-            status.textContent = `${index + 1} von ${data.length}`;
-            log.scrollTop = log.scrollHeight;
-            setTimeout(() => processChunk(index + 1), 1);
-        };
-        processChunk(0);
-    }
-
-    function exportTemplate() {
-        const template = "Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\nBeispiel-Thema,Mathematik,Klasse 5,Problemlösen und Handeln,GeoGebra,Beispielsatz";
-        const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'beispiel-lerndashboard.csv';
-        link.click();
-    }
-
-    function exportCSV() {
-        if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-        let chunkSize = 500;
-        let chunks = [];
-        for (let i = 0; i < resources.length; i += chunkSize) {
-            let chunk = resources.slice(i, i + chunkSize).map(r => {
-                return `"${(r.topic||'').replace(/"/g, '""')}","${r.subject||''}","${r.grade||''}","${r.competence||''}","${(r.tool||'').replace(/"/g, '""')}","${(r.description||'').replace(/"/g, '""')}"`;
-            }).join('\n');
-            chunks.push('Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Digitales Hilfsmittel,Beschreibung\n' + chunk);
-        }
-        let zip = new JSZip();
-        chunks.forEach((chunk, i) => zip.file(`ressourcen_teil_${i+1}.csv`, chunk));
-        zip.generateAsync({type: "blob"}).then(content => {
-            let link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = 'lerndashboard_ressourcen.zip';
-            link.click();
-        });
-    }
-
-    function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        if (resources.length === 0) { showAlert("Keine Daten!"); return; }
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        let y = 25;
-        let pageNumber = 1;
-        doc.setFontSize(20);
-        doc.setTextColor(107, 70, 193);
-        doc.text('LernDashboard', pageWidth / 2, y, { align: 'center' });
-        y += 8;
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text('Digitale Unterrichtsideen', pageWidth / 2, y, { align: 'center' });
-        y += 15;
-        const footer = () => {
-            doc.setFontSize(9);
-            doc.setTextColor(150);
-            doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 15, pageHeight - 10);
-            doc.text(`Seite ${pageNumber}`, pageWidth - 30, pageHeight - 10);
-        };
-        resources.forEach((r, i) => {
-            if (y > 260) { footer(); doc.addPage(); y = 25; pageNumber++; }
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-            doc.text(`${i+1}. ${r.topic}`, 15, y);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            let x = 15;
-            doc.setTextColor(100);
-            doc.text(r.grade || '—', x, y + 6); x += 35;
-            doc.setTextColor(233, 30, 99);
-            doc.text(r.competence || '—', x, y + 6); x += 70;
-            doc.setTextColor(39, 174, 96);
-            doc.text(r.tool || '—', x, y + 6);
-            if (r.lastModified) {
-                doc.setTextColor(150);
-                doc.setFontSize(9);
-                doc.text(`Zuletzt: ${r.lastModified}`, 15, y + 11);
-            }
-            y += 20;
-        });
-        footer();
-        doc.save('LernDashboard_Ressourcen.pdf');
-    }
-        function autoBackup() {
-    const date = new Date().toISOString().slice(0,10); // z. B. 2025-11-02
-    exportCSV(); // Startet den normalen CSV-Export
-    setTimeout(() => {
-        showAlert(`Backup erstellt!\n\nDatei wird heruntergeladen:\nlerndashboard_ressourcen_${date}.zip\n\nTipp: Speichern Sie sie sicher ab!`);
-    }, 800);
-}
-// === BEARB. BESTÄTIGUNG (ohne Ton) ===
-function showEditConfirmation() {
-    const anim = document.getElementById('editAnimation');
-    anim.classList.add('edit-active');
-
-    // Nach 1,6 Sekunden automatisch ausblenden
-    setTimeout(() => {
-        anim.classList.remove('edit-active');
-    }, 1600);
-}
-        // === HINZUFÜGEN BESTÄTIGUNG ===
-function showAddConfirmation() {
-    const anim = document.getElementById('addAnimation');
-    anim.classList.add('add-active');
-    setTimeout(() => anim.classList.remove('add-active'), 1600);
-}
-    // === INIT ===
-    ['filterSubject','filterGrade','filterTool','filterCompetence','filterFavorite'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', applyFilters);
-    });
-    const searchEl = document.getElementById('searchTopic');
-    if (searchEl) searchEl.addEventListener('input', applyFilters);
-
-if (!navigator.onLine) {
-    showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
-}
-
-window.addEventListener('online', () => {
-    showAlert('Internetverbindung wiederhergestellt.');
-});
-window.addEventListener('offline', () => {
-    showAlert('Offline-Modus aktiv – Änderungen werden lokal gespeichert.');
-});
-    populateDropdowns();
-    applyFilters();
-
-// === POPUP-KOMMUNIKATION (NEU + UPDATE) ===
-window.addEventListener('message', function(event) {
-    // NEUE RESSOURCE HINZUFÜGEN
-    if (event.data?.action === 'addResource') {
-        const resource = event.data.resource;
-        if (resource && resource.topic && resource.subject && resource.grade && resource.competence) {
-            // Tool: Originalgroßschreibung beibehalten, nur für Filter klein
-            const originalTool = resource.tool?.trim();
-            if (originalTool) {
-                resource.tool = originalTool;
-                tools.add(originalTool.toLowerCase());
-            }
-            resources.push(resource);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            showAddConfirmation();
-        }
-    }
-    // RESSOURCE AKTUALISIEREN
-    else if (event.data?.action === 'updateResource') {
-        const { index, resource } = event.data;
-        if (index >= 0 && index < resources.length && resource) {
-            const originalTool = resource.tool?.trim();
-            if (originalTool) {
-                resource.tool = originalTool;
-                tools.add(originalTool.toLowerCase());
-            }
-            resources[index] = resource;
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            showEditConfirmation();
-        }
-    }
-});
-             if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker?.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showAlert('Aktualisierung wird geladen...');
-            setTimeout(() => window.location.reload(), 1200);
-          }
-        });
-      });
-    });
-  }
- </script>  <!-- ← ENDE SCRIPT -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</script>  <!-- ← ENDE SCRIPT -->
 
      <!-- Version-Info -->
-    <div class="version-info">
-        v1.3.5 – © Matthias Kloß MPZ NB
-    </div>
+    <div class="version-info" id="versionInfo">Lade Version...</div>
 
     <!-- === LÖSCH-ANIMATION === -->
     <div id="deleteAnimation" style="
@@ -1198,7 +2552,18 @@ window.addEventListener('message', function(event) {
         </div>
     </div>
 
+
     <style>
+        @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+        from { transform: translateY(-100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+        }
+
         @keyframes draw { to { stroke-dashoffset: 0; } }
         .delete-active { display: flex !important; }
         .delete-active > div { transform: scale(1) !important; opacity: 1 !important; }
@@ -1206,6 +2571,267 @@ window.addEventListener('message', function(event) {
          .edit-active > div { transform: scale(1) !important; opacity: 1 !important; }
         .add-active { display: flex !important; }
          .add-active > div { transform: scale(1) !important; opacity: 1 !important; }
+    /* === TABELLEN: KEINE LÜCKEN ZWISCHEN ZELLEN === */
+table, th, td {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: none !important;
+}
+
+th {
+    background: #6b46c1 !important;
+    color: white !important;
+    padding: 14px 16px !important;
+    font-weight: 600;
+    text-align: left;
+    font-size: 15px;
+}
+
+td {
+    background: #f8f9fa !important;
+    padding: 12px 16px !important;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd !important;
+}
+
+/* Optional: Letzte Zeile ohne unteren Rand */
+tr:last-child td {
+    border-bottom: none !important;
+}
+/* === EXPORT: HORIZONTAL + FILTERABHÄNGIGKEIT KLAR === */
+.export-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+    margin: 15px 0;
+    justify-content: flex-start;
+}
+
+.export-group.horizontal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 300px;
+    flex: 1;
+}
+
+.export-group-title {
+    margin: 0 !important;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--primary-light);
+    text-align: left;
+}
+
+#filterExportTitle {
+    transition: color 0.3s ease;
+}
+
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* === FILTER-EXPORT BUTTONS: Hervorhebung bei aktiven Filtern === */
+.filtered-export {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.filtered-export.active {
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 0 2px #e74c3c !important;
+    transform: translateY(-1px);
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 2px #e74c3c; }
+    50% { box-shadow: 0 0 0 4px #e74c3c, 0 0 12px rgba(231, 76, 60, 0.4); }
+}
+
+/* === TOOLTIPS === */
+.btn[title] {
+    position: relative;
+    cursor: pointer;
+}
+.btn[title]:hover::after,
+.btn[title]:focus::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin-bottom: 8px;
+    max-width: 300px;
+    white-space: normal;
+    line-height: 1.4;
+}
+.btn[title]:hover::before,
+.btn[title]:focus::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #333;
+    margin-bottom: 2px;
+    z-index: 1000;
+}
+/* === TOOLTIP MIT CSS-VARIABLEN (für JS-Steuerung) === */
+.btn[title]::after,
+.btn[title]::before {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.btn[title][style*="--show-tooltip: block"]::after,
+.btn[title][style*="--show-tooltip: block"]::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* === MOBILE === */
+@media (max-width: 768px) {
+    .export-buttons {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .export-group.horizontal {
+        min-width: 100%;
+    }
+    .export-group-title {
+        text-align: center;
+        font-size: 13.5px;
+    }
+    .btn-row {
+        justify-content: center;
+    }
+    .btn[title]:hover::after,
+    .btn[title]:hover::before {
+        display: none;
+    }
+    .btn[title]:active::after,
+    .btn[title]:active::before {
+        display: block;
+    }
+}
+@media print {
+    /* Alles verstecken außer .main */
+    body * {
+        visibility: hidden !important;
+    }
+    .main, .main * {
+        visibility: visible !important;
+    }
+    .main {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 12mm 10mm !important;
+        margin: 0 !important;
+    }
+
+    /* TESTVERSION-BANNER & andere Störer verstecken */
+    .test-banner,
+    [class*="test"],
+    [style*="TESTVERSION"],
+    [style*="nicht live"],
+    .version-info,
+    .logo-header,
+    .filter-container,
+    .export-buttons,
+    .sidebar,
+    .new-resource-btn,
+    #deleteAnimation,
+    #editAnimation,
+    #addAnimation {
+        display: none !important;
+    }
+
+    /* Kein unnötiger Platz */
+    * {
+        float: none !important;
+        position: static !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Ressourcen: mehr pro Seite */
+    .print-resource {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        margin-bottom: 5mm !important;
+    }
+
+    /* Beschreibung: passt sich an */
+    .print-resource > div[style*="background"] {
+        display: inline-block !important;
+        width: auto !important;
+        margin: 2mm 0 0 !important;
+        padding: 2mm 6mm !important;
+    }
+
+    /* Seitenlayout */
+    @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 18mm 10mm;
+        @bottom-left {
+            content: "Seite " counter(page);
+            font-size: 8pt;
+            color: #666;
+        }
+        @bottom-right {
+            content: "LernDashboard Digital";
+            font-size: 8pt;
+            color: #666;
+        }
+    }
+
+    /* Schulname unten */
+    #printSchoolName {
+        display: block !important;
+        position: fixed !important;
+        bottom: 8mm !important;
+        left: 10mm !important;
+        font-size: 8pt !important;
+        color: #666 !important;
+    }
+}
+/* === ZENTRIERTER BUTTON-WRAPPER === */
+.centered-button-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    width: 100%;
+}
+
+/* PWA Mobile: Banner immer sichtbar, auch in App-Modus */
+#updateBanner {
+  padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+}
+
+/* Fallback für Android/iOS ohne safe-area */
+@supports not (padding-top: env(safe-area-inset-top)) {
+  #updateBanner {
+    padding-top: 32px !important;
+  }
+}
     </style>
 <!-- === BEARBEITUNGS-BESTÄTIGUNG (ANIMATION – OHNE TON) === -->
 <div id="editAnimation" style="
@@ -1265,7 +2891,6 @@ window.addEventListener('message', function(event) {
         </p>
     </div>
 </div>
-    
 
 </body>
 </html>
