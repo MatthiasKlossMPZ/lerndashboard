@@ -574,6 +574,12 @@
 <div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
     Schule: <span id="printSchoolNameText"></span>
 </div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
     
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
@@ -816,8 +822,26 @@
     </svg>
 
 <script>
+
+// === GLOBALE FILTER-VARIABLEN (einmalig!) ===
+let currentFilters = {
+    subject: '',
+    grade: '',
+    competence: '',
+    level: '',
+    tool: ''
+};
+
+function updateCurrentFilters() {
+    currentFilters.subject = document.getElementById('filterSubject')?.value?.trim() || '';
+    currentFilters.grade = document.getElementById('filterGrade')?.value?.trim() || '';
+    currentFilters.competence = document.getElementById('filterCompetence')?.value?.trim() || '';
+    currentFilters.level = document.getElementById('filterLevel')?.value?.trim() || '';
+    currentFilters.tool = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
+}
+
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const REPO_PATH = (
   location.hostname === 'localhost' ||
   location.hostname === '127.0.0.1' ||
@@ -856,19 +880,44 @@ function getSchoolName() {
     return localStorage.getItem('schoolName');
 }
 
+// === SCHULBUTTON DAUERHAFT AKTUALISIEREN ===
 function updateSchoolButton() {
+    const btnText = document.getElementById('schoolButtonText');
     const btn = document.getElementById('schoolButton');
-    if (!btn) return;
-    const name = getSchoolName();
+    if (!btnText || !btn) return;
+
+    const name = localStorage.getItem('schoolName') || '';
     if (name) {
-        btn.textContent = name;
+        btnText.textContent = name;
         btn.title = 'Schulname ändern';
         btn.dataset.set = 'true';
     } else {
-        btn.textContent = 'Schule einstellen';
+        btnText.textContent = 'Schule einstellen';
         btn.title = 'Schulname festlegen';
         btn.dataset.set = 'false';
     }
+}
+
+// Beim Laden
+document.addEventListener('DOMContentLoaded', updateSchoolButton);
+
+// Nach Änderung im Modal
+function setSchoolName() {
+    const current = localStorage.getItem('schoolName') || '';
+    // ... dein bestehender Modal-Code ...
+
+    // Am Ende des "Speichern"-Buttons:
+    modal.querySelector('#saveSchoolBtn').onclick = () => {
+        const name = input.value.trim();
+        if (name) {
+            localStorage.setItem('schoolName', name);
+        } else {
+            localStorage.removeItem('schoolName');
+        }
+        updateSchoolButton();  // ← HIER AKTUALISIEREN
+        document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
+        // ... Modal schließen ...
+    };
 }
 
 
@@ -994,10 +1043,29 @@ document.head.appendChild(style);
 
 function setFilterAndApply(filterId, value) {
     const select = document.getElementById(filterId);
-    if (select) {
-        select.value = value;
-        applyFilters();
-        document.querySelector('.filter-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!select) return;
+
+    // 1. Wert setzen (auch wenn leer → Reset)
+    select.value = value || '';
+
+    // 2. Filter-Container des betroffenen Selects finden und markieren
+    const filterContainer = select.closest('.filter-container');
+    if (filterContainer) {
+        // Alle anderen aktiv entfernen? Optional: nur diesen aktivieren
+        document.querySelectorAll('.filter-container').forEach(fc => fc.classList.remove('active'));
+        if (value) {
+            filterContainer.classList.add('active');
+        } else {
+            filterContainer.classList.remove('active');
+        }
+    }
+
+    // 3. Filter anwenden
+    applyFilters();
+
+    // 4. Nur zum richtigen Filter-Container scrollen
+    if (filterContainer) {
+        filterContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
@@ -1460,6 +1528,11 @@ function exportPDF() {
     }
 }
 
+// === HELPER: Sauberes Datum für Dateinamen ===
+function getDateString() {
+    return new Date().toISOString().slice(0, 10); // → "2025-11-15"
+}
+
 function exportMatrixCSV() {
     const filtered = getFilteredResources();
     if (filtered.length === 0) {
@@ -1467,14 +1540,21 @@ function exportMatrixCSV() {
         return;
     }
 
-    const subjectFilter = document.getElementById('filterSubject')?.value?.trim() || '';
-    const gradeFilter = document.getElementById('filterGrade')?.value?.trim() || '';
-    const toolFilter = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
+    // === FILTER-INFO (für Inhalt) ===
+    updateCurrentFilters();
 
-    const subjectText = subjectFilter || 'Alle Fächer';
-    const gradeText = gradeFilter || 'Alle Klassen';
-    const toolText = toolFilter ? ` | Tool: ${toolFilter}` : '';
-    const title = `${subjectText} | ${gradeText}${toolText}`;
+    let filterParts = [];
+    if (currentFilters.subject) filterParts.push(currentFilters.subject);
+    if (currentFilters.grade) filterParts.push(currentFilters.grade);
+    if (currentFilters.level) filterParts.push(currentFilters.level);
+    if (currentFilters.competence) {
+        const kb = currentFilters.competence.match(/(\d+)$/);
+        filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+    }
+    if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+    const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+    const fileTitle = `Matrix_${getDateString()}`;  // ← Nur Datum!
 
     const competences = [
         "Suchen, Verarbeiten und Aufbewahren",
@@ -1484,73 +1564,62 @@ function exportMatrixCSV() {
         "Problemlösen und Handeln",
         "Analysieren und Reflektieren"
     ];
-
     const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
 
+    // === MATRIX AUFBAUEN (mit Set für Duplikate) ===
     const matrix = {};
     competences.forEach(c => {
         matrix[c] = {};
         levels.forEach(l => matrix[c][l] = new Set());
     });
 
-    // DEBUG: Zeig an, welche Daten verarbeitet werden
-    console.log("Verarbeite Ressourcen:", filtered.map(r => ({
-        topic: r.topic,
-        competence: r.competence,
-        level: r.level,
-        grade: r.grade,
-        tool: r.tool
-    })));
-
     filtered.forEach(r => {
-        // NORMALISIERE: trim + exakter String
         const comp = (r.competence || '').trim();
         const level = (r.level || '').trim();
         const topic = (r.topic || '').trim();
+        const grade = (r.grade || '').trim();
         const tool = (r.tool || '').trim();
 
-        // Prüfe, ob comp und level in den Listen VORHANDEN sind
-        if (!competences.includes(comp)) {
-            console.warn("Kompetenz nicht erkannt:", comp, "(verfügbar:", competences, ")");
-            return;
-        }
-        if (!levels.includes(level)) {
-            console.warn("Niveaustufe nicht erkannt:", level, "(verfügbar:", levels, ")");
-            return;
-        }
-        if (!topic) return;
+        if (!comp || !level || !topic) return;
+        if (!competences.includes(comp)) return;
+        if (!levels.includes(level)) return;
 
-        const entry = `${topic} (${r.grade}${tool ? ` – ${tool}` : ''})`;
+        const entry = `${topic} (${grade}${tool ? ` – ${tool}` : ''})`;
         matrix[comp][level].add(entry);
     });
 
-    // DEBUG: Zeig Matrix an
-    console.log("Matrix-Inhalt:", matrix);
+    // === CSV AUFBAUEN ===
+    let csv = '\uFEFF';  // BOM für UTF-8
+    csv += `"${documentTitle}"\n\n`;  // Titelzeile (mit Filtern)
 
-    let csv = '\uFEFF"Titel: ${title}"\n\n';
+    // Header
     csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
 
+    // Daten
     competences.forEach(comp => {
         const row = [`"${comp}"`];
         levels.forEach(level => {
             const entries = [...matrix[comp][level]];
             const cell = entries.length > 0 ? entries.join('\n') : '—';
-            row.push(`"${cell}"`);
+            row.push(`"${cell.replace(/"/g, '""')}"`);  // Escaping von "
         });
         csv += row.join(';') + '\n';
     });
 
+    // === DOWNLOAD ===
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Matrix_${title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `${fileTitle}.csv`;  // ← Nur Matrix_2025-11-15.csv
     link.click();
 
     showFancyAlert('Matrix CSV Export erfolgreich!', 'success');
 }
+
 // ──────────────────────────────────────────────────────────────
-//  MATRIX → PDF 
+// MATRIX → PDF
 // ──────────────────────────────────────────────────────────────
+
 async function exportMatrixPDF() {
     const filtered = getFilteredResources();
     if (filtered.length === 0) {
@@ -1571,31 +1640,42 @@ async function exportMatrixPDF() {
         const levelColWidth = (usableWidth - compColWidth) / 5;
         let currentY = topMargin;
 
-        // Filter-Infos
-        const subjectFilter = document.getElementById('filterSubject')?.value?.trim() || '';
-        const gradeFilter = document.getElementById('filterGrade')?.value?.trim() || '';
-        const toolFilter = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
-        const subjectText = subjectFilter ? subjectFilter : 'Alle Fächer';
-        const gradeText = gradeFilter ? gradeFilter : 'Alle Klassen';
-        const toolText = toolFilter ? ` | Tool: ${toolFilter}` : '';
-        const title = `${subjectText} | ${gradeText}${toolText}`;
+        // === FILTER-INFO (für Inhalt) ===
+        updateCurrentFilters();
 
-        // Titel
-        doc.setFontSize(16);
+        let filterParts = [];
+        if (currentFilters.subject) filterParts.push(currentFilters.subject);
+        if (currentFilters.grade) filterParts.push(currentFilters.grade);
+        if (currentFilters.level) filterParts.push(currentFilters.level);
+        if (currentFilters.competence) {
+            const kb = currentFilters.competence.match(/(\d+)$/);
+            filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+        }
+        if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+        const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+        const fileTitle = `Matrix_${getDateString()}`;  // ← Nur Datum!
+
+        // === ÜBERSCHRIFT (kleiner, mehrzeilig) ===
+        doc.setFontSize(13);
         doc.setTextColor(107, 70, 193);
         doc.setFont('helvetica', 'bold');
-        doc.text(title, pageWidth / 2, currentY, { align: 'center' });
-        currentY += 7;
 
-        // Schulname & Datum
+        const maxTitleWidth = pageWidth - leftMargin - rightMargin - 20;
+        const titleLines = doc.splitTextToSize(documentTitle, maxTitleWidth);
+        doc.text(titleLines, pageWidth / 2, currentY, { align: 'center' });
+        currentY += titleLines.length * 5.5;
+
+        // === SCHULNAME & DATUM ===
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.setFont('helvetica', 'italic');
         const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
-        doc.text(schoolName, leftMargin, currentY - 8);
-        doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - rightMargin, currentY - 8, { align: 'right' });
-        currentY += 5;
+        doc.text(schoolName, leftMargin, currentY);
+        doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - rightMargin, currentY, { align: 'right' });
+        currentY += 8;
 
+        // === DATEN ===
         const competences = [
             "Suchen, Verarbeiten und Aufbewahren",
             "Kommunizieren und Kooperieren",
@@ -1604,19 +1684,19 @@ async function exportMatrixPDF() {
             "Problemlösen und Handeln",
             "Analysieren und Reflektieren"
         ];
-        const levels = ["Niveaustufe 1","Niveaustufe 2","Niveaustufe 3","Niveaustufe 4","Niveaustufe 5"];
+        const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
         const levelColors = [
-            [76,175,80],[139,195,74],[255,193,7],[255,152,0],[244,67,54]
+            [76, 175, 80], [139, 195, 74], [255, 193, 7], [255, 152, 0], [244, 67, 54]
         ];
 
-        // Matrix aufbauen
+        // === MATRIX ===
         const matrix = {};
         competences.forEach(c => {
             matrix[c] = {};
             levels.forEach(l => matrix[c][l] = []);
         });
 
-        resources.forEach(r => {
+        filtered.forEach(r => {
             const s = r.subject?.trim();
             const g = r.grade?.trim();
             const t = r.tool?.trim().toLowerCase();
@@ -1624,84 +1704,92 @@ async function exportMatrixPDF() {
             const l = r.level?.trim();
             const topic = r.topic?.trim();
             if (!c || !l || !topic) return;
-            const match = (!subjectFilter || s === subjectFilter) &&
-                          (!gradeFilter || g === gradeFilter) &&
-                          (!toolFilter || t === toolFilter);
+
+            const match = (!currentFilters.subject || s === currentFilters.subject) &&
+                          (!currentFilters.grade || g === currentFilters.grade) &&
+                          (!currentFilters.tool || t === currentFilters.tool) &&
+                          (!currentFilters.competence || c === currentFilters.competence) &&
+                          (!currentFilters.level || l === currentFilters.level);
+
             if (match) {
                 matrix[c][l].push(`${topic}\nKlasse ${g}${r.tool ? ` – ${r.tool}` : ''}`);
             }
         });
 
-        // Hilfsfunktionen
-        const drawLine = (x1,y1,x2,y2) => {
+        // === HILFSFUNKTIONEN ===
+        const drawLine = (x1, y1, x2, y2) => {
             doc.setDrawColor(180);
             doc.setLineWidth(0.25);
-            doc.line(x1,y1,x2,y2);
+            doc.line(x1, y1, x2, y2);
         };
 
         const drawHeader = y => {
             const h = 11;
             let x = leftMargin;
-            doc.setFillColor(107,70,193);
+            doc.setFillColor(107, 70, 193);
             doc.rect(x, y, compColWidth, h, 'F');
             doc.setTextColor(255);
             doc.setFontSize(10);
-            doc.setFont('helvetica','bold');
-            doc.text('Kompetenz', x+4, y+7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Kompetenz', x + 4, y + 7.5);
             x += compColWidth;
-            levels.forEach((lvl,i) => {
+
+            levels.forEach((lvl, i) => {
                 doc.setFillColor(...levelColors[i]);
                 doc.rect(x, y, levelColWidth, h, 'F');
                 doc.setTextColor(255);
-                const lines = doc.splitTextToSize(lvl, levelColWidth-8);
+                const lines = doc.splitTextToSize(lvl, levelColWidth - 8);
                 const lineH = 3.8;
-                const startY = y + (h - lines.length*lineH)/2 + lineH;
-                doc.text(lines, x + levelColWidth/2, startY, {align:'center'});
+                const startY = y + (h - lines.length * lineH) / 2 + lineH;
+                doc.text(lines, x + levelColWidth / 2, startY, { align: 'center' });
                 x += levelColWidth;
             });
+
             doc.setDrawColor(120);
             doc.setLineWidth(0.5);
-            doc.line(leftMargin, y+h, pageWidth-rightMargin, y+h);
+            doc.line(leftMargin, y + h, pageWidth - rightMargin, y + h);
             return y + h;
         };
 
-        const drawCenteredText = (lines, x, y, w, h, lineH, bold=false) => {
+        const drawCenteredText = (lines, x, y, w, h, lineH, bold = false) => {
             const totalH = lines.length * lineH;
-            const startY = y + (h - totalH)/2 + lineH*0.7;
-            doc.setFont('helvetica', bold?'bold':'normal');
-            doc.text(lines, x+4, startY);
+            const startY = y + (h - totalH) / 2 + lineH * 0.7;
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.text(lines, x + 4, startY);
         };
 
-        // Header
+        // === HEADER ===
         let headerBottom = drawHeader(currentY);
         currentY = headerBottom;
 
-        // Zeilen
+        // === ZEILEN ===
         const COMP_FS = 9.5, LEVEL_FS = 8.0;
         const LH_COMP = COMP_FS * 1.2 * 0.3528;
         const LH_LEVEL = LEVEL_FS * 1.2 * 0.3528;
         const MIN_ROW_H = 16;
 
         competences.forEach(comp => {
-            const compLines = doc.splitTextToSize(comp, compColWidth-8);
+            const compLines = doc.splitTextToSize(comp, compColWidth - 8);
             const compH = compLines.length * LH_COMP;
             let maxLevelH = 0;
+
             levels.forEach(l => {
                 const raw = matrix[comp][l].length ? matrix[comp][l].join('\n\n') : '—';
-                const lines = doc.splitTextToSize(raw, levelColWidth-8);
+                const lines = doc.splitTextToSize(raw, levelColWidth - 8);
                 const h = lines.length * LH_LEVEL;
                 if (h > maxLevelH) maxLevelH = h;
             });
+
             const rowH = Math.max(MIN_ROW_H, Math.max(compH, maxLevelH) + 8);
 
             if (currentY + rowH > pageHeight - 20) {
-                drawLine(leftMargin, headerBottom-3, leftMargin, currentY);
-                drawLine(pageWidth-rightMargin, headerBottom-3, pageWidth-rightMargin, currentY);
+                drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
+                drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
                 doc.addPage();
                 currentY = topMargin;
                 doc.setFontSize(10);
                 doc.setTextColor(100);
-                doc.text(`Fortsetzung – Seite ${doc.getCurrentPageInfo().pageNumber}`, pageWidth - rightMargin, currentY, {align:'right'});
+                doc.text(`Fortsetzung – Seite ${doc.getCurrentPageInfo().pageNumber}`, pageWidth - rightMargin, currentY, { align: 'right' });
                 currentY += 8;
                 headerBottom = drawHeader(currentY);
                 currentY = headerBottom;
@@ -1709,42 +1797,47 @@ async function exportMatrixPDF() {
 
             const rowY = currentY;
             let x = leftMargin;
-            doc.setFillColor(248,249,255);
+
+            doc.setFillColor(248, 249, 255);
             doc.rect(x, rowY, compColWidth, rowH, 'F');
             doc.setTextColor(0);
             doc.setFontSize(COMP_FS);
             drawCenteredText(compLines, x, rowY, compColWidth, rowH, LH_COMP, true);
-            drawLine(x+compColWidth, rowY, x+compColWidth, rowY+rowH);
+            drawLine(x + compColWidth, rowY, x + compColWidth, rowY + rowH);
             x += compColWidth;
 
             levels.forEach((lvl, j) => {
                 const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
-                const lines = doc.splitTextToSize(raw, levelColWidth-8);
-                doc.setFillColor(255,255,255);
+                const lines = doc.splitTextToSize(raw, levelColWidth - 8);
+                doc.setFillColor(255, 255, 255);
                 doc.rect(x, rowY, levelColWidth, rowH, 'F');
                 doc.setTextColor(60);
                 doc.setFontSize(LEVEL_FS);
                 drawCenteredText(lines, x, rowY, levelColWidth, rowH, LH_LEVEL);
-                if (j < 4) drawLine(x+levelColWidth, rowY, x+levelColWidth, rowY+rowH);
+                if (j < 4) drawLine(x + levelColWidth, rowY, x + levelColWidth, rowY + rowH);
                 x += levelColWidth;
             });
-            drawLine(leftMargin, rowY+rowH, pageWidth-rightMargin, rowY+rowH);
+
+            drawLine(leftMargin, rowY + rowH, pageWidth - rightMargin, rowY + rowH);
             currentY += rowH;
         });
 
-        // Abschluss
-        drawLine(leftMargin, headerBottom-3, leftMargin, currentY);
-        drawLine(pageWidth-rightMargin, headerBottom-3, pageWidth-rightMargin, currentY);
+        // === ABSCHLUSS ===
+        drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
+        drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
+
         const totalPages = doc.getNumberOfPages();
-        for (let i=1; i<=totalPages; i++) {
+        for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
             doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Seite ${i}`, pageWidth-rightMargin, pageHeight-8, {align:'right'});
+            doc.text(`Seite ${i}`, pageWidth - rightMargin, pageHeight - 8, { align: 'right' });
         }
 
-        doc.save(`LernDashboard_Matrix_${new Date().toISOString().slice(0,10)}.pdf`);
+        // === SAVE MIT SAUBEREM DATEINAMEN ===
+        doc.save(`${fileTitle}.pdf`);
         showFancyAlert('PDF erfolgreich erstellt!', 'success');
+
     } catch (err) {
         console.error('PDF-Erstellung fehlgeschlagen:', err);
         showAlert('Fehler beim Erstellen der PDF. Bitte Seite neu laden und erneut versuchen.');
@@ -1779,26 +1872,31 @@ function exportMatrixExcel() {
     const headerColor = 'FF6B46C1';
     const contentColor = 'FFF8F9FA';
 
-    // === FILTER-INFO ===
-    const subjectFilter = document.getElementById('filterSubject')?.value || 'Alle Fächer';
-    const gradeFilter = document.getElementById('filterGrade')?.value || 'Alle Klassen';
-    const competenceFilter = document.getElementById('filterCompetence')?.value || '';
-    const levelFilter = document.getElementById('filterLevel')?.value || '';
-    const toolFilter = document.getElementById('filterTool')?.value || '';
-    let filterParts = [subjectFilter, gradeFilter];
-    if (competenceFilter) filterParts.push(competenceFilter);
-    if (levelFilter) filterParts.push(levelFilter);
-    if (toolFilter) filterParts.push(`Tool: ${toolFilter}`);
-    const filterText = filterParts.join(' | ');
+    // === FILTER-INFO (für Inhalt) ===
+    updateCurrentFilters();
+
+    let filterParts = [];
+    if (currentFilters.subject) filterParts.push(currentFilters.subject);
+    if (currentFilters.grade) filterParts.push(currentFilters.grade);
+    if (currentFilters.level) filterParts.push(currentFilters.level);
+    if (currentFilters.competence) {
+        const kb = currentFilters.competence.match(/(\d+)$/);
+        filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+    }
+    if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+    const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+    const fileTitle = `Matrix_${getDateString()}`;  // ← Nur Datum!
 
     // === SCHULNAME & DATUM ===
     const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
     const exportDate = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    // === Matrix aufbauen ===
+    // === MATRIX AUFBAUEN ===
     const matrix = {};
     competences.forEach(c => matrix[c] = {});
     levels.forEach(l => competences.forEach(c => matrix[c][l] = []));
+
     filtered.forEach(r => {
         if (r.competence && r.level && matrix[r.competence][r.level]) {
             const entry = `${r.topic} (${[r.subject, r.grade, r.tool].filter(Boolean).join(', ')})`;
@@ -1807,33 +1905,36 @@ function exportMatrixExcel() {
         }
     });
 
-    // === Workbook ===
+    // === WORKBOOK ===
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Kompetenzmatrix');
 
-    // === KOPFZEILE ===
+    // === KOPFZEILE (wie PDF: kleiner, mehrzeilig, wrapText) ===
     const headerTopRow = sheet.addRow(['', '', '', '', '', '']);
-    headerTopRow.height = 35;
+    headerTopRow.height = 45;  // Platz für 2 Zeilen
+
     const schoolCell = headerTopRow.getCell(1);
     schoolCell.value = schoolName;
-    schoolCell.font = { bold: true, size: 14, color: { argb: headerColor } };
+    schoolCell.font = { bold: true, size: 12, color: { argb: headerColor } };
     schoolCell.alignment = { horizontal: 'left', vertical: 'middle' };
     schoolCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
 
     sheet.mergeCells('B1:E1');
     const filterCell = sheet.getCell('B1');
-    filterCell.value = filterText;
-    filterCell.font = { bold: true, size: 14, color: { argb: headerColor } };
-    filterCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    filterCell.value = documentTitle;  // ← Inhalt: Filter
+    filterCell.font = { bold: true, size: 12, color: { argb: headerColor } };
+    filterCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     filterCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
 
     const dateCell = headerTopRow.getCell(6);
     dateCell.value = `Export: ${exportDate}`;
-    dateCell.font = { size: 12, color: { argb: 'FF666666' } };
+    dateCell.font = { size: 11, color: { argb: 'FF666666' } };
     dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
     dateCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
 
-    sheet.addRow([]);
+    sheet.addRow([]);  // Leere Zeile
+
+    // === TABELLENÜBERSCHRIFT ===
     const headerRow = sheet.addRow(['Kompetenzbereich', ...levels]);
     headerRow.eachCell((cell, colNumber) => {
         let fillColor = colNumber === 1 ? headerColor : levelColors[levels[colNumber - 2]];
@@ -1844,6 +1945,7 @@ function exportMatrixExcel() {
     });
     headerRow.height = 45;
 
+    // === ZEILEN ===
     competences.forEach(comp => {
         const rowValues = [comp, ...levels.map(l => matrix[comp][l].join('\n\n') || '–')];
         const row = sheet.addRow(rowValues);
@@ -1875,10 +1977,10 @@ function exportMatrixExcel() {
 
     sheet.columns = [{ width: 36 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }];
 
-    // === EXPORT MIT BESTÄTIGUNG ===
+    // === EXPORT MIT SAUBEREM DATEINAMEN ===
     workbook.xlsx.writeBuffer().then(buffer => {
         const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
-        saveAs(excelBlob, `Kompetenzmatrix_${new Date().toISOString().slice(0,10)}.xlsx`);
+        saveAs(excelBlob, `${fileTitle}.xlsx`);  // ← Nur Matrix_2025-11-15
         showFancyAlert('Excel-Matrix erfolgreich erstellt!', 'success');
     }).catch(err => {
         console.error("Export-Fehler:", err);
@@ -2447,7 +2549,7 @@ function displayResources(list) {
                 <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
                 <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
                 <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
-                <span class="tag level-tag">${r.level || '—'}</span>
+                <span class="tag level-tag" onclick="setFilterAndApply('filterLevel', '${escapeJs(r.level || '')}')">${r.level || '—'}</span>
                ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${escapeJs(r.tool)}</span>` : ''}
                 ${r.description ? `<div class="description">${r.description}</div>` : ''}
                 ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
