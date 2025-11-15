@@ -1,7 +1,7 @@
-const VERSION = '1.0.8'; // ← Erhöhe hier für Test (nach Deploy auf 1.0.8)
+const VERSION = '1.0.8'; // ← Erhöhe für Test (setze auf 1.0.9 nach Fix)
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
-// DYNAMISCHER PFAD – FIX FÜR LEEREN PATHNAME (LIVE-REPO)
+// DYNAMISCHER PFAD – FIX: IMMER TRAILING SLASH!
 const REPO_PATH = (() => {
   const hostname = self.location.hostname;
   const pathname = self.location.pathname;
@@ -23,23 +23,21 @@ const REPO_PATH = (() => {
 
   // 4. Allgemein: Erster Ordner nach / (z. B. /lerndashboard/)
   const parts = pathname.split('/').filter(p => p);
-  if (parts.length > 0) {
-    return self.location.origin + '/' + parts[0] + '/';
-  }
+  let path = parts.length > 0 ? '/' + parts[0] + '/' : '/';
 
-  // Fallback
-  return self.location.origin + '/';
+  // 5. Fallback
+  return self.location.origin + path;
 })();
 
-console.log('SW geladen: REPO_PATH =', REPO_PATH); // Debug in DevTools
+console.log('SW geladen: REPO_PATH =', REPO_PATH); // Debug: Sollte IMMER mit '/' enden!
 
 const urlsToCache = [
-  './',
+  './',  // ← Root
   'index.html',
   'new-resource.html',
   'edit-resource.html',
   'manifest.json',
-  'icon-192.png',
+  'icon-192.png',      // ← Jetzt korrekt: /lerndashboard-test/icon-192.png
   'icon-512.png',
   'icon-maskable-192.png',
   'icon-maskable-512.png',
@@ -50,7 +48,7 @@ const urlsToCache = [
   'libs/FileSaver.min.js'
 ].map(url => new URL(url, REPO_PATH).href);
 
-console.log('Zu cachende URLs:', urlsToCache); // Debug
+console.log('Zu cachende URLs (erste 5):', urlsToCache.slice(0, 5)); // Debug: Prüfe Slashing!
 
 // === skipWaiting ===
 self.addEventListener('message', event => {
@@ -69,14 +67,19 @@ self.addEventListener('install', event => {
           urlsToCache.map(url =>
             fetch(url, { cache: 'reload' })
               .then(r => {
-                if (r.ok) return cache.put(url, r);
+                if (r.ok) {
+                  console.log('Gecacht:', url); // Debug: Erfolge sehen
+                  return cache.put(url, r);
+                } else {
+                  console.warn('Fetch fehlgeschlagen (', r.status, '):', url);
+                }
               })
               .catch(err => console.warn('Fetch failed for', url, err))
           )
         );
       })
       .then(() => {
-        console.log(`SW v${VERSION} installiert`);
+        console.log(`SW v${VERSION} installiert – ${urlsToCache.length} URLs gecacht`);
       })
   );
 });
@@ -98,7 +101,7 @@ self.addEventListener('activate', event => {
 // === FETCH ===
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  if (url.origin === self.location.origin && url.href.startsWith(REPO_PATH)) {
+  if (url.origin === self.location.origin && url.pathname.startsWith(new URL(REPO_PATH).pathname)) {
     event.respondWith(
       caches.match(event.request).then(cached => {
         if (cached) return cached;
