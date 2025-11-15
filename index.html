@@ -1300,7 +1300,7 @@ document.getElementById('updateNowBtn').onclick = () => {
 // === SERVICE WORKER REGISTRIERUNG ===
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+    navigator.serviceWorker.register('./service-worker.js', { scope: './' })  // ← scope: './' statt '/'
       .then(reg => {
         console.log('SW registriert:', reg.scope);
 
