@@ -1,4 +1,4 @@
-const VERSION = '1.0.6';
+const VERSION = '1.0.7';
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
