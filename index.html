@@ -2518,7 +2518,7 @@ window.addEventListener('load', () => {
     // Warte kurz, bis SW aktiv ist
     setTimeout(() => {
         // LÖSE EINEN FETCH AUS (z. B. Bild laden)
-        fetch(`${REPO_PATH}icon-192.png?t=${Date.now()}`)
+        fetch(`${REPO_PATH}/icon-192.png?t=${Date.now()}`)
             .then(() => console.log('Fetch ausgelöst → PWA-Install bereit'))
             .catch(() => {});
     }, 1000);
