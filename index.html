@@ -842,11 +842,16 @@ function updateCurrentFilters() {
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
 const VERSION = '1.0.9';
-const REPO_PATH = (
-  location.hostname === 'localhost' ||
-  location.hostname === '127.0.0.1' ||
-  location.protocol === 'file:'
-) ? '/' : 'https://matthiasklossmpz.github.io/lerndashboard-test';
+const REPO_PATH = (() => {
+  if (location.hostname === 'localhost' || 
+      location.hostname === '127.0.0.1' || 
+      location.protocol === 'file:') {
+    return '/';
+  }
+  const path = location.pathname.split('/').filter(Boolean);
+  return location.origin + '/' + (path[0] || '') + '/';  // ← Immer mit trailing '/'
+})();
+console.log('Frontend REPO_PATH:', REPO_PATH);  // Debug: Sollte /lerndashboard/ sein
 
 let resources = JSON.parse(localStorage.getItem('resources') || '[]');
 let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
