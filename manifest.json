@@ -2,7 +2,7 @@
   "name": "LernDashboard Digital",
   "short_name": "LernDB",
   "description": "Digitale Unterrichtsideen & Ressourcen verwalten",
-  "start_url": "/lerndashboard",
+"start_url": "/lerndashboard/",
   "scope": "/lerndashboard/",
   "display": "standalone",
   "background_color": "#6b46c1",
