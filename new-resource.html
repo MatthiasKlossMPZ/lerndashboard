@@ -41,10 +41,10 @@ button { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; 
 <script>
 const gradeSelect = document.getElementById('grade');
 for (let i = 1; i <= 13; i++) {
-    const option = document.createElement('option');
-    option.value = `Klasse ${i}`;
-    option.textContent = `Klasse ${i}`;
-    gradeSelect.appendChild(option);
+  const option = document.createElement('option');
+  option.value = `Klasse ${i}`;
+  option.textContent = `Klasse ${i}`;
+  gradeSelect.appendChild(option);
 }
 </script>
 <div class="form-group"><label>Kompetenzbereich *</label><select id="competence" required>
@@ -58,76 +58,106 @@ for (let i = 1; i <= 13; i++) {
 </select></div>
 <div class="form-group"><label>Niveaustufe *</label>
 <select id="level" required>
-<option value="">Bitte auswählen</option>
+<option value="">- Niveau wählen -</option>
 <option value="Niveaustufe 1">Niveaustufe 1</option>
 <option value="Niveaustufe 2">Niveaustufe 2</option>
 <option value="Niveaustufe 3">Niveaustufe 3</option>
 <option value="Niveaustufe 4">Niveaustufe 4</option>
 <option value="Niveaustufe 5">Niveaustufe 5</option>
-</select>
-</div>
+</select></div>
 <div class="form-group"><label>Digitales Tool</label><input type="text" id="tool" placeholder="z.B. GeoGebra, Canva, Padlet"></div>
 <div class="form-group"><label>Beschreibung (optional)</label><textarea id="description" placeholder="Kurze Beschreibung der Unterrichtsidee..."></textarea></div>
 <div class="buttons">
-<button type="button" class="cancel" onclick="cancel()">Abbrechen</button>
-<button type="submit" class="save">Speichern</button>
+  <button type="button" class="cancel" onclick="cancel()">Abbrechen</button>
+  <button type="submit" class="save">Speichern</button>
 </div>
 </form>
 </div>
 
 <script>
-// === ABBRECHEN ===
+// === Abbrechen ===
 function cancel() {
-    const topic = document.getElementById('topic').value.trim();
-    const subject = document.getElementById('subject').value;
-    const grade = document.getElementById('grade').value;
-    const competence = document.getElementById('competence').value;
-    const level = document.getElementById('level').value;
-
-    const hasInput = topic || subject || grade || competence || level;
-
-    if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) {
-        return;
-    }
-
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({ action: 'cancelAddResource' }, '*');
-    }
-    window.close();
+  const hasInput = document.getElementById('topic').value.trim() ||
+                   document.getElementById('subject').value ||
+                   document.getElementById('grade').value ||
+                   document.getElementById('competence').value ||
+                   document.getElementById('level').value;
+  if (hasInput && !confirm('Möchtest du wirklich abbrechen? Deine Eingaben gehen verloren.')) return;
+  window.close();
 }
 
-// === SPEICHERN ===
+// === Robuster Versand (funktioniert im Browser UND in installierter PWA) ===
+// === FINALER VERSAND – KEIN DOPPEL mehr, funktioniert überall! ===
+function sendToMainWindow(type, payload) {
+    let sent = false;
+
+    // 1. postMessage versuchen (funktioniert im normalen Browser-Fenster)
+    if (!sent && window.opener && !window.opener.closed) {
+        try {
+            window.opener.postMessage({ type, ...payload }, '*');
+            sent = true;                // ← Wenn postMessage ging → fertig
+            console.log('Gesendet via postMessage');
+        } catch (e) {
+            console.warn('postMessage fehlgeschlagen', e);
+        }
+    }
+
+    // 2. NUR als Fallback: BroadcastChannel (wichtig in installierter PWA)
+    if (!sent) {
+        try {
+            const channel = new BroadcastChannel('lerndashboard-channel');
+            channel.postMessage({ type, ...payload });
+            channel.close();
+            console.log('Gesendet via BroadcastChannel (Fallback)');
+        } catch (e) {
+            console.warn('BroadcastChannel nicht verfügbar', e);
+        }
+    }
+
+    // Kleine Bestätigung im Popup (kann später wieder raus)
+    setTimeout(() => {
+        if (document.body) {
+            const fb = document.createElement('div');
+            fb.textContent = 'Gespeichert!';
+            fb.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#27ae60;color:white;padding:8px 16px;border-radius:8px;font-weight:bold;z-index:10000;';
+            document.body.appendChild(fb);
+            setTimeout(() => fb.remove(), 1500);
+        }
+    }, 300);
+}
+
+// === Speichern (EINZIGER Handler!) ===
 document.getElementById('resourceForm').onsubmit = e => {
-    e.preventDefault();
-    const resource = {
-        topic: document.getElementById('topic').value.trim(),
-        subject: document.getElementById('subject').value,
-        grade: document.getElementById('grade').value,
-        competence: document.getElementById('competence').value,
-        level: document.getElementById('level').value,
-        tool: document.getElementById('tool').value.trim(),
-        description: document.getElementById('description').value.trim(),
-        favorite: false,
-        lastModified: new Date().toLocaleDateString('de-DE')
-    };
+  e.preventDefault();
 
-    if (!resource.topic || !resource.subject || !resource.grade || !resource.competence || !resource.level) {
-        alert('Bitte alle Pflichtfelder ausfüllen!');
-        return;
-    }
+  const resource = {
+    topic: document.getElementById('topic').value.trim(),
+    subject: document.getElementById('subject').value,
+    grade: document.getElementById('grade').value,
+    competence: document.getElementById('competence').value,
+    level: document.getElementById('level').value,
+    tool: document.getElementById('tool').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    favorite: false,
+    lastModified: new Date().toLocaleDateString('de-DE')
+  };
 
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({
-            action: 'addResource',
-            resource: resource
-        }, '*');
-    }
-    window.close();
+  // Pflichtfelder prüfen
+  if (!resource.topic || !resource.subject || !resource.grade || !resource.competence || !resource.level) {
+    alert('Bitte alle Pflichtfelder ausfüllen!');
+    return;
+  }
+
+  // Nachricht senden
+  sendToMainWindow('ADD_RESOURCE', { data: resource });
+
+  // KEIN alert() mehr – das Hauptfenster zeigt die schöne Animation
+  window.close();
 };
 
-// Dark Mode synchronisieren
+// Dark Mode vom Hauptfenster übernehmen
 if (window.opener && window.opener.document.body.classList.contains('dark')) {
-    document.body.classList.add('dark');
+  document.body.classList.add('dark');
 }
 </script>
 </body>

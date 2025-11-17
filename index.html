@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
     <meta charset="UTF-8">
     <title>LernDashboard Digital</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -462,6 +463,7 @@
         z-index: 10;
     }
 
+    
     /* --- TOUCH OPTIMIERUNG --- */
     .btn, .action-icon, .tag, .reset-btn, .new-resource-btn, select, input {
         min-height: 44px;
@@ -841,7 +843,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.0.11';
+const VERSION = '1.6.16';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -861,7 +863,6 @@ let deferredPrompt = null;
 let targetVersion = null;
 let allowReload = false;          
 let newServiceWorker = null;
-let updateBannerShown = false;
 
 // === DROPDOWN-DATEN ===
 const subjects = ['Deutsch','Mathematik','Englisch','Biologie','Chemie','Physik','Geschichte','Geografie','Politik','Wirtschaft','Informatik','Kunst','Musik','Sport','Ethik','Religion'];
@@ -1197,25 +1198,62 @@ function resetFilters() {
     applyFilters();
 }
 
-// === COPYRIGHT + VERSION ANZEIGEN ===
-window.addEventListener('load', () => {
+// === VERSION SOFORT UND NACH UPDATE ANZEIGEN ===
+function updateVersionDisplay() {
     const el = document.getElementById('versionInfo');
     if (el) {
         el.innerHTML = `© 2025 <strong>Matthias Kloß</strong> | Version ${VERSION}`;
     }
+}
+
+// Beim ersten Laden
+window.addEventListener('load', updateVersionDisplay);
+
+// WICHTIG: Nach jedem Service-Worker-Update sofort neu anzeigen (auch ohne Reload!)
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('SW gewechselt → Version sofort aktualisieren');
+    updateVersionDisplay();        // ← Das fehlte!
+    if (allowReload) {
+        window.location.reload();
+    }
 });
 
-// === EMPFANGE ÄNDERUNGEN AUS EDIT-POPUP ===
-window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'UPDATE_RESOURCE') {
-        const { index, data } = event.data;
+// === NACHRICHTEN-EMPFANG (postMessage + BroadcastChannel) – MUSS DRIN SEIN! ===
+function handleResourceMessage(event) {
+    if (!event.data) return;
 
+    // Kompatibilität für ganz alte Versionen
+    if (event.data.action === 'addResource' && event.data.resource) {
+        event.data = { type: 'ADD_RESOURCE', data: event.data.resource };
+    }
+
+    // === NEUE RESSOURCE ===
+    if (event.data.type === 'ADD_RESOURCE') {
+        const { data: newResource } = event.data;
+        if (newResource && newResource.topic) {
+            resources.push(newResource);
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters();
+            updateToolFilter();
+            populateDropdowns();
+
+            const addAnim = document.getElementById('addAnimation');
+            if (addAnim) {
+                addAnim.classList.add('add-active');
+                setTimeout(() => addAnim.classList.remove('add-active'), 1200);
+            }
+            showFancyAlert('Ressource erfolgreich hinzugefügt!', 'success');
+        }
+    }
+
+    // === UPDATE RESSOURCE ===
+    if (event.data.type === 'UPDATE_RESOURCE') {
+        const { index, data } = event.data;
         if (index >= 0 && index < resources.length) {
             resources[index] = data;
             localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters(); // Aktualisiert Dashboard + Matrix
+            applyFilters();
 
-            // Erfolgsanimation
             const anim = document.getElementById('editAnimation');
             if (anim) {
                 anim.classList.add('edit-active');
@@ -1223,52 +1261,16 @@ window.addEventListener('message', function(event) {
             }
         }
     }
-});
+}
 
-// === PWA INSTALL BANNER ===
-
-function showPWAInstallBanner() {
-  let banner = document.getElementById('pwaInstallBanner');
-  if (banner) {
-    banner.style.display = 'flex';
-    return;
-  }
-
-  banner = document.createElement('div');
-  banner.id = 'pwaInstallBanner';
-  banner.style.cssText = `
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-    background:#6b46c1; color:white; padding:12px 20px; border-radius:12px;
-    box-shadow:0 8px 32px rgba(107,70,193,0.4); font-size:14px; z-index:9998;
-    display:flex; align-items:center; gap:10px; animation:slideUp 0.5s ease;
-  `;
-  banner.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-    </svg>
-    <strong>App installieren?</strong>
-    <button id="installPwaBtn" style="background:white; color:#6b46c1; border:none; border-radius:8px; padding:4px 12px; margin-left:8px; font-weight:600; cursor:pointer;">Installieren</button>
-    <button id="closePwaBanner" style="background:none; border:none; color:white; font-size:18px; margin-left:8px; cursor:pointer;">×</button>
-  `;
-  document.body.appendChild(banner);
-
-  document.getElementById('installPwaBtn').onclick = async () => {
-    banner.style.display = 'none';
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('PWA Installation:', outcome);
-
-    if (outcome === 'accepted') {
-      deferredPrompt = null;
-    }
-  };
-
-  document.getElementById('closePwaBanner').onclick = () => {
-    banner.style.display = 'none';
-    deferredPrompt = null; // Verhindert erneuten Aufruf
-  };
+// 1. Klassischer Listener
+window.addEventListener('message', handleResourceMessage);
+// 2. Fallback: BroadcastChannel (für installierte PWAs)
+try {
+    const channel = new BroadcastChannel('lerndashboard-channel');
+    channel.onmessage = handleResourceMessage;
+} catch (e) {
+    console.warn('BroadcastChannel nicht unterstützt');
 }
 
 // === PWA INSTALLATION ===
@@ -1278,42 +1280,244 @@ window.addEventListener('beforeinstallprompt', (e) => {
   showPWAInstallBanner(); // ← JETZT WIRD ER ANGEZEIGT!
 });
 
-// === PWA UPDATE BANNER ===
+// === SCHÖNES PWA-INSTALLATIONS-BANNER (mit längerem Anzeigen!) ===
+function showPWAInstallBanner() {
+    // Nur einmal pro Sitzung oder alle 24h
+    const lastShown = localStorage.getItem('pwaBannerLastShown');
+    const now = Date.now();
+    // if (lastShown && (now - parseInt(lastShown)) < 86400000) return; // 24 Stunden
+
+    const banner = document.createElement('div');
+    banner.id = 'pwaInstallBanner';
+    banner.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: white; color: #333; padding: 16px 24px; border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 99999;
+        display: flex; align-items: center; gap: 16px; max-width: 90%;
+        font-family: system-ui, sans-serif; animation: slideUp 0.5s ease;
+        border: 3px solid #6b46c1;
+    `;
+    banner.innerHTML = `
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#6b46c1">
+            <path d="M17 18H7V6h10v1h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v1z"/>
+            <path d="M14 9h5l-7 7-7-7h5V3h4v6z"/>
+        </svg>
+        <div>
+            <strong style="font-size:16px;display:block;margin-bottom:4px;">
+                LernDashboard als App installieren?
+            </strong>
+            <span style="font-size:14px;color:#666;">
+                Für schnelleren Zugriff – direkt vom Homescreen!
+            </span>
+        </div>
+        <button id="installPwaBtn" style="
+            background:#6b46c1;color:white;border:none;padding:10px 20px;
+            border-radius:10px;font-weight:700;cursor:pointer;margin-left:auto;
+        ">Installieren</button>
+        <button id="closePwaBanner" style="
+            background:none;border:none;font-size:24px;cursor:pointer;margin-left:8px;
+            color:#999;
+        ">×</button>
+    `;
+    document.body.appendChild(banner);
+
+    // Installieren-Button
+    document.getElementById('installPwaBtn').onclick = async () => {
+        banner.remove();
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('PWA Installation:', outcome);
+        deferredPrompt = null;
+        if (outcome === 'accepted') {
+            showFancyAlert('App wurde installiert!', 'success');
+        }
+    };
+
+    // Schließen-Button
+    document.getElementById('closePwaBanner').onclick = () => {
+        banner.style.animation = 'slideDown 0.4s ease forwards';
+        setTimeout(() => banner.remove(), 400);
+        localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+    };
+
+    // Auto-Close nach 8 Sekunden (genug Zeit zum Lesen + Klicken)
+    setTimeout(() => {
+        if (banner && banner.parentElement) {
+            banner.style.animation = 'slideDown 0.4s ease forwards';
+            setTimeout(() => banner.remove(), 400);
+            localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+        }
+    }, 8000);
+}
+
+// === PWA-INSTALLATIONS-BANNER: Animationen (kein Konflikt mehr!) ===
+const pwaBannerStyle = document.createElement('style');
+pwaBannerStyle.textContent = `
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    }
+`;
+document.head.appendChild(pwaBannerStyle);
+
+// === PWA-INSTALLATIONS-BANNER ===
+function showPWAInstallBanner() {
+    // Nur einmal pro Tag zeigen
+    const lastShown = localStorage.getItem('pwaBannerLastShown');
+    const now = Date.now();
+    if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'pwaInstallBanner';
+    banner.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: white; color: #333; padding: 16px 28px; border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.35); z-index: 99999;
+        display: flex; align-items: center; gap: 16px; max-width: 90%;
+        font-family: system-ui, sans-serif; animation: slideUp 0.6s ease;
+        border: 4px solid #6b46c1;
+    `;
+    banner.innerHTML = `
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="#6b46c1">
+            <path d="M17 18H7V6h10v1h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v1z"/>
+            <path d="M14 9h5l-7 7-7-7h5V3h4v6z"/>
+        </svg>
+        <div style="flex:1;">
+            <strong style="font-size:17px;display:block;margin-bottom:4px;">
+                LernDashboard als App installieren?
+            </strong>
+            <span style="font-size:14px;color:#555;">
+                Direkt vom Homescreen starten – schneller & offline nutzbar!
+            </span>
+        </div>
+        <button id="installPwaBtn" style="
+            background:#6b46c1;color:white;border:none;padding:12px 24px;
+            border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;
+        ">Installieren</button>
+        <button id="closePwaBanner" style="
+            background:none;border:none;font-size:28px;cursor:pointer;color:#999;
+            margin-left:8px;
+        ">×</button>
+    `;
+
+    document.body.appendChild(banner);
+
+    // Installieren
+    document.getElementById('installPwaBtn').onclick = async () => {
+        banner.remove();
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') {
+            showFancyAlert('LernDashboard wurde installiert!', 'success');
+        }
+    };
+
+    // Schließen
+    document.getElementById('closePwaBanner').onclick = () => {
+        banner.style.animation = 'slideDown 0.5s ease forwards';
+        setTimeout(() => banner.remove(), 500);
+        localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+    };
+
+    // Auto-Close nach 10 Sekunden (genug Zeit!)
+    setTimeout(() => {
+        if (banner && banner.parentElement) {
+            banner.style.animation = 'slideDown 0.5s ease forwards';
+            setTimeout(() => banner.remove(), 500);
+            localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+        }
+    }, 10000);
+}
+
+// === NUR NACH KICK RELOAD (bleibt genau so!) ===
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (allowReload) {
+    window.location.reload();
+  }
+});
+
+// === UPDATE-BANNER: Neue Version verfügbar ===
+let updateBannerShown = false;
+
 function showUpdateBanner() {
-  if (updateBannerShown || document.getElementById('updateBanner')) return;
+  if (updateBannerShown) return;
   updateBannerShown = true;
+
   const banner = document.createElement('div');
   banner.id = 'updateBanner';
   banner.style.cssText = `
-    position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
-    background: linear-gradient(135deg, #6b46c1, #8e67d6); color: white;
-    padding: 18px 20px; text-align: center; font-family: system-ui, sans-serif;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column;
-    gap: 12px; align-items: center; animation: slideInDown 0.5s ease forwards;
-    transform: translateY(-100%);
-    padding-top: calc(18px + env(safe-area-inset-top, 0px));
-    padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
+    position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+    background: linear-gradient(135deg, #6b46c1, #8e44ad);
+    color: white; padding: 18px 20px; text-align: center;
+    font-family: system-ui, sans-serif; font-size: 16px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: slideInDown 0.5s ease;
   `;
   banner.innerHTML = `
-    <div style="font-weight: 700; font-size: 16px;">Neue Version verfügbar!</div>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 10px;">
+      <path d="M19 13V18C19 19.1 18.1 20 17 20H7C5.9 20 5 19.1 5 18V13"/>
+      <path d="M12 4L12 13M12 13L15.5 9.5M12 13L8.5 9.5"/>
+    </svg>
+    Eine neue Version ist verfügbar!
     <button id="updateNowBtn" style="
-      background: white; color: #6b46c1; border: none; padding: 12px 32px;
-      border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer;
-      min-width: 160px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      margin-left: 16px; background: white; color: #6b46c1;
+      border: none; padding: 10px 20px; border-radius: 12px;
+      font-weight: bold; font-size: 15px; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     ">Jetzt aktualisieren</button>
   `;
-  document.body.appendChild(banner);
-  requestAnimationFrame(() => {
-    banner.style.transform = 'translateY(0)';
-  });
 
-  // showUpdateBanner() → Button
-document.getElementById('updateNowBtn').onclick = () => {
-  allowReload = true;
-  newServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-  // Banner ausblenden + reload
+  document.body.prepend(banner);
+
+  document.getElementById('updateNowBtn').onclick = () => {
+  // 1. Banner schön ausblenden
+  banner.style.animation = 'slideInDown 0.4s ease reverse forwards';
+
+  // 2. Kurze Bestätigung anzeigen
+  const confirmBanner = document.createElement('div');
+  confirmBanner.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+    background: #27ae60; color: white; padding: 16px 20px; text-align: center;
+    font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: slideInDown 0.4s ease;
+  `;
+  confirmBanner.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle; margin-right: 8px;">
+      <path d="M20 6 L9 17 L4 12" />
+    </svg>
+    Aktualisiert! Die neue Version wird gleich geladen…
+  `;
+  document.body.prepend(confirmBanner);
+
+  // 3. SW aktivieren + Seite neu laden
+  setTimeout(() => {
+    if (newServiceWorker) {
+      allowReload = true;
+      newServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+    // Optional: kurze Pause für Schönheit, dann Reload
+    setTimeout(() => location.reload(), 800);
+  }, 400);
 };
-}  
+}
+
+// Animation für das Banner
+const bannerStyle = document.createElement('style');
+bannerStyle.textContent = `
+  @keyframes slideInDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+`;
+document.head.appendChild(bannerStyle);
 
 // === SERVICE WORKER REGISTRIERUNG ===
 if ('serviceWorker' in navigator) {
@@ -2611,25 +2815,18 @@ function deleteResource(i) {
 
     // === BEARBEITEN ===
     function editResource(i) {
-        const r = resources[i];
-        const data = encodeURIComponent(JSON.stringify(r));
-        const url = `edit-resource.html?index=${i}&data=${data}`;
-        const popup = window.open(url, 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
-        if (popup) {
-            popup.focus();
-        } else {
-            alert('Popup wurde blockiert – bitte erlauben!');
-        }
+    const r = resources[i];
+    const data = encodeURIComponent(JSON.stringify(r));
+    const url = `edit-resource.html?v=${VERSION}&index=${i}&data=${data}`;
+    const popup = window.open(url, 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    if (!popup) alert('Popup wurde blockiert – bitte erlauben!');
     }
 
     function openNewResourceWindow() {
-    const popup = window.open('new-resource.html', 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
-    if (popup) {
-        popup.focus();
-    } else {
-        alert('Popup wurde blockiert – bitte erlauben!');
+    const url = `new-resource.html?v=${VERSION}`;
+    const popup = window.open(url, 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    if (!popup) alert('Popup wurde blockiert – bitte erlauben!');
     }
-}
 
 </script>  <!-- ← ENDE SCRIPT -->
 
@@ -3005,6 +3202,12 @@ tr:last-child td {
         </p>
     </div>
 </div>
-
+<!-- Manueller Installations-Button (klein & unauffällig) -->
+<div id="installButtonContainer" style="position:fixed; bottom:20px; right:20px; z-index:1001; display:none;">
+    <button id="installAppBtn" style="
+        background:#6b46c1; color:white; border:none; border-radius:50%; width:60px; height:60px; 
+        cursor:pointer; font-size:24px; box-shadow:0 4px 12px rgba(107,70,193,0.3); transition:all 0.3s;
+    " title="Als App installieren">📱</button>
+</div>
 </body>
 </html>
