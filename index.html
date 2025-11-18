@@ -577,7 +577,7 @@
     Schule: <span id="printSchoolNameText"></span>
 </div>
 <div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-  TESTVERSION
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)!
 </div>
 
 <!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
@@ -762,16 +762,16 @@
                 <h4 class="export-group-title" id="filterExportTitle">Filter-Exporte</h4>
                 <div class="btn-row">
                     <button class="btn csv filtered-export" onclick="exportCSV()" 
-                            title="Exportiert gefilterte Ressourcen als CSV (Fach, Klasse, Tool, etc.)">CSV</button>
+                            title="Exportiert gefilterte Ressourcen als CSV (Fach, Klasse, Tool, etc.)"type="button">CSV</button>
                     <button class="btn pdf filtered-export" onclick="exportPDF()" 
-                            title="Exportiert gefilterte Ressourcen als PDF (nur sichtbare Einträge)">PDF</button>
+                            title="Exportiert gefilterte Ressourcen als PDF (nur sichtbare Einträge)"type="button">PDF</button>
                     <button class="btn matrix filtered-export" onclick="exportMatrixCSV()" 
                             style="background:#e67e22;" 
-                            title="Matrix als CSV – basierend auf aktuellen Filtern">Matrix CSV</button>
-                    <button class="btn matrix filtered-export" id="matrixPdfBtn" style="background:#9c27b0; color:white;" title="Matrix als PDF – nur gefilterte Daten" onclick="exportMatrixPDF()">Matrix PDF</button>
+                            title="Matrix als CSV – basierend auf aktuellen Filtern"type="button">Matrix CSV</button>
+                    <button class="btn matrix filtered-export" id="matrixPdfBtn" style="background:#9c27b0; color:white;" title="Matrix als PDF – nur gefilterte Daten" onclick="exportMatrixPDF()"type="button">Matrix PDF</button>
                     <button class="btn matrix filtered-export" onclick="exportMatrixExcel()" 
                             style="background:#27ae60; color:white; border:2px solid #1e7e34;" 
-                            title="Formatierte Excel-Matrix mit aktuellen Filtern">Matrix Excel</button>
+                            title="Formatierte Excel-Matrix mit aktuellen Filtern"type="button">Matrix Excel</button>
                 </div>
             </div>
 
@@ -843,7 +843,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.0';
+const VERSION = '1.6.21';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -2590,7 +2590,7 @@ function showImportPreview(csvString) {
         return;
     }
 
-    // Vorschau-Tabelle
+    // Vorschau-Tabelle (unverändert)
     let previewHtml = `<div style="max-height:300px;overflow-y:auto;margin:10px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">`;
     previewHtml += `<tr style="background:#6b46c1;color:white;"><th style="padding:8px;text-align:left;">${headers.slice(0, 6).join('</th><th style="padding:8px;text-align:left;">')}</th></tr>`;
     data.slice(0, 8).forEach(row => {
@@ -2599,7 +2599,6 @@ function showImportPreview(csvString) {
     if (data.length > 8) previewHtml += `<tr><td colspan="6" style="text-align:center;color:#666;padding:8px;font-style:italic;">… und ${data.length - 8} weitere</td></tr>`;
     previewHtml += `</table></div>`;
 
-    // Modal erstellen
     const modal = document.createElement('div');
     modal.style.cssText = `
         position:fixed;top:0;left:0;width:100%;height:100%;
@@ -2607,7 +2606,6 @@ function showImportPreview(csvString) {
         display:flex;justify-content:center;align-items:center;
         z-index:20000;padding:20px;box-sizing:border-box;
     `;
-
     modal.innerHTML = `
         <div style="background:var(--card);padding:28px;border-radius:16px;max-width:90%;width:600px;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
             <h3 style="margin:0 0 12px;color:var(--text);font-size:19px;font-weight:700;">Import-Vorschau</h3>
@@ -2616,10 +2614,10 @@ function showImportPreview(csvString) {
             </p>
             ${previewHtml}
             <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button id="cancelImportBtn" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;cursor:pointer;font-weight:600;">
+                <button id="cancelImportBtn" type="button" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;cursor:pointer;font-weight:600;">
                     Abbrechen
                 </button>
-                <button id="confirmImportBtn" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:700;">
+                <button id="confirmImportBtn" type="button" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:700;">
                     Importieren
                 </button>
             </div>
@@ -2628,25 +2626,25 @@ function showImportPreview(csvString) {
 
     document.body.appendChild(modal);
 
-    // === 100 % sicheres Event-Binding ===
-    modal.addEventListener('click', (e) => {
-        if (e.target.id === 'cancelImportBtn') {
-            modal.remove();
+    // Jetzt funktionieren beide Buttons + Enter-Taste
+    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
+
+    modal.querySelector('#confirmImportBtn').onclick = () => {
+        modal.remove();
+        performImport(data);
+    };
+
+    // Enter-Taste → Importieren
+    modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            modal.querySelector('#confirmImportBtn').click();
         }
-        if (e.target.id === 'confirmImportBtn') {
-            modal.remove();
-            performImport(data);
-        }
+        if (e.key === 'Escape') modal.remove();
     });
 
-    // Optional: ESC-Taste schließt auch
-    const closeOnEsc = (e) => {
-        if (e.key === 'Escape') {
-            modal.remove();
-            document.removeEventListener('keydown', closeOnEsc);
-        }
-    };
-    document.addEventListener('keydown', closeOnEsc);
+    // Fokus auf "Importieren" setzen, damit Enter sofort geht
+    modal.querySelector('#confirmImportBtn').focus();
 }
 
 function performImport(data) {
@@ -2697,71 +2695,41 @@ function performImport(data) {
 }
 
 function showFancyAlert(title, type = 'info', subtitle = '') {
-    // Entferne alte Modals (sicherheitshalber)
+    // Alte Popups entfernen
     document.querySelectorAll('[data-fancy-alert]').forEach(m => m.remove());
 
     const modal = document.createElement('div');
     modal.dataset.fancyAlert = 'true';
     modal.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(8px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 30000;
-        padding: 20px;
-        box-sizing: border-box;
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+        display:flex;justify-content:center;align-items:center;
+        z-index:30000;padding:20px;box-sizing:border-box;
     `;
 
-    const colors = {
-        success: '#27ae60',
-        warning: '#f39c12',
-        info: '#6b46c1'
-    };
+    const colors = { success: '#27ae60', warning: '#f39c12', info: '#6b46c1', error: '#e74c3c' };
 
     modal.innerHTML = `
-        <div style="
-            background: var(--card);
-            padding: 28px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 90%;
-            width: 380px;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
-            animation: fadeIn 0.3s ease;
-        ">
-            <div style="margin: 0 auto 16px; width: 64px; height: 64px;">
-                <svg width="64" height="64" viewBox="0 0 100 100">
+        <div id="fancyDialog" role="dialog" aria-modal="true" tabindex="-1"
+             style="background:var(--card);padding:32px;border-radius:16px;text-align:center;
+                    max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);
+                    outline:none;">
+            <div style="margin:0 auto 20px;width:70px;height:70px;">
+                <svg width="70" height="70" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
                     <circle cx="50" cy="50" r="44" fill="none" stroke="${colors[type]}" stroke-width="4"
                             stroke-dasharray="276.46" stroke-dashoffset="276.46"
-                            style="animation: drawCircle 1s ease forwards;"/>
+                            style="animation:drawCircle 1s ease forwards;"/>
                     <path d="M30 50 L45 65 L70 35" fill="none" stroke="${colors[type]}" stroke-width="6"
                           stroke-linecap="round" stroke-linejoin="round"
-                          style="stroke-dasharray:100; stroke-dashoffset:100; animation: draw 0.6s ease forwards 0.5s;"/>
+                          style="stroke-dasharray:100;stroke-dashoffset:100;animation:draw 0.6s ease forwards 0.5s;"/>
                 </svg>
             </div>
-            <p style="font-size: 18px; font-weight: 700; color: ${colors[type]}; margin: 0 0 8px;">
-                ${title}
-            </p>
-            ${subtitle ? `<p style="font-size: 14px; color: var(--text-light); margin: 0 0 20px; line-height: 1.5;">
-                ${subtitle}
-            </p>` : ''}
-            <button id="fancyAlertOK" style="
-                padding: 10px 24px;
-                background: ${colors[type]};
-                color: white;
-                border: none;
-                border-radius: 10px;
-                font-weight: 600;
-                font-size: 15px;
-                cursor: pointer;
-                min-width: 100px;
-                transition: all 0.2s;
-            " onmouseover="this.style.opacity='0.9'"
-                onmouseout="this.style.opacity='1'">
+            <p style="font-size:19px;font-weight:700;color:${colors[type]};margin:0 0 8px;">${title}</p>
+            ${subtitle ? `<p style="font-size:14px;color:var(--text-light);margin:0 0 24px;line-height:1.5;">${subtitle}</p>` : ''}
+            <button id="fancyAlertOK" style="padding:11px 28px;background:${colors[type]};color:white;
+                border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;
+                min-width:110px;transition:all 0.2s;" autofocus>
                 OK
             </button>
         </div>
@@ -2769,11 +2737,35 @@ function showFancyAlert(title, type = 'info', subtitle = '') {
 
     document.body.appendChild(modal);
 
-    // Button direkt anhängen – KEIN this.closest!
-    modal.querySelector('#fancyAlertOK').onclick = () => {
+    const dialog = modal.querySelector('#fancyDialog');
+    const okBtn = modal.querySelector('#fancyAlertOK');
+
+    // WICHTIG: Dialog fokussieren → Tastatureingaben werden empfangen
+    dialog.focus();
+
+    const closeModal = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(() => modal.remove(), 350);
     };
+
+    // Enter und Escape schließen das Popup
+    dialog.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            closeModal();
+        }
+    });
+
+    okBtn.onclick = closeModal;
+
+    // Falls jemand auf das Overlay klickt → auch schließen
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
 }
 
 function escapeHtml(text) {
@@ -2874,6 +2866,13 @@ function deleteResource(i) {
     const popup = window.open(url, 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
     if (!popup) alert('Popup wurde blockiert – bitte erlauben!');
     }
+
+// Schützt vor versehentlichem Doppel-Download durch Enter
+document.querySelectorAll('.btn').forEach(btn => {
+    if (btn.onclick || btn.getAttribute('onclick')) {
+        btn.type = 'button';
+    }
+});
 
 </script>  <!-- ← ENDE SCRIPT -->
 

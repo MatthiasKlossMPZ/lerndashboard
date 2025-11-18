@@ -4,122 +4,293 @@
   <meta charset="UTF-8">
   <title>Ressource bearbeiten</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f5f7fa; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    textarea { min-height: 100px; resize: vertical; }
-    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px; }
-    button[type="submit"] { background: #6b46c1; color: white; }
-    button[type="button"] { background: #95a5a6; color: white; }
+    .autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1.5px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  display: none;
+}
+.autocomplete-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 15px;
+  border-bottom: 1px solid #eee;
+}
+.autocomplete-item:hover,
+.autocomplete-item.highlighted {
+  background: #eef5ff;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+
+    :root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 620px; margin: 20px auto; background: var(--card); padding: 30px; border-radius: 16px; box-shadow: var(--shadow); }
+    h2 { color: var(--primary); text-align: center; margin-top: 0; font-size: 22px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; margin-bottom: 7px; font-weight: 600; font-size: 14.5px; }
+    input, select, textarea {
+      width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 10px;
+      font-size: 15px; box-sizing: border-box; transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
+    textarea { min-height: 110px; resize: vertical; }
+    .buttons { display: flex; gap: 14px; justify-content: flex-end; margin-top: 30px; }
+    button {
+      padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer;
+      font-weight: 600; font-size: 15px; min-width: 110px; transition: all 0.2s;
+    }
+    .save { background: var(--primary); color: white; }
+    .save:hover { background: #5a37a8; }
+    .cancel { background: #95a5a6; color: white; }
+    .cancel:hover { background: #7f8c8d; }
   </style>
 </head>
 <body>
-  <h2>Ressource bearbeiten</h2>
-  <form id="editForm">
-    <input type="hidden" id="editIndex">
-    <div class="form-group">
+  <div class="container">
+    <h2>Ressource bearbeiten</h2>
+    <form id="editForm" autocomplete="off">
+      <input type="hidden" id="editIndex">
+      <div class="form-group" style="position:relative;">
       <label>Thema *</label>
-      <input type="text" id="topic" required>
-    </div>
-    <div class="form-group">
-      <label>Fach</label>
-      <select id="subject">
-        <option>Deutsch</option><option>Mathematik</option><option>Englisch</option>
-        <option>Biologie</option><option>Chemie</option><option>Physik</option>
-        <option>Geschichte</option><option>Geografie</option><option>Politik</option>
-        <option>Wirtschaft</option><option>Informatik</option><option>Kunst</option>
-        <option>Musik</option><option>Sport</option><option>Ethik</option><option>Religion</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Klasse</label>
-      <select id="grade">
-        <option>Klasse 5</option><option>Klasse 6</option><option>Klasse 7</option>
-        <option>Klasse 8</option><option>Klasse 9</option><option>Klasse 10</option>
-        <option>Klasse 11</option><option>Klasse 12</option><option>Klasse 13</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Kompetenz</label>
-      <select id="competence">
+      <input type="text" id="topic" autocomplete="off" placeholder="z.B. Klimawandel interaktiv" required>
+      <div id="topicDropdown" class="autocomplete-dropdown"></div>
+      </div>
+      <div class="form-group"><label>Fach *</label><select id="subject" required>
+        <option value="">– Fach wählen –</option>
+        <option>AWT</option><option>Astronomie</option><option>Biologie</option>
+        <option>Chemie</option><option>Deutsch</option><option>Englisch</option>
+        <option>Französisch</option><option>Geografie</option><option>Geschichte</option>
+        <option>Gesellschaftskunde</option><option>Informatik</option><option>Italienisch</option>
+        <option>Kunst</option><option>Mathematik</option><option>Musik</option>
+        <option>Naturwissenschaften</option><option>Physik</option><option>Plattdeutsch</option>
+        <option>Russisch</option><option>Spanisch</option><option>Sozialkunde</option>
+        <option>Sport</option><option>Wirtschaft</option>
+      </select></div>
+      <div class="form-group"><label>Klasse *</label><select id="grade" required></select></div>
+      <div class="form-group"><label>Kompetenzbereich *</label><select id="competence" required>
+        <option value="">– Kompetenz wählen –</option>
         <option>Suchen, Verarbeiten und Aufbewahren</option>
         <option>Kommunizieren und Kooperieren</option>
         <option>Produzieren und Präsentieren</option>
         <option>Schützen und sicher Agieren</option>
         <option>Problemlösen und Handeln</option>
         <option>Analysieren und Reflektieren</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Niveaustufe</label>
-      <select id="level">
+      </select></div>
+      <div class="form-group"><label>Niveaustufe *</label><select id="level" required>
+        <option value="">– Niveau wählen –</option>
         <option>Niveaustufe 1</option><option>Niveaustufe 2</option><option>Niveaustufe 3</option>
         <option>Niveaustufe 4</option><option>Niveaustufe 5</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Tool</label>
-      <input type="text" id="tool">
-    </div>
-    <div class="form-group">
-      <label>Beschreibung</label>
-      <textarea id="description"></textarea>
-    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-      <button type="button" onclick="window.close()" style="background: #95a5a6; color: white;">Abbrechen</button>
-      <button type="submit" style="background: #6b46c1; color: white;">Speichern</button>
-    </div>
-  </form>
+      </select></div>
+      <div class="form-group" style="position:relative;">
+      <label>Digitales Tool</label>
+      <input type="text" id="tool" autocomplete="off" placeholder="z.B. GeoGebra, Canva, Padlet">
+      <div id="toolDropdown" class="autocomplete-dropdown"></div>
+      </div>
+      <div class="form-group"><label>Beschreibung (optional)</label><textarea id="description"></textarea></div>
+      <div class="buttons">
+        <button type="button" id="cancelBtn" class="cancel">Abbrechen</button>
+        <button type="button" id="saveBtn" class="save">Speichern</button>
+      </div>
+    </form>
+  </div>
 
   <script>
-    // === Lese URL-Parameter ===
-    const params = new URLSearchParams(window.location.search);
-    const urlIndex = params.get('index');
-    const rawData = params.get('data');
-
-    let urlData = {};
-    if (rawData) {
-        try {
-            urlData = JSON.parse(decodeURIComponent(rawData));
-        } catch (e) {
-            console.error("Datenfehler:", e);
-        }
+    // Klassen 1–13
+    const gradeSelect = document.getElementById('grade');
+    for (let i = 1; i <= 13; i++) {
+      const opt = document.createElement('option');
+      opt.value = `Klasse ${i}`;
+      opt.textContent = `Klasse ${i}`;
+      gradeSelect.appendChild(opt);
     }
 
-    // === Formular befüllen ===
+    // Dark Mode übernehmen
+    if (window.opener?.document.body.classList.contains('dark')) {
+      document.body.classList.add('dark');
+    }
+
+    // === Daten aus URL auslesen und Formular befüllen ===
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('editIndex').value = urlIndex || '';
-        document.getElementById('topic').value = urlData.topic || '';
-        document.getElementById('subject').value = urlData.subject || '';
-        document.getElementById('grade').value = urlData.grade || '';
-        document.getElementById('competence').value = urlData.competence || '';
-        document.getElementById('level').value = urlData.level || '';
-        document.getElementById('tool').value = urlData.tool || '';
-        document.getElementById('description').value = urlData.description || '';
-    });
+      const params = new URLSearchParams(window.location.search);
+      const rawData = params.get('data');
+      let resource = {};
 
-    // === Speichern ===
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const updated = {
-            topic: document.getElementById('topic').value.trim(),
-            subject: document.getElementById('subject').value,
-            grade: document.getElementById('grade').value,
-            competence: document.getElementById('competence').value,
-            level: document.getElementById('level').value,
-            tool: document.getElementById('tool').value.trim(),
-            description: document.getElementById('description').value.trim(),
-        };
-
-        if (window.opener) {
-            window.opener.postMessage({
-                type: 'UPDATE_RESOURCE',
-                index: parseInt(urlIndex),
-                data: updated
-            }, '*');
+      if (rawData) {
+        try {
+          resource = JSON.parse(decodeURIComponent(rawData));
+        } catch (e) {
+          console.error('Fehler beim Parsen der Daten', e);
         }
-        window.close();
+      }
+
+      // Alle Felder befüllen – jetzt inkl. Thema, Fach, Tool und Beschreibung!
+      document.getElementById('topic').value       = resource.topic || '';
+      document.getElementById('subject').value     = resource.subject || '';
+      document.getElementById('grade').value       = resource.grade || '';
+      document.getElementById('competence').value  = resource.competence || '';
+      document.getElementById('level').value       = resource.level || '';
+      document.getElementById('tool').value        = resource.tool || '';
+      document.getElementById('description').value = resource.description || '';
+
+      // Fokus auf Thema setzen
+      document.getElementById('topic').focus();
     });
+
+    const form = document.getElementById('editForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Enter = Speichern, Escape = Sofort schließen (wie gewünscht – ohne Nachfrage)
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        saveBtn.click();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        window.close();
+      }
+    });
+
+    cancelBtn.onclick = () => window.close();
+
+    // Speichern
+    saveBtn.onclick = () => {
+      const updated = {
+        topic: document.getElementById('topic').value.trim(),
+        subject: document.getElementById('subject').value,
+        grade: document.getElementById('grade').value,
+        competence: document.getElementById('competence').value,
+        level: document.getElementById('level').value,
+        tool: document.getElementById('tool').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        favorite: false,
+        lastModified: new Date().toLocaleDateString('de-DE')
+      };
+
+      if (!updated.topic || !updated.subject || !updated.grade || !updated.competence || !updated.level) {
+        alert('Bitte alle Pflichtfelder (*) ausfüllen!');
+        return;
+      }
+
+      const index = new URLSearchParams(window.location.search).get('index');
+
+      if (window.opener) {
+        window.opener.postMessage({
+          type: 'UPDATE_RESOURCE',
+          index: parseInt(index),
+          data: updated
+        }, '*');
+      } else {
+        const channel = new BroadcastChannel('lerndashboard-channel');
+        channel.postMessage({ type: 'UPDATE_RESOURCE', index: parseInt(index), data: updated });
+        channel.close();
+      }
+
+      saveBtn.textContent = 'Gespeichert ✓';
+      saveBtn.style.background = '#27ae60';
+      setTimeout(() => window.close(), 600);
+    };
+    // === ECHTE Memory-Suche für Thema & Tool (funktioniert überall im Text!) ===
+function setupAutocomplete(inputId, dropdownId, getSuggestions) {
+  const input = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+
+  input.addEventListener('input', () => {
+    const value = input.value.trim().toLowerCase();
+    dropdown.innerHTML = '';
+    if (!value) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    const suggestions = getSuggestions().filter(s => s.toLowerCase().includes(value));
+    if (suggestions.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    suggestions.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'autocomplete-item';
+      div.textContent = s;
+      div.onclick = () => {
+        input.value = s;
+        dropdown.style.display = 'none';
+      };
+      dropdown.appendChild(div);
+    });
+
+    dropdown.style.display = 'block';
+    dropdown.querySelector('.autocomplete-item')?.classList.add('highlighted');
+  });
+
+  // Pfeiltasten + Enter
+  input.addEventListener('keydown', e => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    let highlighted = dropdown.querySelector('.highlighted');
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!highlighted) {
+        items[0]?.classList.add('highlighted');
+      } else {
+        highlighted.classList.remove('highlighted');
+        const next = highlighted.nextElementSibling || items[0];
+        next?.classList.add('highlighted');
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (highlighted) {
+        highlighted.classList.remove('highlighted');
+        const prev = highlighted.previousElementSibling || items[items.length - 1];
+        prev?.classList.add('highlighted');
+      }
+    } else if (e.key === 'Enter' && highlighted) {
+      e.preventDefault();
+      input.value = highlighted.textContent;
+      dropdown.style.display = 'none';
+    } else if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // Klick außerhalb schließt
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+// Alle vorhandenen Themen & Tools aus localStorage holen
+function getAllTopics() {
+  return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]')
+    .map(r => r.topic)
+    .filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'de'));
+}
+
+function getAllTools() {
+  return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]')
+    .map(r => r.tool)
+    .filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'de'));
+}
+
+// Beim Laden aktivieren
+setupAutocomplete('topic', 'topicDropdown', getAllTopics);
+setupAutocomplete('tool', 'toolDropdown', getAllTools);
   </script>
 </body>
 </html>
