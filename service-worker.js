@@ -1,5 +1,5 @@
 // service-worker.js
-const VERSION = '1.1.3';                     // Nur hier erhöhen bei Änderungen!
+const VERSION = '1.7.5';                     // Nur hier erhöhen bei Änderungen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 // WICHTIG: Dynamischer Pfad mit garantiertem trailing Slash
@@ -39,11 +39,8 @@ const urlsToCache = [
   'libs/jszip.min.js',
   'libs/exceljs.min.js',
   'libs/FileSaver.min.js',
-
-  // WICHTIG: Aktuelle Version der Popup-Fenster mit Cache-Buster
-  // → immer aktuell + trotzdem offline verfügbar!
-  'new-resource.html?v=' + VERSION,
-  'edit-resource.html?v=' + VERSION
+  'new-resource.html',
+  'edit-resource.html'
 ].map(url => new URL(url, REPO_PATH).href);
 
 // === skipWaiting bei Nachricht vom Client ===
@@ -104,53 +101,42 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // 1. Immer frisch vom Netz laden (nie cachen): dynamische Anfragen
-  if (requestUrl.pathname.includes('/api/') || 
-      requestUrl.search.includes('v=') && requestUrl.pathname.includes('new-resource.html') ||
-      requestUrl.search.includes('v=') && requestUrl.pathname.includes('edit-resource.html')) {
-    // Diese Dateien werden zwar mit ?v=VERSION aufgerufen → aber wir cachen sie trotzdem oben
-    // → Hier nur fallback, falls Netz da ist
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
+  // Nur echte API-Anfragen immer online versuchen (falls du später mal welche hast)
+  if (requestUrl.pathname.includes('/api/')) {
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }
 
-  // 2. Alles aus unserem Repo: Cache-first, dann Netz
-  if (requestUrl.origin === new URL(REPO_PATH).origin &&
-      requestUrl.pathname.startsWith(new URL(REPO_PATH).pathname)) {
-
+  // Alles aus unserem Repo (inkl. new-resource.html und edit-resource.html mit oder ohne Query-String)
+  if (requestUrl.origin === new URL(REPO_PATH).origin) {
     event.respondWith(
-      caches.match(event.request)
-        .then(cachedResponse => {
-          if (cachedResponse) {
-            // Immer auch im Hintergrund aktualisieren (stale-while-revalidate)
+      caches.match(event.request).then(cached => {
+        if (cached) {
+          // Stale-while-revalidate: im Hintergrund updaten, falls online
+          if (navigator.onLine) {
             fetch(event.request).then(fresh => {
-              if (fresh.ok) {
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, fresh));
-              }
+              if (fresh.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, fresh.clone()));
             }).catch(() => {});
-            return cachedResponse;
           }
-
-          // Nicht im Cache → vom Netz holen und cachen
-          return fetch(event.request)
-            .then(response => {
-              if (response && response.status === 200) {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-              }
-              return response;
-            })
-            .catch(() => {
-              // Offline + nicht im Cache → fallback auf index.html
-              return caches.match(new URL('index.html', REPO_PATH));
-            });
-        })
+          return cached;
+        }
+        // Nicht im Cache → holen und cachen (oder fallback auf index.html bei Navigation)
+        return fetch(event.request).then(response => {
+          if (response.ok) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+          }
+          return response;
+        }).catch(() => {
+          if (event.request.mode === 'navigate') {
+            return caches.match('index.html');
+          }
+          return new Response('Offline', { status: 503 });
+        });
+      })
     );
     return;
   }
 
-  // 3. Alles andere (z. B. Google Fonts, externe Bilder) → normal weiterleiten
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  // Alles andere (externe Ressourcen) einfach durchreichen
+  event.respondWith(fetch(event.request).catch(() => new Response('Offline', { status: 503 })));
 });

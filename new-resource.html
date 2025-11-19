@@ -104,6 +104,33 @@ button {
 </div>
 
 <script>
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin) return;
+
+    if (event.data.type === 'EDIT_RESOURCE') {
+        // Hier deine bestehende Logik, das Formular zu befüllen
+        currentIndex = event.data.index;
+        const r = event.data.data;
+        document.getElementById('topic').value = r.topic || '';
+        document.getElementById('subject').value = r.subject || '';
+        document.getElementById('grade').value = r.grade || '';
+        document.getElementById('competence').value = r.competence || '';
+        document.getElementById('level').value = r.level || '';
+        document.getElementById('tool').value = r.tool || '';
+        document.getElementById('description').value = r.description || '';
+        document.title = 'Ressource bearbeiten';
+        // ggf. Favorit-Icon aktivieren usw.
+    }
+});
+
+// Optional: Falls das Popup schon geladen ist, bevor die Nachricht kommt
+if (window.opener) {
+    // Für den Fall, dass das Popup schon fertig ist
+    window.opener.addEventListener('load', () => {
+        // wird automatisch vom load-Listener oben abgefangen
+    });
+}
+
 // Klassen 1–13
 const gradeSelect = document.getElementById('grade');
 for (let i = 1; i <= 13; i++) {

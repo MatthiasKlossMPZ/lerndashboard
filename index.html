@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
     <title>LernDashboard Digital</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#6b46c1">
@@ -576,6 +576,12 @@
 <div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
     Schule: <span id="printSchoolNameText"></span>
 </div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)!
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
     
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
@@ -837,7 +843,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.3';
+const VERSION = '1.7.5';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -1237,6 +1243,7 @@ function handleResourceMessage(event) {
             }
             showFancyAlert('Ressource erfolgreich hinzugefügt!', 'success');
         }
+        
     }
 
     // === UPDATE RESSOURCE ===
@@ -1254,6 +1261,15 @@ function handleResourceMessage(event) {
             }
         }
     }
+    if (event.data.type === 'SHOW_EDIT_SUCCESS') {
+    setTimeout(() => {
+        const anim = document.getElementById('editAnimation');
+        if (anim) {
+            anim.classList.add('edit-active');
+            setTimeout(() => anim.classList.remove('edit-active'), 1200);
+        }
+    }, 250); 
+}
 }
 
 // 1. Klassischer Listener
@@ -2847,26 +2863,56 @@ function deleteResource(i) {
 }
 
     // === BEARBEITEN ===
-    function editResource(i) {
+function editResource(i) {
     const r = resources[i];
-    const data = encodeURIComponent(JSON.stringify(r));
-    const url = `edit-resource.html?v=${VERSION}&index=${i}&data=${data}`;
-    const popup = window.open(url, 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
-    if (!popup) alert('Popup wurde blockiert – bitte erlauben!');
+
+    // Popup mit sauberer URL öffnen
+    const popup = window.open('edit-resource.html', 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    
+    if (!popup) {
+        alert('Popup wurde blockiert – bitte erlauben!');
+        return;
     }
 
-    function openNewResourceWindow() {
-    const url = `new-resource.html?v=${VERSION}`;
-    const popup = window.open(url, 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
-    if (!popup) alert('Popup wurde blockiert – bitte erlauben!');
+    // Daten sofort schicken – egal ob das Popup schon geladen ist oder nicht
+    const sendData = () => {
+        popup.postMessage({
+            type: 'EDIT_RESOURCE',
+            index: i,
+            data: r
+        }, location.origin);
+    };
+
+    // Versuch 1: Sofort senden
+    sendData();
+
+    // Versuch 2: Falls nicht, dann beim load-Event
+    popup.addEventListener('load', sendData, { once: true });
+
+    // Versuch 3: Poll-Mechanik als absoluter Fallback
+    let attempts = 0;
+    const interval = setInterval(() => {
+        if (attempts++ > 20) { // max. 2 Sekunden warten
+            clearInterval(interval);
+            return;
+        }
+        try {
+            sendData();
+        } catch(e) {}
+    }, 100);
+}
+
+function openNewResourceWindow() {
+    const popup = window.open('new-resource.html', 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    if (!popup) {
+        alert('Popup wurde blockiert – bitte erlauben!');
+        return;
     }
 
-// Schützt vor versehentlichem Doppel-Download durch Enter
-document.querySelectorAll('.btn').forEach(btn => {
-    if (btn.onclick || btn.getAttribute('onclick')) {
-        btn.type = 'button';
-    }
-});
+    const send = () => popup.postMessage({ type: 'NEW_RESOURCE' }, location.origin);
+    send();
+    popup.addEventListener('load', send, { once: true });
+}
 
 </script>  <!-- ← ENDE SCRIPT -->
 
