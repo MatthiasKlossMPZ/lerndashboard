@@ -17,6 +17,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lerndashboard   # <-- das ist der entscheidende Trick
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,21 +28,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm                # <-- nur das, kein cache-dependency-path!
+          cache: npm                        # jetzt findet er die package-lock.json automatisch
 
       - name: Install and Build
         run: |
-          cd lerndashboard
           npm ci
           npm run build
 
       - name: Move dist to root for Pages
-        run: mv lerndashboard/dist ./dist
+        run: mv dist ../dist                  # ein Verzeichnis höher = Repo-Root
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ../dist                         # vom Root aus gesehen
 
   deploy:
     needs: build
