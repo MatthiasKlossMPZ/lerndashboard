@@ -25,18 +25,21 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: lerndashboard/package-lock.json
 
-      - name: Install & Build
+      - name: Install and Build
         run: |
           cd lerndashboard
           npm ci
           npm run build
 
+      # WICHTIG: Wir kopieren das dist in den Root, damit Pages es findet
+      - name: Move dist to root
+        run: mv lerndashboard/dist ./dist
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: lerndashboard/dist
+          path: ./dist   # jetzt liegt es im Root
 
   deploy:
     needs: build
