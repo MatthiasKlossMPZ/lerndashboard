@@ -24,16 +24,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # KEIN cache mehr → vermeidet den ganzen Fehler
 
       - name: Install and Build
         run: |
-          cd lerndashboard
           npm ci
-          npm run build
-
-      - name: Move dist to root
-        run: mv lerndashboard/dist ./dist
+          npm run build   # erstellt ./dist direkt im Root
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
