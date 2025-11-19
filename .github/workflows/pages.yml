@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: npm                # <-- nur das, kein cache-dependency-path!
 
       - name: Install and Build
         run: |
@@ -32,22 +32,20 @@ jobs:
           npm ci
           npm run build
 
-      # WICHTIG: Wir kopieren das dist in den Root, damit Pages es findet
-      - name: Move dist to root
+      - name: Move dist to root for Pages
         run: mv lerndashboard/dist ./dist
 
-      - name: Upload Pages artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist   # jetzt liegt es im Root
+          path: ./dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
-        id: deploy
+        id: deployment
         uses: actions/deploy-pages@v4
