@@ -121,16 +121,41 @@
     .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
     .filter-group select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; }
     .search-container {
-        position: relative;
-        flex: 1;
-        max-width: 280px !important;
-        min-width: 180px;
-        margin-right: 10px;
-    }
+    position: relative;          
+    flex: 1;
+    max-width: 280px !important;
+    min-width: 180px;
+    margin-right: 10px;
+    z-index: 10001;             
+}
     .search-input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-    #suggestions { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; max-height: 180px; overflow-y: auto; z-index: 1000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
-    #suggestions div { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; }
-    #suggestions div:hover { background: #f0f4ff; }
+#suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20000;               /* ← das ist der entscheidende Wert */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+    display: none;
+}
+
+#suggestions div {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 13.5px !important;   /* minimal kleiner + super lesbar */
+    line-height: 1.4;
+    transition: background 0.15s ease;
+}
+
+#suggestions div:hover {
+    background: #eef5ff;
+}
     .reset-btn {
         background: var(--primary);
         color: white;
@@ -568,6 +593,76 @@
 @keyframes drawCircle {
   to { stroke-dashoffset: 0; }
 }
+/* ==================== LÖSCH-CONFIRM-DIALOG ==================== */
+dialog#confirmDeleteDialog {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.35);
+  padding: 28px;
+  max-width: 420px;
+  width: 90vw;
+  background: var(--card);
+  animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+
+  /* Zentrieren */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+dialog#confirmDeleteDialog::backdrop {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+}
+
+dialog#confirmDeleteDialog p {
+  margin: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+dialog#confirmDeleteDialog .buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+dialog#confirmDeleteDialog button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+  transition: all 0.2s;
+}
+
+dialog#confirmDeleteDialog button[value="cancel"] {
+  background: #95a5a6;
+  color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"] {
+  background: var(--danger);
+  color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"]:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
+@keyframes modalPop {
+  from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+}
+
+.filter-container {
+    overflow: visible !important;   /* ← das war der Übeltäter */
+}
 
     </style>
 </head>
@@ -576,6 +671,12 @@
 <div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
     Schule: <span id="printSchoolNameText"></span>
 </div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)!
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
     
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
@@ -837,7 +938,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.8';
+const VERSION = '1.1.9';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -1180,6 +1281,75 @@ function applyFilters() {
     updateFilterHighlight();
     updateFilterStatus();
 }
+
+// ==================== AUTOCOMPLETE FÜR THEMA-SUCHE ====================
+const searchInput = document.getElementById('searchTopic');
+const suggestionsDiv = document.getElementById('suggestions');
+
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.trim().toLowerCase();
+  suggestionsDiv.innerHTML = '';
+  
+  if (query.length === 0) {
+    suggestionsDiv.style.display = 'none';
+    return;
+  }
+
+  // Alle Themen aus resources sammeln und filtern
+  const matches = resources
+    .map(r => r.topic || '')
+    .filter(topic => topic.toLowerCase().includes(query))
+    .sort()                                 // alphabetisch
+    .slice(0, 8);                           // max. 8 Vorschläge (passt optisch)
+
+  if (matches.length === 0) {
+    suggestionsDiv.style.display = 'none';
+    return;
+  }
+
+  matches.forEach(topic => {
+    const item = document.createElement('div');
+    item.textContent = topic;
+
+    // Highlight des eingegebenen Teils
+    const regex = new RegExp(`(${query})`, 'gi');
+    item.innerHTML = topic.replace(regex, '<strong>$1</strong>');
+
+    item.addEventListener('click', () => {
+      searchInput.value = topic;
+      suggestionsDiv.innerHTML = '';
+      suggestionsDiv.style.display = 'none';
+      applyFilters();                       // sofort filtern
+    });
+
+    suggestionsDiv.appendChild(item);
+  });
+
+  suggestionsDiv.style.display = 'block';
+});
+
+// Klick außerhalb → Vorschläge schließen
+document.addEventListener('click', (e) => {
+  if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+    suggestionsDiv.style.display = 'none';
+  }
+});
+
+// Enter oder Tab → ersten Vorschlag übernehmen
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    const first = suggestionsDiv.querySelector('div');
+    if (first) {
+      e.preventDefault();
+      searchInput.value = first.textContent;
+      suggestionsDiv.style.display = 'none';
+      applyFilters();
+    }
+  }
+  if (e.key === 'Escape') {
+    suggestionsDiv.style.display = 'none';
+  }
+});
 
 function resetFilters() {
     ['filterSubject','filterGrade','filterCompetence','filterLevel','filterTool','filterFavorite'].forEach(id => {
@@ -2845,15 +3015,47 @@ function toggleFavorite(i) {
     }
 }
 
-function deleteResource(i) {
-    if (i >= 0 && i < resources.length) {
-        resources.splice(i, 1);
-        localStorage.setItem('resources', JSON.stringify(resources));
-        const anim = document.getElementById('deleteAnimation');
-        anim.classList.add('delete-active');
-        setTimeout(() => anim.classList.remove('delete-active'), 1200);
-        applyFilters();
-    }
+async function deleteResource(i) {
+  if (i < 0 || i >= resources.length) return;
+
+  const dialog = document.getElementById('confirmDeleteDialog');
+
+  dialog.showModal();
+
+  // Das ist der einzige Trick, der in allen Browsern (auch Chrome 2025) funktioniert
+  setTimeout(() => {
+    const rect = dialog.getBoundingClientRect();
+    const top  = (window.innerHeight - rect.height) / 2 + window.scrollY;
+    const left = (window.innerWidth  - rect.width)  / 2 + window.scrollX;
+
+    dialog.style.position = 'absolute';   // nicht fixed! absolute respektiert scroll
+    dialog.style.top  = `${top}px`;
+    dialog.style.left = `${left}px`;
+    dialog.style.margin = '0';
+    dialog.style.transform = 'none';      // überschreibt alles andere
+
+    // Optional: sanfter Zoom-Effekt
+    dialog.style.opacity = '0';
+    dialog.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    requestAnimationFrame(() => {
+      dialog.style.opacity = '1';
+      dialog.style.transform = 'scale(1)';
+    });
+  }, 10);   // 10 ms reicht – nur damit showModal() erst fertig ist
+
+  const result = await new Promise(resolve => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
+  });
+
+  if (result === 'delete') {
+    resources.splice(i, 1);
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+
+    const anim = document.getElementById('deleteAnimation');
+    anim.classList.add('delete-active');
+    setTimeout(() => anim.classList.remove('delete-active'), 1200);
+  }
 }
 
     // === BEARBEITEN ===
@@ -3282,5 +3484,15 @@ tr:last-child td {
         </p>
     </div>
 </div>
+<!-- LÖSCH-BESTÄTIGUNGSDIALOG -->
+<dialog id="confirmDeleteDialog">
+  <form method="dialog">
+    <p>Möchtest du diese Ressource <strong>wirklich löschen</strong>?<br>Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+    <div class="buttons">
+      <button value="cancel">Abbrechen</button>
+      <button value="delete" autofocus>Löschen</button>
+    </div>
+  </form>
+</dialog>
 </body>
 </html>
