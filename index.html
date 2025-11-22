@@ -169,8 +169,6 @@
         align-self: flex-end;
     }
     .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: normal; transition: 0.2s; }
-    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
     .file-input { display: none; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
     .stat-card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); font-weight: 600; }
@@ -381,64 +379,12 @@
     box-shadow: 0 4px 10px rgba(197, 143, 224, 0.35);
 }
 
-/* === EXPORT-BUTTONS – EINHEITLICHES FARBKONZEPT === */
-.export-buttons .btn {
-    font-weight: 600;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    position: relative;
-    overflow: hidden;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-/* 1. ALLE EXPORT → VIOLETT */
-.btn.csv,
-.btn.pdf,
-.btn.matrix {
-    background: var(--primary);
-    color: white;
-}
-
-/* 2. IMPORT & VORLAGE → BLAU */
-.btn.import,
-.btn.template {
-    background: #2980b9;
-    color: white;
-}
-
-/* 3. DRUCKEN → DUNKELGRAU */
-.btn.print {
-    background: #2c3e50;
-    color: white;
-}
-
-/* 4. BACKUP → GRÜN (wie gewünscht) */
-.btn[onclick="autoBackup()"] {
-    background: #2ecc71;
-    color: white;
-}
-
 /* Hover für alle */
-.export-buttons .btn:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
+
     .export-buttons {
         flex-wrap: wrap;
         gap: 8px;
         justify-content: stretch;
-    }
-    .btn {
-        flex: 1 1 45%;
-        min-width: 0;
-        font-size: 13px;
-        padding: 9px 8px;
-        white-space: nowrap;
     }
 
 /* --- NEUE RESSOURCE BUTTON (MOBILE) --- */
@@ -494,22 +440,7 @@
         min-height: 44px;
         touch-action: manipulation;
     }
-        .btn.import {
-        font-weight: normal !important;
-        text-align: center !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-        padding: 9px 8px;
-    }
-    .btn.import span {
-        display: block;
-        width: 100%;
-        text-align: center;
-        pointer-events: none;
-    }
+
     .btn.import input[type="file"] {
         position: absolute;
         top: 0; left: 0;
@@ -664,6 +595,66 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     overflow: visible !important;   /* ← das war der Übeltäter */
 }
 
+/* ============================================================= */
+/* FINALER ZUSTAND – 38px + Hover + Dark Mode 100 % kompatibel */
+/* ============================================================= */
+
+.export-buttons .btn,
+.export-buttons label.btn {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 13.8px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 9px !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+    color: white;
+    background: var(--primary);               /* hell: violett, dark: wird unten überschrieben */
+    transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+
+/* Hover für alle */
+.export-buttons .btn:hover,
+.export-buttons label.btn:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 10px 25px rgba(107,70,193,0.35) !important;
+}
+.export-buttons .btn.print:hover       { box-shadow: 0 10px 25px rgba(44,62,80,0.5) !important; }
+.export-buttons .btn[onclick="autoBackup()"]:hover {
+    background: #27ae60 !important;
+    box-shadow: 0 10px 25px rgba(46,204,113,0.5) !important;
+}
+
+/* File-Input unsichtbar */
+.export-buttons .btn.import input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    font-size: 0; margin: 0; padding: 0; appearance: none;
+}
+
+/* Spezialfarben – nur im Hell-Modus hart, im Dark Mode sanfter */
+.export-buttons .btn.import                  { background: #2980b9 !important; }
+.export-buttons .btn.print                   { background: #2c3e50 !important; }
+.export-buttons .btn[onclick="autoBackup()"] { background: #2ecc71 !important; }
+
+/* ——————— DARK MODE FIX ——————— */
+.dark .export-buttons .btn,
+.dark .export-buttons label.btn {
+    background: #4a3780 !important;        /* gedecktes Violett statt grelles #6b46c1 */
+    color: #e0e0e0 !important;
+}
+.dark .export-buttons .btn.import                  { background: #1e5a8a !important; } /* dunkleres Blau */
+.dark .export-buttons .btn.print                   { background: #34495e !important; } /* dunkleres Grau */
+.dark .export-buttons .btn[onclick="autoBackup()"] { background: #27ae60 !important; } /* Grün bleibt fast gleich */
+.dark .export-buttons .btn.matrix                  { 
+    opacity: 0.95; 
+    filter: brightness(1.1);               /* inline-Farben etwas aufhellen */
+}
+
     </style>
 </head>
 <body>
@@ -671,6 +662,12 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 <div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
     Schule: <span id="printSchoolNameText"></span>
 </div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)!
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
     
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
@@ -940,7 +937,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.10';
+const VERSION = '1.1.11';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -3131,6 +3128,25 @@ function openManual() {
     document.body.appendChild(dialog);
     dialog.showModal();
 }
+
+// === DARK MODE TOGGLE ===
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    
+    // Zustand speichern
+    if (document.body.classList.contains('dark')) {
+        localStorage.setItem('darkMode', 'on');
+    } else {
+        localStorage.removeItem('darkMode');
+    }
+}
+
+// Beim Laden wiederherstellen
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('darkMode') === 'on') {
+        document.body.classList.add('dark');
+    }
+});
 
 </script>  <!-- ← ENDE SCRIPT -->
 
