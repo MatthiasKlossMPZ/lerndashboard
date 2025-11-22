@@ -671,6 +671,12 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 <div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
     Schule: <span id="printSchoolNameText"></span>
 </div>
+<div style="background: #ff4444; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+  TESTVERSION – nur für internen Gebrauch! (Diese Änderungen sind noch nicht live)!
+</div>
+
+<!-- Kleiner Abstand, damit der Rest nicht unter dem Banner verschwindet -->
+<div style="height: 70px;"></div>
     
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
@@ -880,6 +886,14 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                 title="Erstellt sofort ein lokales Backup aller Daten">Backup jetzt</button>
     </div>
     </div>
+        <!-- Hilfe-Button (rechtsbündig) -->
+    <div style="margin-left: auto; padding-top: 10px;">
+        <button class="action-icon edit-icon" onclick="openManual();" title="Bedienungsanleitung anzeigen">
+            <svg width="18" height="18" viewBox="0 0 20 20">
+                <text x="10" y="15" font-size="18" text-anchor="middle" fill="currentColor">?</text>
+            </svg>
+        </button>
+    </div>
 
 <!-- ZENTRIERTE NEUE-RESSOURCE-BUTTON -->
 <div class="centered-button-wrapper">
@@ -932,7 +946,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.9';
+const VERSION = '1.1.10';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -963,6 +977,16 @@ const competences = [
   'Problemlösen und Handeln',
   'Analysieren und Reflektieren'
 ];
+// === BEDIENUNGSANLEITUNG ===
+function openManual() {
+    const dialog = document.createElement('dialog');
+    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow);';
+    dialog.innerHTML = `
+        <iframe src="https://matthiasklossmpz.github.io/lerndashboard/docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height:100%; border:none;"></iframe>
+        <button onclick="this.parentNode.close()" style="position:absolute; top:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer;">Schließen</button>`;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+}
 
 // === ALLE FUNKTIONEN ===
 function escapeJs(str) {
@@ -3103,6 +3127,16 @@ function openNewResourceWindow() {
     send();
     popup.addEventListener('load', send, { once: true });
 }
+function openManual() {
+    const dialog = document.createElement('dialog');
+    dialog.id = 'manualDialog';  // Für Styling
+    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow); background: var(--card); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);';
+    dialog.innerHTML = `
+        <iframe src="docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height: calc(100% - 40px); border:none;"></iframe>
+        <button onclick="this.parentNode.close()" style="position:absolute; bottom:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Schließen</button>`;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+}
 
 </script>  <!-- ← ENDE SCRIPT -->
 
@@ -3419,6 +3453,30 @@ tr:last-child td {
     padding-top: 32px !important;
   }
 }
+.export-group.horizontal {
+    gap: 16px;  /* Abstand zwischen Gruppen */
+}
+
+@media (max-width: 768px) {
+    .export-group.horizontal {
+        justify-content: flex-start;  /* Auf Mobile links ausrichten, um Wrap zu handhaben */
+    }
+    .export-group.horizontal > div:last-child {
+        margin-left: auto;  /* Hilfe-Button bleibt rechts, auch bei Wrap */
+    }
+}
+
+#manualDialog::backdrop {
+    background: rgba(0,0,0,0.5);  /* Dunkler Hintergrund */
+    backdrop-filter: blur(6px);
+}
+#manualDialog iframe {
+    overflow: auto;  /* Scrollbar in der PDF, falls nötig */
+}
+.dark #manualDialog {
+    background: var(--card);  /* Dark-Mode-Anpassung */
+}
+
     </style>
 <!-- === BEARBEITUNGS-BESTÄTIGUNG (ANIMATION – OHNE TON) === -->
 <div id="editAnimation" style="
