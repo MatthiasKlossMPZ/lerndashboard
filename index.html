@@ -963,7 +963,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.26';
+const VERSION = '1.1.35';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -1426,26 +1426,6 @@ function handleResourceMessage(event) {
         event.data = { type: 'ADD_RESOURCE', data: event.data.resource };
     }
 
-    // === NEUE RESSOURCE ===
-    if (event.data.type === 'ADD_RESOURCE') {
-        const { data: newResource } = event.data;
-        if (newResource && newResource.topic) {
-            resources.push(newResource);
-            localStorage.setItem('resources', JSON.stringify(resources));
-            applyFilters();
-            updateToolFilter();
-            populateDropdowns();
-
-            const addAnim = document.getElementById('addAnimation');
-            if (addAnim) {
-                addAnim.classList.add('add-active');
-                setTimeout(() => addAnim.classList.remove('add-active'), 1200);
-            }
-            showFancyAlert('Ressource erfolgreich hinzugefügt!', 'success');
-        }
-        
-    }
-
     // === UPDATE RESSOURCE ===
     if (event.data.type === 'UPDATE_RESOURCE') {
         const { index, data } = event.data;
@@ -1469,6 +1449,72 @@ function handleResourceMessage(event) {
             setTimeout(() => anim.classList.remove('edit-active'), 1200);
         }
     }, 250); 
+    }
+
+// === EINZIGER ORT FÜR ADD_RESOURCE (verhindert Duplikate!) ===
+if (event.data.type === 'ADD_RESOURCE') {
+  const { data, undoFullBackup, undoMessage } = event.data;
+
+  // WICHTIG: Nur hinzufügen, wenn noch NICHT vorhanden!
+  const alreadyExists = resources.some(r =>
+    r.topic === data.topic &&
+    r.subject === data.subject &&
+    r.grade === data.grade &&
+    r.competence === data.competence &&
+    r.level === data.level &&
+    (r.tool || '').trim() === (data.tool || '').trim() &&
+    (r.description || '') === (data.description || '')
+  );
+
+  if (alreadyExists) {
+    console.log('Ressource bereits vorhanden – wird nicht doppelt angelegt');
+    applyFilters();
+    return;
+  }
+
+  const backupBeforeAdd = undoFullBackup || JSON.parse(JSON.stringify(resources));
+  resources.push(data);
+  localStorage.setItem('resources', JSON.stringify(resources));
+  applyFilters();
+  updateToolFilter();
+  populateDropdowns();
+
+  const undoEntry = {
+    action: 'add',
+    timestamp: Date.now(),
+    resourcesBackup: backupBeforeAdd,
+    message: undoMessage || 'Neue Ressource entfernen'
+  };
+  undoStack.unshift(undoEntry);
+  if (undoStack.length > 15) undoStack.pop();
+  localStorage.setItem('undoStack', JSON.stringify(undoStack));
+  showUndoToast(undoEntry.message);
+}
+
+// === UPDATE_RESOURCE (überschreiben) ===
+if (event.data.type === 'UPDATE_RESOURCE') {
+  const { index, data, undoFullBackup, undoBackup, undoMessage } = event.data;
+  if (index >= 0 && index < resources.length) {
+
+    // Vollständiges Backup vor der Änderung (wenn mitgeschickt, sonst aktuell nehmen)
+    const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
+
+    resources[index] = data;
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+
+    const undoEntry = {
+      action: 'override',
+      timestamp: Date.now(),
+      resourcesBackup: backupBeforeUpdate,
+      message: undoMessage || 'Überschreibung rückgängig machen'
+    };
+    undoStack.unshift(undoEntry);
+    if (undoStack.length > 15) undoStack.pop();
+    localStorage.setItem('undoStack', JSON.stringify(undoStack));
+
+    showUndoToast(undoEntry.message);
+  }
 }
 }
 
@@ -2965,7 +3011,7 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
                                            <small style="color:#e74c3c;">${escapeHtml((s.existing.description||'–').substring(0,100))}${s.existing.description?.length>100?'…':''}</small>`
                                         : s.tool !== s.existing.tool 
                                             ? `<strong style="color:#e67e22;">Tool geändert</strong>: ${escapeHtml(s.tool||'–')} → ${escapeHtml(s.existing.tool||'–')}`
-                                            : '<span style="color:#999;">nur Kleinigkeiten geändert</span>'
+                                            : '<span style="color:#999;">Beschreibung unverändert</span>'
                                     }
                                 </td>
                                 <td style="padding:10px;font-size:13px;color:#555;">

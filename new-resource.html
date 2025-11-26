@@ -4,98 +4,107 @@
 <meta charset="UTF-8">
 <title>Neue Ressource</title>
 <style>
-  .autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--card);
-  border: 1.5px solid var(--primary);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  display: none;
-}
-.autocomplete-item {
-  padding: 10px 12px;
-  cursor: pointer;
-  font-size: 15px;
-  border-bottom: 1px solid #eee;
-}
-.autocomplete-item:hover,
-.autocomplete-item.highlighted {
-  background: #eef5ff;
-}
-.autocomplete-item:last-child { border-bottom: none; }
+  :root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; padding: 20px; margin: 0; }
+  .container { max-width: 620px; margin: 0 auto; background: var(--card); padding: 32px; border-radius: 18px; box-shadow: var(--shadow); }
+  h2 { color: var(--primary); margin-top: 0; text-align: center; font-size: 23px; font-weight: 700; }
+  .form-group { margin-bottom: 20px; position: relative; }
+  label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14.8px; }
+  input, select, textarea {
+    width: 100%; padding: 13px; border: 1.8px solid #ccc; border-radius: 12px;
+    font-size: 15.5px; box-sizing: border-box; transition: border 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15); }
+  textarea { min-height: 110px; resize: vertical; }
+  .buttons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; }
+  button {
+    padding: 14px 28px; border: none; border-radius: 14px; cursor: pointer;
+    font-weight: 700; font-size: 15.5px; min-width: 120px; transition: all 0.25s;
+  }
+  .cancel { background: #95a5a6; color: white; }
+  .save { background: var(--primary); color: white; }
+  .save:hover { background: #5a37a8; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(107,70,193,0.3); }
 
-:root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
-.dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; padding: 20px; margin: 0; }
-.container { max-width: 620px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 16px; box-shadow: var(--shadow); }
-h2 { color: var(--primary); margin-top: 0; text-align: center; font-size: 22px; }
-.form-group { margin-bottom: 18px; }
-label { display: block; margin-bottom: 7px; font-weight: 600; font-size: 14.5px; }
-input, select, textarea {
-  width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 10px;
-  font-size: 15px; box-sizing: border-box; transition: border 0.2s;
-}
-input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
-textarea { min-height: 110px; resize: vertical; }
-.buttons { display: flex; gap: 14px; justify-content: flex-end; margin-top: 30px 0 10px; }
-button {
-  padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer;
-  font-weight: 600; font-size: 15px; min-width: 110px; transition: all 0.2s;
-}
-.save { background: var(--primary); color: white; }
-.save:hover { background: #5a37a8; }
-.cancel { background: #95a5a6; color: white; }
-.cancel:hover { background: #7f8c8d; }
+  .autocomplete-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
+    background: var(--card); border: 1.8px solid var(--primary); border-top: none;
+    border-radius: 0 0 12px 12px; max-height: 220px; overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18); display: none;
+  }
+  .autocomplete-item {
+    padding: 11px 14px; cursor: pointer; font-size: 15px; border-bottom: 1px solid #eee;
+    transition: background 0.15s;
+  }
+  .autocomplete-item:hover, .autocomplete-item.highlighted { background: #eef5ff; }
+  .autocomplete-item:last-child { border-bottom: none; }
+
+  @keyframes modalPop {
+    from { transform: scale(0.88); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Neue Ressource hinzufügen</h2>
   <form id="resourceForm" autocomplete="off">
-    <div class="form-group" style="position:relative;">
-    <label>Thema *</label>
-    <input type="text" id="topic" autocomplete="off" placeholder="z.B. Klimawandel interaktiv" required>
-    <div id="topicDropdown" class="autocomplete-dropdown"></div>
+    <div class="form-group">
+      <label>Thema *</label>
+      <input type="text" id="topic" autocomplete="off" placeholder="z.B. Klimawandel interaktiv" required>
+      <div id="topicDropdown" class="autocomplete-dropdown"></div>
     </div>
-    <div class="form-group"><label>Fach *</label><select id="subject" required>
-      <option value="">– Fach wählen –</option>
-      <option>AWT</option><option>Astronomie</option><option>Biologie</option>
-      <option>Chemie</option><option>Deutsch</option><option>Englisch</option>
-      <option>Französisch</option><option>Geografie</option><option>Geschichte</option>
-      <option>Gesellschaftskunde</option><option>Informatik</option><option>Italienisch</option>
-      <option>Kunst</option><option>Mathematik</option><option>Musik</option>
-      <option>Naturwissenschaften</option><option>Physik</option><option>Plattdeutsch</option>
-      <option>Russisch</option><option>Spanisch</option><option>Sozialkunde</option>
-      <option>Sport</option><option>Wirtschaft</option>
-    </select></div>
+
+    <div class="form-group">
+      <label>Fach *</label>
+      <select id="subject" required>
+        <option value="">– Fach wählen –</option>
+        <option>AWT</option><option>Astronomie</option><option>Biologie</option>
+        <option>Chemie</option><option>Deutsch</option><option>Englisch</option>
+        <option>Französisch</option><option>Geografie</option><option>Geschichte</option>
+        <option>Gesellschaftskunde</option><option>Informatik</option><option>Italienisch</option>
+        <option>Kunst</option><option>Mathematik</option><option>Musik</option>
+        <option>Naturwissenschaften</option><option>Physik</option><option>Plattdeutsch</option>
+        <option>Russisch</option><option>Spanisch</option><option>Sozialkunde</option>
+        <option>Sport</option><option>Wirtschaft</option>
+      </select>
+    </div>
+
     <div class="form-group"><label>Klasse *</label><select id="grade" required></select></div>
-    <div class="form-group"><label>Kompetenzbereich *</label><select id="competence" required>
-      <option value="">– Kompetenz wählen –</option>
-      <option>Suchen, Verarbeiten und Aufbewahren</option>
-      <option>Kommunizieren und Kooperieren</option>
-      <option>Produzieren und Präsentieren</option>
-      <option>Schützen und sicher Agieren</option>
-      <option>Problemlösen und Handeln</option>
-      <option>Analysieren und Reflektieren</option>
-    </select></div>
-    <div class="form-group"><label>Niveaustufe *</label><select id="level" required>
-      <option value="">– Niveau wählen –</option>
-      <option>Niveaustufe 1</option><option>Niveaustufe 2</option><option>Niveaustufe 3</option>
-      <option>Niveaustufe 4</option><option>Niveaustufe 5</option>
-    </select></div>
-    <div class="form-group" style="position:relative;">
-    <label>Digitales Tool</label>
-    <input type="text" id="tool" autocomplete="off" placeholder="z.B. GeoGebra, Canva, Anton">
-    <div id="toolDropdown" class="autocomplete-dropdown"></div>
+
+    <div class="form-group">
+      <label>Kompetenzbereich *</label>
+      <select id="competence" required>
+        <option value="">– Kompetenz wählen –</option>
+        <option>Suchen, Verarbeiten und Aufbewahren</option>
+        <option>Kommunizieren und Kooperieren</option>
+        <option>Produzieren und Präsentieren</option>
+        <option>Schützen und sicher Agieren</option>
+        <option>Problemlösen und Handeln</option>
+        <option>Analysieren und Reflektieren</option>
+      </select>
     </div>
-    <div class="form-group"><label>Beschreibung (optional)</label><textarea id="description" placeholder="Kurze Beschreibung der Unterrichtsidee..."></textarea></div>
+
+    <div class="form-group">
+      <label>Niveaustufe *</label>
+      <select id="level" required>
+        <option value="">– Niveau wählen –</option>
+        <option>Niveaustufe 1</option><option>Niveaustufe 2</option><option>Niveaustufe 3</option>
+        <option>Niveaustufe 4</option><option>Niveaustufe 5</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Digitales Tool</label>
+      <input type="text" id="tool" autocomplete="off" placeholder="z.B. GeoGebra, Canva, Anton">
+      <div id="toolDropdown" class="autocomplete-dropdown"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Beschreibung (optional)</label>
+      <textarea id="description" placeholder="Kurze Beschreibung der Unterrichtsidee..."></textarea>
+    </div>
+
     <div class="buttons">
       <button type="button" id="cancelBtn" class="cancel">Abbrechen</button>
       <button type="button" id="saveBtn" class="save">Speichern</button>
@@ -104,34 +113,12 @@ button {
 </div>
 
 <script>
-  window.addEventListener('message', event => {
-    if (event.origin !== location.origin) return;
-
-    if (event.data.type === 'EDIT_RESOURCE') {
-        // Hier deine bestehende Logik, das Formular zu befüllen
-        currentIndex = event.data.index;
-        const r = event.data.data;
-        document.getElementById('topic').value = r.topic || '';
-        document.getElementById('subject').value = r.subject || '';
-        document.getElementById('grade').value = r.grade || '';
-        document.getElementById('competence').value = r.competence || '';
-        document.getElementById('level').value = r.level || '';
-        document.getElementById('tool').value = r.tool || '';
-        document.getElementById('description').value = r.description || '';
-        document.title = 'Ressource bearbeiten';
-        // ggf. Favorit-Icon aktivieren usw.
-    }
-});
-
-// Optional: Falls das Popup schon geladen ist, bevor die Nachricht kommt
-if (window.opener) {
-    // Für den Fall, dass das Popup schon fertig ist
-    window.opener.addEventListener('load', () => {
-        // wird automatisch vom load-Listener oben abgefangen
-    });
+// Dark Mode übernehmen
+if (window.opener?.document.body.classList.contains('dark')) {
+  document.body.classList.add('dark');
 }
 
-// Klassen 1–13
+// Klassen befüllen
 const gradeSelect = document.getElementById('grade');
 for (let i = 1; i <= 13; i++) {
   const opt = document.createElement('option');
@@ -140,43 +127,26 @@ for (let i = 1; i <= 13; i++) {
   gradeSelect.appendChild(opt);
 }
 
-// Dark Mode übernehmen
-if (window.opener?.document.body.classList.contains('dark')) {
-  document.body.classList.add('dark');
-}
-
-// Elemente
-const form = document.querySelector('form');
-const saveBtn = document.getElementById('saveBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-
-// Fokus auf Thema
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('topic').focus();
-});
-
-// === Enter = Speichern, Escape = Sofort schließen (ohne Nachfrage) ===
+// Fokus & Tastatur
+document.getElementById('topic').focus();
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && document.activeElement.tagName !== 'TEXTAREA') {
     e.preventDefault();
-    saveBtn.click();
+    document.getElementById('saveBtn').click();
   }
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    window.close();   // <--- SOFORT schließen, keine Frage!
-  }
+  if (e.key === 'Escape') window.close();
 });
 
-// Cancel-Button macht jetzt genau dasselbe wie Escape
-cancelBtn.onclick = () => window.close();
+document.getElementById('cancelBtn').onclick = () => window.close();
 
-// Optional: Fokus auf Thema beim Öffnen
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('topic').focus();
-});
+// Ressourcen holen
+function getExistingResources() {
+  try { return JSON.parse(localStorage.getItem('resources') || '[]'); }
+  catch(e) { return []; }
+}
 
-// === Speichern (neu + bearbeiten) ===
-saveBtn.onclick = () => {
+// === SPEICHERN ===
+document.getElementById('saveBtn').onclick = () => {
   const resource = {
     topic: document.getElementById('topic').value.trim(),
     subject: document.getElementById('subject').value,
@@ -194,115 +164,194 @@ saveBtn.onclick = () => {
     return;
   }
 
-  const isEdit = window.location.pathname.includes('edit-resource');
-  const type = isEdit ? 'UPDATE_RESOURCE' : 'ADD_RESOURCE';
-  const payload = isEdit
-    ? { type, index: parseInt(new URLSearchParams(window.location.search).get('index')), data: resource }
-    : { type, data: resource };
-
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage(payload, '*');
-  } else {
-    const channel = new BroadcastChannel('lerndashboard-channel');
-    channel.postMessage(payload);
-    channel.close();
-  }
-
-  saveBtn.textContent = 'Gespeichert ✓';
-  saveBtn.style.background = '#27ae60';
-  setTimeout(() => window.close(), 600);
+  const backupBefore = JSON.parse(JSON.stringify(getExistingResources()));
+  checkForSimilarAndDecide(resource, backupBefore);
 };
 
-// === ECHTE Memory-Suche für Thema & Tool (funktioniert überall im Text!) ===
-function setupAutocomplete(inputId, dropdownId, getSuggestions) {
+// === MODAL + LOGIK ===
+function checkForSimilarAndDecide(resource, backupBefore) {
+  const existing = getExistingResources();
+
+  const similarEntries = existing
+    .map((r, i) => ({ ...r, originalIndex: i }))
+    .filter(r =>
+      r.subject === resource.subject &&
+      r.grade === resource.grade &&
+      (r.tool || '').trim().toLowerCase() === (resource.tool || '').trim().toLowerCase()
+    );
+
+  // Keine ähnlichen → direkt anlegen
+  if (similarEntries.length === 0) {
+    sendAddResource(resource, backupBefore);
+    return;
+  }
+
+  // === Modal ===
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;
+    font-family:system-ui,sans-serif;
+  `;
+
+  modal.innerHTML = `
+    <div style="background:var(--card);border-radius:20px;width:100%;max-width:660px;
+                box-shadow:0 30px 80px rgba(0,0,0,0.45);overflow:hidden;
+                animation:modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="background:#fff8e1;padding:22px 30px;text-align:center;border-bottom:4px solid #ffb300;">
+        <h3 style="margin:0;font-size:23px;color:#d35400;font-weight:700;">
+          ${similarEntries.length} ähnliche Ressource${similarEntries.length > 1 ? 'n' : ''} gefunden
+        </h3>
+        <p style="margin:8px 0 0;color:#856404;font-size:16px;">
+          ${resource.subject} • ${resource.grade} ${resource.tool ? `• ${resource.tool}` : ''}
+        </p>
+      </div>
+
+      <div style="max-height:60vh;overflow-y:auto;padding:24px 30px 12px;">
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:18px;font-weight:600;font-size:15.5px;">
+          <input type="checkbox" id="selectAll" checked style="width:19px;height:19px;">
+          Alle auswählen
+        </label>
+
+        ${similarEntries.map(entry => {
+          const changes = entry.topic !== resource.topic ||
+                          entry.competence !== resource.competence ||
+                          entry.level !== resource.level ||
+                          entry.description !== resource.description;
+          return `
+            <label style="display:flex;align-items:flex-start;gap:18px;padding:16px;
+                         background:#fdfdfd;border:2px solid #eee;border-radius:14px;
+                         margin-bottom:14px;cursor:pointer;transition:all 0.2s;">
+              <input type="checkbox" class="similar-check" data-index="${entry.originalIndex}" checked
+                     style="margin-top:4px;width:21px;height:21px;flex-shrink:0;">
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:16.8px;color:#2c3e50;">${entry.topic}</div>
+                <div style="color:#555;font-size:15px;margin-top:5px;">
+                  ${entry.competence} – ${entry.level}
+                </div>
+              </div>
+            </label>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="padding:20px 30px 30px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <button id="cancelBtn" style="padding:15px;background:#95a5a6;color:white;border:none;border-radius:14px;font-weight:600;">
+          Abbrechen
+        </button>
+        <button id="addNewBtn" style="padding:15px;background:#27ae60;color:white;border:none;border-radius:14px;font-weight:700;">
+          Nur neu anlegen
+        </button>
+        <button id="overrideBtn" style="padding:15px;background:#e74c3c;color:white;border:none;border-radius:14px;font-weight:700;">
+          Ausgewählte überschreiben (<span id="count">${similarEntries.length}</span>)
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const selectAll = modal.querySelector('#selectAll');
+  const checks = modal.querySelectorAll('.similar-check');
+  const countSpan = modal.querySelector('#count');
+
+  const updateCount = () => {
+    const cnt = modal.querySelectorAll('.similar-check:checked').length;
+    countSpan.textContent = cnt;
+    modal.querySelector('#overrideBtn').style.opacity = cnt > 0 ? '1' : '0.5';
+  };
+
+  selectAll.onchange = () => { checks.forEach(c => c.checked = selectAll.checked); updateCount(); };
+  checks.forEach(c => c.onchange = () => {
+    const all = [...checks].every(ch => ch.checked);
+    const some = [...checks].some(ch => ch.checked);
+    selectAll.checked = all;
+    selectAll.indeterminate = some && !all;
+    updateCount();
+  });
+
+  modal.querySelector('#cancelBtn').onclick = () => modal.remove();
+
+  modal.querySelector('#addNewBtn').onclick = () => {
+    modal.remove();
+    sendAddResource(resource, backupBefore);
+  };
+
+  modal.querySelector('#overrideBtn').onclick = () => {
+    const indices = Array.from(modal.querySelectorAll('.similar-check:checked'))
+      .map(ch => parseInt(ch.dataset.index));
+
+    if (indices.length === 0) return;
+
+    modal.remove();
+    indices.forEach(idx => {
+      window.opener.postMessage({
+        type: 'UPDATE_RESOURCE',
+        index: idx,
+        data: resource,
+        undoFullBackup: backupBefore,
+        undoMessage: `${indices.length} Eintrag${indices.length > 1 ? 'e' : ''} überschrieben`
+      }, location.origin);
+    });
+
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.textContent = `Überschrieben (${indices.length}×)`;
+    saveBtn.style.background = '#e74c3c';
+    setTimeout(() => window.close(), 900);
+  };
+
+  updateCount();
+}
+
+// === Nur neu anlegen ===
+function sendAddResource(resource, backupBefore) {
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({
+      type: 'ADD_RESOURCE',
+      data: resource,
+      undoFullBackup: backupBefore,
+      undoMessage: 'Neue Ressource entfernen'
+    }, location.origin);
+  }
+  // Kein zweites push hier! Nur schließen
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.textContent = 'Hinzugefügt!';
+  saveBtn.style.background = '#27ae60';
+  setTimeout(() => window.close(), 800);
+}
+
+// === Autocomplete ===
+function setupAutocomplete(inputId, dropdownId, getValues) {
   const input = document.getElementById(inputId);
   const dropdown = document.getElementById(dropdownId);
-
   input.addEventListener('input', () => {
-    const value = input.value.trim().toLowerCase();
+    const val = input.value.toLowerCase();
     dropdown.innerHTML = '';
-    if (!value) {
-      dropdown.style.display = 'none';
-      return;
-    }
-
-    const suggestions = getSuggestions().filter(s => s.toLowerCase().includes(value));
-    if (suggestions.length === 0) {
-      dropdown.style.display = 'none';
-      return;
-    }
-
+    if (!val) { dropdown.style.display = 'none'; return; }
+    const suggestions = getValues()
+      .filter(s => s.toLowerCase().includes(val))
+      .slice(0, 9);
+    if (!suggestions.length) { dropdown.style.display = 'none'; return; }
     suggestions.forEach(s => {
       const div = document.createElement('div');
       div.className = 'autocomplete-item';
       div.textContent = s;
-      div.onclick = () => {
-        input.value = s;
-        dropdown.style.display = 'none';
-      };
+      div.onclick = () => { input.value = s; dropdown.style.display = 'none'; };
       dropdown.appendChild(div);
     });
-
     dropdown.style.display = 'block';
-    dropdown.querySelector('.autocomplete-item')?.classList.add('highlighted');
   });
-
-  // Pfeiltasten + Enter
-  input.addEventListener('keydown', e => {
-    const items = dropdown.querySelectorAll('.autocomplete-item');
-    let highlighted = dropdown.querySelector('.highlighted');
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (!highlighted) {
-        items[0]?.classList.add('highlighted');
-      } else {
-        highlighted.classList.remove('highlighted');
-        const next = highlighted.nextElementSibling || items[0];
-        next?.classList.add('highlighted');
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (highlighted) {
-        highlighted.classList.remove('highlighted');
-        const prev = highlighted.previousElementSibling || items[items.length - 1];
-        prev?.classList.add('highlighted');
-      }
-    } else if (e.key === 'Enter' && highlighted) {
-      e.preventDefault();
-      input.value = highlighted.textContent;
-      dropdown.style.display = 'none';
-    } else if (e.key === 'Escape') {
-      dropdown.style.display = 'none';
-    }
-  });
-
-  // Klick außerhalb schließt
   document.addEventListener('click', e => {
-    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.style.display = 'none';
-    }
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
   });
 }
 
-// Alle vorhandenen Themen & Tools aus localStorage holen
-function getAllTopics() {
-  return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]')
-    .map(r => r.topic)
-    .filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'de'));
-}
-
-function getAllTools() {
-  return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]')
-    .map(r => r.tool)
-    .filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'de'));
-}
-
-// Beim Laden aktivieren
-setupAutocomplete('topic', 'topicDropdown', getAllTopics);
-setupAutocomplete('tool', 'toolDropdown', getAllTools);
+setupAutocomplete('topic', 'topicDropdown', () => 
+  [...new Set(getExistingResources().map(r => r.topic).filter(Boolean))].sort()
+);
+setupAutocomplete('tool', 'toolDropdown', () => 
+  [...new Set(getExistingResources().map(r => r.tool).filter(Boolean))].sort()
+);
 </script>
 </body>
 </html>
