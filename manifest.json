@@ -2,7 +2,7 @@
   "name": "LernDashboard Digital",
   "short_name": "LernDB",
   "description": "Digitale Unterrichtsideen & Ressourcen verwalten",
-  "start_url": "/lerndashboard-test/",
+  "start_url": "/lerndashboard/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#6b46c1",
@@ -10,25 +10,25 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/lerndashboard-test/icon-192.png",
+      "src": "/lerndashboard/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lerndashboard-test/icon-512.png",
+      "src": "/lerndashboard/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lerndashboard-test/icon-maskable-192.png",
+      "src": "/lerndashboard/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/lerndashboard-test/icon-maskable-512.png",
+      "src": "/lerndashboard/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
