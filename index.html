@@ -943,7 +943,51 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
         <symbol id="star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
     </svg>
 
-<script>
+<script defer>
+// ===========================
+// ASYNCHRONES DATENLADEN + APP-START (2025-SICHER)
+// ===========================
+window.resources = [];
+window.undoStack = [];
+window.dataReady = false;
+
+function loadData() {
+    return new Promise(resolve => {
+        const idle = window.requestIdleCallback || (cb => setTimeout(cb, 50));
+        idle(() => {
+            try {
+                const r = localStorage.getItem('resources');
+                const u = localStorage.getItem('undoStack');
+                window.resources = r ? JSON.parse(r) : [];
+                window.undoStack = u ? JSON.parse(u) : [];
+            } catch (e) {
+                console.warn('Daten konnten nicht geladen werden', e);
+                window.resources = [];
+                window.undoStack = [];
+            }
+            window.dataReady = true;
+            resolve();
+        });
+    });
+}
+
+function startApp() {
+    if (!window.dataReady) return;
+
+    // Dein alter INIT-Code
+    ['filterSubject','filterGrade','filterTool','filterCompetence','filterLevel','filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', applyFilters);
+    });
+    const searchEl = document.getElementById('searchTopic');
+    if (searchEl) searchEl.addEventListener('input', applyFilters);
+
+    populateDropdowns();
+    applyFilters();
+    document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
+
+    console.log('LernDashboard vollständig gestartet – butterweich auf iPad!');
+}
 
 // === GLOBALE FILTER-VARIABLEN (einmalig!) ===
 let currentFilters = {
@@ -963,7 +1007,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.35';
+const VERSION = '1.1.40';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -3524,40 +3568,45 @@ async function deleteResource(i) {
 function editResource(i) {
     const r = resources[i];
 
-    // Popup mit sauberer URL öffnen
+    // Autocomplete-Listen vorbereiten
+    const allTopics = [...new Set(resources.map(x => x.topic).filter(Boolean))].sort();
+    const allTools  = [...new Set(resources.map(x => x.tool).filter(Boolean))].sort();
+
+    // Popup öffnen
     const popup = window.open('edit-resource.html', 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
-    
     if (!popup) {
         alert('Popup wurde blockiert – bitte erlauben!');
         return;
     }
 
-    // Daten sofort schicken – egal ob das Popup schon geladen ist oder nicht
-    const sendData = () => {
-        popup.postMessage({
-            type: 'EDIT_RESOURCE',
-            index: i,
-            data: r
-        }, location.origin);
+    // WICHTIG: Sofort senden, bevor Safari blockiert!
+    const message = {
+        type: 'EDIT_RESOURCE',
+        index: i,
+        data: r,
+        allTopics: allTopics,
+        allTools: allTools
     };
 
-    // Versuch 1: Sofort senden
-    sendData();
+    // 1. Sofort versuchen
+    try { popup.postMessage(message, location.origin); } catch(e) {}
 
-    // Versuch 2: Falls nicht, dann beim load-Event
-    popup.addEventListener('load', sendData, { once: true });
+    // 2. Beim load nochmal
+    popup.addEventListener('load', () => {
+        try { popup.postMessage(message, location.origin); } catch(e) {}
+    });
 
-    // Versuch 3: Poll-Mechanik als absoluter Fallback
+    // 3. Poll-Fallback für Safari (der entscheidende Trick!)
     let attempts = 0;
-    const interval = setInterval(() => {
-        if (attempts++ > 20) { // max. 2 Sekunden warten
-            clearInterval(interval);
-            return;
-        }
+    const trySend = () => {
+        if (attempts++ > 50) return; // max. 5 Sekunden
         try {
-            sendData();
-        } catch(e) {}
-    }, 100);
+            popup.postMessage(message, location.origin);
+        } catch(e) {
+            setTimeout(trySend, 100);
+        }
+    };
+    setTimeout(trySend, 50);
 }
 
 function openNewResourceWindow() {
@@ -3600,6 +3649,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('dark');
     }
 });
+
+// ======================
+// START DER APP
+// ======================
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadData().then(startApp));
+} else {
+    loadData().then(startApp);
+}
 
 </script>  <!-- ← ENDE SCRIPT -->
 

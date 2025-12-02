@@ -54,7 +54,18 @@ font-weight: 600; font-size: 15px; min-width: 110px; transition: all 0.2s;
 .cancel:hover { background: #7f8c8d; }
 </style>
 </head>
-<body>
+<body onload="document.getElementById('topic').blur()">
+
+<script>
+
+window.addEventListener('message', event => {
+    if (event.origin !== location.origin) return;
+    if (event.data?.type === 'EDIT_RESOURCE' || event.data?.type === 'NEW_RESOURCE') {
+        window.receivedData = event.data;
+    }
+});
+</script>
+
 <div class="container">
 <h2 id="pageTitle">Ressource bearbeiten</h2>
 <form id="editForm" autocomplete="off">
@@ -103,38 +114,70 @@ font-weight: 600; font-size: 15px; min-width: 110px; transition: all 0.2s;
 </div>
 
 <script>
-// ===== NEU: postMessage-only – KEIN Query-String mehr! =====
+// ===== FINAL: Alles in einem Listener =====
 let currentEditIndex = -1;
+let allTopics = [];
+let allTools = [];
 
 window.addEventListener('message', event => {
     if (event.origin !== location.origin) return;
 
-    if (event.data.type === 'EDIT_RESOURCE') {
-        currentEditIndex = event.data.index;
-        const r = event.data.data;
+    if (event.data.type === 'EDIT_RESOURCE' || event.data.type === 'NEW_RESOURCE') {
+        allTopics = event.data.allTopics || [];
+        allTools  = event.data.allTools  || [];
 
-        document.getElementById('topic').value = r.topic || '';
-        document.getElementById('subject').value = r.subject || '';
-        document.getElementById('grade').value = r.grade || '';
-        document.getElementById('competence').value = r.competence || '';
-        document.getElementById('level').value = r.level || '';
-        document.getElementById('tool').value = r.tool || '';
-        document.getElementById('description').value = r.description || '';
-        document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
-        document.getElementById('topic').focus();
-    }
+        if (!window.autocompleteInitialized) {
+            setupAutocomplete('topic', 'topicDropdown', () => allTopics);
+            setupAutocomplete('tool',  'toolDropdown',  () => allTools);
+            window.autocompleteInitialized = true;
+        }
 
-    if (event.data.type === 'NEW_RESOURCE') {
-        currentEditIndex = -1;
-        document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
-        document.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.type !== 'button') el.value = '';
-        });
+        if (event.data.type === 'EDIT_RESOURCE') {
+            currentEditIndex = event.data.index;
+            const r = event.data.data;
+            document.getElementById('topic').value = r.topic || '';
+            document.getElementById('subject').value = r.subject || '';
+            document.getElementById('grade').value = r.grade || '';
+            document.getElementById('competence').value = r.competence || '';
+            document.getElementById('level').value = r.level || '';
+            document.getElementById('tool').value = r.tool || '';
+            document.getElementById('description').value = r.description || '';
+            document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
+        } else {
+            currentEditIndex = -1;
+            document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.type !== 'button') el.value = '';
+            });
+        }
         document.getElementById('topic').focus();
     }
 });
 
-// ===== SPEICHERN – nur noch postMessage =====
+// Falls die Nachricht VOR DOMContentLoaded kam → jetzt verarbeiten
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.receivedData) {
+        const event = new MessageEvent('message', {
+            data: window.receivedData,
+            origin: location.origin
+        });
+        window.dispatchEvent(event);
+        delete window.receivedData;
+    }
+
+    // Klassen 1–13 füllen
+    for (let i = 1; i <= 13; i++) {
+        const opt = new Option(`Klasse ${i}`, `Klasse ${i}`);
+        document.getElementById('grade').add(opt);
+    }
+
+    // Dark Mode übernehmen
+    if (window.opener?.document.body.classList.contains('dark')) {
+        document.body.classList.add('dark');
+    }
+});
+
+// ===== SPEICHERN =====
 document.getElementById('saveBtn').onclick = () => {
     const resource = {
         topic: document.getElementById('topic').value.trim(),
@@ -153,24 +196,23 @@ document.getElementById('saveBtn').onclick = () => {
         return;
     }
 
-    if (window.opener) {
-        // 1. Daten + Animation sofort ans Hauptfenster schicken
+    if (window.opener && !window.opener.closed) {
         if (currentEditIndex >= 0) {
             window.opener.postMessage({ type: 'UPDATE_RESOURCE', index: currentEditIndex, data: resource }, location.origin);
         } else {
             window.opener.postMessage({ type: 'ADD_RESOURCE', data: resource }, location.origin);
         }
         window.opener.postMessage({ type: 'SHOW_EDIT_SUCCESS' }, location.origin);
-
-        document.body.style.transition = 'opacity 0.25s ease';
-        document.body.style.opacity = '0';
-        setTimeout(() => window.close(), 250);
     }
+
+    document.body.style.transition = 'opacity 0.25s ease';
+    document.body.style.opacity = '0';
+    setTimeout(() => window.close(), 250);
 };
 
 document.getElementById('cancelBtn').onclick = () => window.close();
 
-// Enter = Speichern (außer in Textarea mit Shift)
+// Enter = Speichern
 document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey && document.activeElement.tagName !== 'TEXTAREA') {
         e.preventDefault();
@@ -179,21 +221,11 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') window.close();
 });
 
-// Klassen 1–13
-for (let i = 1; i <= 13; i++) {
-    const opt = new Option(`Klasse ${i}`, `Klasse ${i}`);
-    document.getElementById('grade').add(opt);
-}
-
-// Dark Mode übernehmen
-if (window.opener?.document.body.classList.contains('dark')) {
-    document.body.classList.add('dark');
-}
-
-// Autocomplete (bleibt unverändert – super!)
+// ===== AUTOCOMPLETE (unverändert) =====
 function setupAutocomplete(inputId, dropdownId, getSuggestions) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
+
     input.addEventListener('input', () => {
         const value = input.value.toLowerCase();
         dropdown.innerHTML = '';
@@ -243,16 +275,6 @@ function setupAutocomplete(inputId, dropdownId, getSuggestions) {
         }
     });
 }
-
-function getAllTopics() {
-    return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]').map(r => r.topic).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
-}
-function getAllTools() {
-    return [...new Set(JSON.parse(localStorage.getItem('resources') || '[]').map(r => r.tool).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
-}
-
-setupAutocomplete('topic', 'topicDropdown', getAllTopics);
-setupAutocomplete('tool', 'toolDropdown', getAllTools);
 </script>
 </body>
 </html>
