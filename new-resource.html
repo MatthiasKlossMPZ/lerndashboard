@@ -85,10 +85,21 @@
       </select>
     </div>
 
+<<<<<<< HEAD
 <div class="form-group">
   <label>Niveaustufe *</label>
   <select id="level" required></select>
 </div>
+=======
+    <div class="form-group">
+      <label>Niveaustufe *</label>
+      <select id="level" required>
+        <option value="">– Niveau wählen –</option>
+        <option>Niveaustufe 1</option><option>Niveaustufe 2</option><option>Niveaustufe 3</option>
+        <option>Niveaustufe 4</option><option>Niveaustufe 5</option>
+      </select>
+    </div>
+>>>>>>> origin/main
 
     <div class="form-group">
       <label>Digitales Tool</label>
@@ -114,7 +125,10 @@ if (window.opener?.document.body.classList.contains('dark')) {
   document.body.classList.add('dark');
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 // Klassen befüllen
 const gradeSelect = document.getElementById('grade');
 for (let i = 1; i <= 13; i++) {
@@ -124,6 +138,7 @@ for (let i = 1; i <= 13; i++) {
   gradeSelect.appendChild(opt);
 }
 
+<<<<<<< HEAD
 // ======================
 // DYNAMISCHE NIVEAUSTUFEN FÜR NEUE RESSOURCE (3 oder 5)
 // ======================
@@ -147,6 +162,8 @@ function populateLevelSelect() {
 // Niveaustufen beim Laden befüllen
 populateLevelSelect();
 
+=======
+>>>>>>> origin/main
 // Fokus & Tastatur
 document.getElementById('topic').focus();
 document.addEventListener('keydown', e => {
