@@ -965,92 +965,143 @@ window.undoStack = [];
 window.dataReady = false;
 
 // ======================
-// NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen)
+// NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen) – KORRIGIERTE VERSION
 // ======================
 let currentLevelMode = localStorage.getItem('levelMode') || '5';
 
 function getLevelMode() {
-  return currentLevelMode;
+    // Immer den aktuellen Wert aus localStorage holen (sicher gegen Timing-Probleme)
+    const saved = localStorage.getItem('levelMode');
+    if (saved) currentLevelMode = saved;
+    return currentLevelMode;
 }
 
 function getLevelOptions() {
-  const count = parseInt(currentLevelMode);
-  return Array.from({ length: count }, (_, i) => `Niveaustufe ${i + 1}`);
+    const count = parseInt(getLevelMode());
+    return Array.from({ length: count }, (_, i) => `Niveaustufe ${i + 1}`);
 }
 
 function getLevelNumber(levelStr) {
-  if (!levelStr) return 0;
-  const match = levelStr.match(/\d+/);
-  return match ? parseInt(match[0]) : 0;
+    if (!levelStr) return 0;
+    const match = levelStr.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
 }
 
 function migrateResourceLevels(resources, oldMode, newMode) {
-  if (!resources?.length || oldMode === newMode) return resources;
+    if (!resources?.length || oldMode === newMode) return resources;
 
-  return resources.map(resource => {
-    if (!resource.level) return resource;
-    const oldNum = getLevelNumber(resource.level);
-    if (!oldNum) return resource;
+    return resources.map(resource => {
+        if (!resource.level) return resource;
+        const oldNum = getLevelNumber(resource.level);
+        if (!oldNum) return resource;
 
-    let newNum = oldNum;
-    if (oldMode === '5' && newMode === '3') {
-      if (oldNum <= 2) newNum = 1;
-      else if (oldNum === 3) newNum = 2;
-      else newNum = 3;
-    } else if (oldMode === '3' && newMode === '5') {
-      if (oldNum === 1) newNum = 1;
-      else if (oldNum === 2) newNum = 3;
-      else if (oldNum === 3) newNum = 5;
-    }
-    resource.level = `Niveaustufe ${newNum}`;
-    return resource;
-  });
+        let newNum = oldNum;
+        if (oldMode === '5' && newMode === '3') {
+            if (oldNum <= 2) newNum = 1;
+            else if (oldNum === 3) newNum = 2;
+            else newNum = 3;
+        } else if (oldMode === '3' && newMode === '5') {
+            if (oldNum === 1) newNum = 1;
+            else if (oldNum === 2) newNum = 3;
+            else if (oldNum === 3) newNum = 5;
+        }
+        resource.level = `Niveaustufe ${newNum}`;
+        return resource;
+    });
 }
 
 function changeLevelMode(newMode) {
-  const oldMode = currentLevelMode;
-  if (oldMode === newMode) return;
+    const oldMode = getLevelMode();
+    if (oldMode === newMode) return;
 
-  const direction = oldMode === '5' && newMode === '3' 
-    ? "5 → 3 Stufen:\n• Niveaustufe 1+2 → 1\n• Niveaustufe 3 → 2\n• Niveaustufe 4+5 → 3"
-    : "3 → 5 Stufen:\n• Niveaustufe 1 → 1\n• Niveaustufe 2 → 3\n• Niveaustufe 3 → 5";
+    const direction = oldMode === '5' && newMode === '3' 
+        ? "5 → 3 Stufen:\n• Niveaustufe 1+2 → 1\n• Niveaustufe 3 → 2\n• Niveaustufe 4+5 → 3"
+        : "3 → 5 Stufen:\n• Niveaustufe 1 → 1\n• Niveaustufe 2 → 3\n• Niveaustufe 3 → 5";
 
-  if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction}\n\nAlle Ressourcen, Filter und Matrixen werden automatisch angepasst.`)) {
-    
-    const backup = JSON.stringify(resources || []);
-    localStorage.setItem('resources_level_backup', backup);
+    if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction}\n\nAlle Ressourcen, Filter und Matrixen werden automatisch angepasst.`)) {
+        
+        const backup = JSON.stringify(resources || []);
+        localStorage.setItem('resources_level_backup', backup);
 
-    resources = migrateResourceLevels(resources, oldMode, newMode);
-    localStorage.setItem('resources', JSON.stringify(resources));
+        resources = migrateResourceLevels(resources, oldMode, newMode);
+        localStorage.setItem('resources', JSON.stringify(resources));
 
-    currentLevelMode = newMode;
-    localStorage.setItem('levelMode', newMode);
+        currentLevelMode = newMode;
+        localStorage.setItem('levelMode', newMode);
 
-    // Alles neu rendern
-    populateLevelFilter();
-    updateLevelModeButtons();   
-    applyFilters();
-    renderAllMatrices();
+        // Alles neu rendern
+        populateLevelFilter();
+        updateLevelModeButtons();   
+        applyFilters();
+        renderAllMatrices();
 
-    alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!\nFilter und Matrixen wurden aktualisiert.`);
-  }
+        alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!\nFilter und Matrixen wurden aktualisiert.`);
+    }
 }
+
+// ======================
+// ERSTER START: Niveaustufen-Auswahl (jetzt robust)
+// ======================
+function showInitialLevelModeModal() {
+    if (localStorage.getItem('levelMode')) return;   // schon gewählt
+
+    const modal = document.createElement('dialog');
+    modal.style.cssText = `
+        max-width: 520px; 
+        border: none; 
+        border-radius: 20px; 
+        padding: 0; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: var(--card);
+    `;
+    modal.innerHTML = `
+        <div style="padding:40px 30px 20px; text-align:center;">
+          <h2 style="margin:0 0 20px; color:var(--primary);">Willkommen im LernDashboard Digital!</h2>
+          <p style="font-size:17px; margin-bottom:28px; line-height:1.5;">
+            Mit wie vielen Niveaustufen möchtest du arbeiten?
+          </p>
+          
+          <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="selectInitialLevelMode('5'); this.closest('dialog').close()" 
+                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
+                           background:linear-gradient(135deg,#6b46c1,#7e5be0); color:white; min-width:190px; cursor:pointer;">
+              5 Niveaustufen<br>
+              <small style="font-size:14px; opacity:0.9;">(detailliert)</small>
+            </button>
+            <button onclick="selectInitialLevelMode('3'); this.closest('dialog').close()" 
+                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
+                           background:linear-gradient(135deg,#00bfff,#00d2d3); color:white; min-width:190px; cursor:pointer;">
+              3 Niveaustufen<br>
+              <small style="font-size:14px; opacity:0.9;">(übersichtlich)</small>
+            </button>
+          </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.showModal();
+
+    window.selectInitialLevelMode = function(mode) {
+        currentLevelMode = mode;
+        localStorage.setItem('levelMode', mode);
+        console.log('Initial levelMode gesetzt:', mode);
+
+        // Sofort alles aktualisieren
+        populateLevelFilter();
+        updateLevelModeButtons();
+        applyFilters();
+    };
+}
+
 // ======================
 // DYNAMISCHER NIVEAUSTUFEN-FILTER
 // ======================
 function populateLevelFilter() {
     const select = document.getElementById('filterLevel');
-    if (!select) {
-        console.warn('filterLevel Select nicht gefunden!');
-        return;
-    }
+    if (!select) return;
 
-    const currentValue = select.value;   // aktuelle Auswahl merken
+    const currentValue = select.value;
 
-    // Reset + "Alle" Option
     select.innerHTML = '<option value="">Alle</option>';
 
-    // Dynamisch mit 3 oder 5 Optionen befüllen
     getLevelOptions().forEach(level => {
         const opt = document.createElement('option');
         opt.value = level;
@@ -1058,42 +1109,36 @@ function populateLevelFilter() {
         select.appendChild(opt);
     });
 
-    // Vorherige Auswahl wiederherstellen, falls sie noch existiert
     if (currentValue && getLevelOptions().includes(currentValue)) {
         select.value = currentValue;
     } else {
-        select.value = ''; // sonst "Alle" auswählen
+        select.value = '';
     }
 }
 
-// ======================
-// SIDEBAR-BUTTONS AKTUALISIEREN (3/5 Stufen)
-// ======================
 function updateLevelModeButtons() {
     const btn3 = document.getElementById('levelBtn3');
     const btn5 = document.getElementById('levelBtn5');
     const textEl = document.getElementById('currentLevelText');
     
     if (btn3) {
-        btn3.style.background = currentLevelMode === '3' ? '#00bfff' : '#e2e8f0';
-        btn3.style.color = currentLevelMode === '3' ? 'white' : '#333';
+        btn3.style.background = getLevelMode() === '3' ? '#00bfff' : '#e2e8f0';
+        btn3.style.color = getLevelMode() === '3' ? 'white' : '#333';
     }
     if (btn5) {
-        btn5.style.background = currentLevelMode === '5' ? '#6b46c1' : '#e2e8f0';
-        btn5.style.color = currentLevelMode === '5' ? 'white' : '#333';
+        btn5.style.background = getLevelMode() === '5' ? '#6b46c1' : '#e2e8f0';
+        btn5.style.color = getLevelMode() === '5' ? 'white' : '#333';
     }
     if (textEl) {
-        textEl.textContent = `${currentLevelMode} Niveaustufen`;
+        textEl.textContent = `${getLevelMode()} Niveaustufen`;
     }
 }
 
-// Hilfsfunktion zum Neu-Rendern aller Matrixen
+// Hilfsfunktion (falls du weitere Matrix-Funktionen hast)
 function renderAllMatrices() {
-  // Hier alle deine Matrix-Funktionen aufrufen, z.B.:
-  if (typeof renderCompetenceMatrix === 'function') renderCompetenceMatrix();
-  if (typeof renderGradeLevelMatrix === 'function') renderGradeLevelMatrix();
-  if (typeof renderSubjectLevelMatrix === 'function') renderSubjectLevelMatrix();
-  // Füge hier weitere Matrix-Funktionen hinzu, die du hast
+    if (typeof renderCompetenceMatrix === 'function') renderCompetenceMatrix();
+    if (typeof renderGradeLevelMatrix === 'function') renderGradeLevelMatrix();
+    if (typeof renderSubjectLevelMatrix === 'function') renderSubjectLevelMatrix();
 }
 
 function loadData() {
@@ -1160,7 +1205,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.41';
+const VERSION = '1.1.42';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -3839,10 +3884,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // ======================
 // START DER APP
 // ======================
+function initializeApp() {
+    loadData().then(() => {
+        initLevelMode();           // ← neu hinzugefügt
+        startApp();
+    });
+}
+
+function initLevelMode() {
+    getLevelMode();                // synchronisiert currentLevelMode
+    if (!localStorage.getItem('levelMode')) {
+        showInitialLevelModeModal();
+    } else {
+        populateLevelFilter();
+        updateLevelModeButtons();
+    }
+}
+
+// Start
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => loadData().then(startApp));
+    document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-    loadData().then(startApp);
+    initializeApp();
 }
 
 </script>  <!-- ← ENDE SCRIPT -->
