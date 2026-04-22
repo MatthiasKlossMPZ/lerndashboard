@@ -1,3 +1,26 @@
+/**
+ * Lerndashboard - Service Worker
+ *
+ * Copyright (C) 2025-2026 Matthias Kloss
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+// ================================================
+// Service Worker für Lerndashboard (PWA)
+// ================================================
+
 // service-worker.js
 const VERSION = '1.1.42';                     // Nur hier erhöhen bei Änderungen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
@@ -101,13 +124,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // Nur echte API-Anfragen immer online versuchen (falls du später mal welche hast)
+  // Nur echte API-Anfragen immer online versuchen 
   if (requestUrl.pathname.includes('/api/')) {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }
 
-  // Alles aus unserem Repo (inkl. new-resource.html und edit-resource.html mit oder ohne Query-String)
   if (requestUrl.origin === new URL(REPO_PATH).origin) {
     event.respondWith(
       caches.match(event.request).then(cached => {

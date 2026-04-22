@@ -39,12 +39,19 @@ cd lerndashboard
 ./Start.sh
 ```
 
-# Lizenz
-## Quellcode
-Der gesamte Quellcode steht unter der MIT-Lizenz – frei nutzbar, anpassbar und weiterverbreitbar.
+## Lizenz
+
+Dieses Projekt steht unter der **GNU Affero General Public License Version 3 (AGPLv3)**.
+
+### Was bedeutet das?
+- Jeder darf den Quellcode **frei nutzen, verändern und weiterverbreiten**.
+- Wenn jemand die App (oder eine veränderte Version) **öffentlich zugänglich macht** (z. B. auf einem Server hostet), muss er seinen Quellcode ebenfalls unter der AGPLv3 veröffentlichen.
+- Das soll verhindern, dass die App kommerziell „geschlossen“ oder als bezahlter Dienst angeboten wird, ohne dass die Änderungen der Gemeinschaft zur Verfügung stehen.
+
+Siehe die Datei [`LICENSE`](LICENSE) für den vollständigen Lizenztext.
 
 ## Logo und Assets
-Das Logo wurde von Matthias Kloss erstellt und steht unter der CC BY 4.0-Lizenz (Namensnennung erforderlich).
+Die Logos wurde von Matthias Kloss erstellt und stehen unter der CC BY 4.0-Lizenz (Namensnennung erforderlich).
 
 ## Namensnennung:
 Logos: Matthias Kloss, Lerndashboard – https://github.com/MatthiasKlossMPZ/lerndashboard

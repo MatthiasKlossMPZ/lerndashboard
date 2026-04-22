@@ -1,3 +1,22 @@
+<!--
+    Lerndashboard
+
+    Copyright (C) 2025-2026 Matthias Kloss
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -45,16 +64,16 @@
     flex-shrink: 0;
 }
 
-/* Linkes SVG-Logo – jetzt noch etwas größer */
+/* Linkes SVG-Logo */
 .logo-left svg {
-    height: 155px !important;     /* ← hier vergrößert */
+    height: 155px !important;    
     width: auto;
     flex-shrink: 0;
 }
 
-/* Rechtes PNG-Logo – passend angepasst */
+/* Rechtes PNG-Logo */
 .logo-right img {
-    height: 116px !important;     /* etwas größer als vorher, bleibt aber harmonisch */
+    height: 116px !important;    
     width: auto;
     max-width: 100%;
     object-fit: contain;
@@ -133,7 +152,7 @@
 .centered-button-wrapper {
     display: flex;
     justify-content: center;
-    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    margin: 6px 0 12px !important;  
     width: 100%;
 }
 .resources-container {
@@ -186,7 +205,7 @@
     border-radius: 8px;
     max-height: 220px;
     overflow-y: auto;
-    z-index: 20000;               /* ← das ist der entscheidende Wert */
+    z-index: 20000;            
     box-shadow: 0 10px 30px rgba(0,0,0,0.22);
     display: none;
 }
@@ -195,7 +214,7 @@
     padding: 9px 14px;
     cursor: pointer;
     border-bottom: 1px solid #eee;
-    font-size: 13.5px !important;   /* minimal kleiner + super lesbar */
+    font-size: 13.5px !important;   
     line-height: 1.4;
     transition: background 0.15s ease;
 }
@@ -625,14 +644,14 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 }
 
 .filter-container {
-    overflow: visible !important;   /* ← das war der Übeltäter */
+    overflow: visible !important; 
 }
 
 /* ============================================================= */
 /* FINALER ZUSTAND – alles perfekt, auch Dark Mode + Innenränder */
 /* ============================================================= */
 
-/* 1. Grundstil aller Buttons */
+/* Grundstil aller Buttons */
 .export-buttons .btn,
 .export-buttons label.btn {
     min-height: 38px !important;
@@ -658,7 +677,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     box-shadow: 0 10px 25px rgba(46,204,113,0.5) !important;
 }
 
-/* 3. Dark Mode – Grundfarbe */
+/* Dark Mode – Grundfarbe */
 .dark .export-buttons .btn,
 .dark .export-buttons label.btn {
     background: #4a3780 !important;
@@ -666,7 +685,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 }
 .dark .export-buttons .btn.matrix { opacity: 0.95; filter: brightness(1.1); }
 
-/* 4. SPEZIALKNÖPFE – MÜSSEN ZU LETZT STEHEN → gewinnen immer! */
+/* SPEZIALKNÖPFE */
 .export-buttons .btn.import {
     background: #2980b9 !important;
     border: 2px solid #1e5f8a !important;
@@ -797,7 +816,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                 </div>
             </div>
 
-            <!-- Rechtes MV-Logo  -->
+            <!-- Rechtes Logo  -->
             <div class="logo-right">
                 <img src="schule_in_mv.png"
                      alt="Entwickelt für den Einsatz an Schulen in MV"
@@ -958,7 +977,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 
 <script defer>
 // ===========================
-// ASYNCHRONES DATENLADEN + APP-START (2025-SICHER)
+// ASYNCHRONES DATENLADEN + APP-START
 // ===========================
 window.resources = [];
 window.undoStack = [];
@@ -1043,7 +1062,7 @@ function changeLevelMode(newMode) {
 // ERSTER START: Niveaustufen-Auswahl (jetzt robust)
 // ======================
 function showInitialLevelModeModal() {
-    if (localStorage.getItem('levelMode')) return;   // schon gewählt
+    if (localStorage.getItem('levelMode')) return;
 
     const modal = document.createElement('dialog');
     modal.style.cssText = `
@@ -1134,7 +1153,7 @@ function updateLevelModeButtons() {
     }
 }
 
-// Hilfsfunktion (falls du weitere Matrix-Funktionen hast)
+// Hilfsfunktion
 function renderAllMatrices() {
     if (typeof renderCompetenceMatrix === 'function') renderCompetenceMatrix();
     if (typeof renderGradeLevelMatrix === 'function') renderGradeLevelMatrix();
@@ -1213,12 +1232,12 @@ const REPO_PATH = (() => {
     return '/';
   }
   const path = location.pathname.split('/').filter(Boolean);
-  return location.origin + '/' + (path[0] || '') + '/';  // ← Immer mit trailing '/'
+  return location.origin + '/' + (path[0] || '') + '/';  
 })();
-console.log('Frontend REPO_PATH:', REPO_PATH);  // Debug: Sollte /lerndashboard/ sein
+console.log('Frontend REPO_PATH:', REPO_PATH);  
 
 let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]'); // neu!
+let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]'); 
 let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
 let dropdownsInitialized = false;
 
@@ -1323,7 +1342,6 @@ document.addEventListener('DOMContentLoaded', updateSchoolButton);
 // Nach Änderung im Modal
 function setSchoolName() {
     const current = localStorage.getItem('schoolName') || '';
-    // ... dein bestehender Modal-Code ...
 
     // Am Ende des "Speichern"-Buttons:
     modal.querySelector('#saveSchoolBtn').onclick = () => {
@@ -1333,9 +1351,8 @@ function setSchoolName() {
         } else {
             localStorage.removeItem('schoolName');
         }
-        updateSchoolButton();  // ← HIER AKTUALISIEREN
+        updateSchoolButton();  
         document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
-        // ... Modal schließen ...
     };
 }
 
@@ -1479,10 +1496,8 @@ function setFilterAndApply(filterId, value) {
         }
     }
 
-    // 3. Filter anwenden
     applyFilters();
 
-    // 4. Nur zum richtigen Filter-Container scrollen
     if (filterContainer) {
         filterContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -1598,7 +1613,7 @@ function applyFilters() {
     displayResources(filtered);
     updateStats();
     updateFilterHighlight();
-    updateFilterStatus();   // ← nur noch hier, alles perfekt
+    updateFilterStatus();
 }
 
 // ==================== AUTOCOMPLETE FÜR THEMA-SUCHE ====================
@@ -1618,8 +1633,8 @@ searchInput.addEventListener('input', () => {
   const matches = resources
     .map(r => r.topic || '')
     .filter(topic => topic.toLowerCase().includes(query))
-    .sort()                                 // alphabetisch
-    .slice(0, 8);                           // max. 8 Vorschläge (passt optisch)
+    .sort()                             
+    .slice(0, 8);                           
 
   if (matches.length === 0) {
     suggestionsDiv.style.display = 'none';
@@ -1638,7 +1653,7 @@ searchInput.addEventListener('input', () => {
       searchInput.value = topic;
       suggestionsDiv.innerHTML = '';
       suggestionsDiv.style.display = 'none';
-      applyFilters();                       // sofort filtern
+      applyFilters();                   
     });
 
     suggestionsDiv.appendChild(item);
@@ -1691,7 +1706,6 @@ function updateVersionDisplay() {
 // Beim ersten Laden
 window.addEventListener('load', updateVersionDisplay);
 
-// WICHTIG: Nach jedem Service-Worker-Update sofort neu anzeigen (auch ohne Reload!)
 navigator.serviceWorker.addEventListener('controllerchange', () => {
     console.log('SW gewechselt → Version sofort aktualisieren');
     updateVersionDisplay();        // ← Das fehlte!
@@ -1700,7 +1714,7 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
     }
 });
 
-// === NACHRICHTEN-EMPFANG (postMessage + BroadcastChannel) – MUSS DRIN SEIN! ===
+// === NACHRICHTEN-EMPFANG (postMessage + BroadcastChannel) ===
 function handleResourceMessage(event) {
     if (!event.data) return;
 
@@ -1738,7 +1752,6 @@ function handleResourceMessage(event) {
 if (event.data.type === 'ADD_RESOURCE') {
   const { data, undoFullBackup, undoMessage } = event.data;
 
-  // WICHTIG: Nur hinzufügen, wenn noch NICHT vorhanden!
   const alreadyExists = resources.some(r =>
     r.topic === data.topic &&
     r.subject === data.subject &&
@@ -1779,7 +1792,7 @@ if (event.data.type === 'UPDATE_RESOURCE') {
   const { index, data, undoFullBackup, undoBackup, undoMessage } = event.data;
   if (index >= 0 && index < resources.length) {
 
-    // Vollständiges Backup vor der Änderung (wenn mitgeschickt, sonst aktuell nehmen)
+    // Vollständiges Backup vor der Änderung
     const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
 
     resources[index] = data;
@@ -1801,9 +1814,7 @@ if (event.data.type === 'UPDATE_RESOURCE') {
 }
 }
 
-// 1. Klassischer Listener
 window.addEventListener('message', handleResourceMessage);
-// 2. Fallback: BroadcastChannel (für installierte PWAs)
 try {
     const channel = new BroadcastChannel('lerndashboard-channel');
     channel.onmessage = handleResourceMessage;
@@ -1813,12 +1824,10 @@ try {
 
 // === NEUE, ROBUSTE VERSION ===
 function showPWAInstallBanner() {
-  // Nur einmal pro Tag (oder Sitzung) zeigen
   const lastShown = localStorage.getItem('pwaBannerLastShown');
   const now = Date.now();
   if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
 
-  // Falls noch kein Prompt bereit → nicht anzeigen
   if (!installPromptEvent) return;
 
   const banner = document.createElement('div');
@@ -1855,7 +1864,7 @@ function showPWAInstallBanner() {
   `;
   document.body.appendChild(banner);
 
-  // Installieren – jetzt 100 % sicher
+  // Installieren
   const installBtn = banner.querySelector('#installPwaBtn');
   installBtn.onclick = async () => {
     if (!installPromptEvent) return;
@@ -1897,7 +1906,7 @@ function showPWAInstallBanner() {
   }, 12000);
 }
 
-// === PWA-INSTALLATIONS-BANNER: Animationen (kein Konflikt mehr!) ===
+// === PWA-INSTALLATIONS-BANNER: Animationen ===
 const pwaBannerStyle = document.createElement('style');
 pwaBannerStyle.textContent = `
     @keyframes slideUp {
@@ -1913,7 +1922,7 @@ document.head.appendChild(pwaBannerStyle);
 
 // === PWA-INSTALLATIONS-BANNER ===
 function showPWAInstallBanner() {
-    // Nur einmal pro Tag zeigen
+
     const lastShown = localStorage.getItem('pwaBannerLastShown');
     const now = Date.now();
     if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
@@ -1972,7 +1981,7 @@ function showPWAInstallBanner() {
         localStorage.setItem('pwaBannerLastShown', Date.now().toString());
     };
 
-    // Auto-Close nach 10 Sekunden (genug Zeit!)
+    // Auto-Close nach 10 Sekunden
     setTimeout(() => {
         if (banner && banner.parentElement) {
             banner.style.animation = 'slideDown 0.5s ease forwards';
@@ -1982,7 +1991,7 @@ function showPWAInstallBanner() {
     }, 10000);
 }
 
-// === NUR NACH KICK RELOAD (bleibt genau so!) ===
+// === NUR NACH KICK RELOAD ===
 navigator.serviceWorker.addEventListener('controllerchange', () => {
   if (allowReload) {
     window.location.reload();
@@ -2068,7 +2077,7 @@ document.head.appendChild(bannerStyle);
 // === SERVICE WORKER REGISTRIERUNG ===
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js', { scope: './' })  // ← scope: './' statt '/'
+    navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
       .then(reg => {
         console.log('SW registriert:', reg.scope);
 
@@ -2311,7 +2320,7 @@ function exportPDF() {
 
 // === HELPER: Sauberes Datum für Dateinamen ===
 function getDateString() {
-    return new Date().toISOString().slice(0, 10); // → "2025-11-15"
+    return new Date().toISOString().slice(0, 10); 
 }
 
 function exportMatrixCSV() {
@@ -2345,7 +2354,7 @@ function exportMatrixCSV() {
         "Analysieren und Reflektieren"
     ];
 
-    const levels = getLevelOptions();   // ← entscheidend
+    const levels = getLevelOptions();  
 
     // Matrix aufbauen
     const matrix = {};
@@ -3083,7 +3092,7 @@ function parseCSVLine(line) {
     return result;
 }
 
-// ==================== CSV IMPORT – KOMPLETT NEU, ROBUST & FUNKTIONIEREND ====================
+// ==================== CSV IMPORT ====================
 function importCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -3211,7 +3220,7 @@ showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
 return;
 }
 
-// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKe (ersetzt die alte showSimilarDecisionDialog) ===
+// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKE ===
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
     const totalNew = newOnes.length;
     const totalSimilar = similarOnes.length;
@@ -3654,12 +3663,11 @@ function showFancyAlert(title, type = 'info', subtitle = '', onClose = null) {
 
     const okBtn = modal.querySelector('#fancyAlertOK');
 
-    // DIE WICHTIGE ZEILE: Arrow-Function OHNE const/let/var → onClose ist garantiert im Scope!
     okBtn.onclick = () => {
         modal.style.opacity = '0';
         setTimeout(() => {
             modal.remove();
-            if (onClose) onClose();   // ← Jetzt wird’s ausgeführt!
+            if (onClose) onClose();
         }, 350);
     };
 
@@ -3759,17 +3767,16 @@ async function deleteResource(i) {
 
   dialog.showModal();
 
-  // Das ist der einzige Trick, der in allen Browsern (auch Chrome 2025) funktioniert
   setTimeout(() => {
     const rect = dialog.getBoundingClientRect();
     const top  = (window.innerHeight - rect.height) / 2 + window.scrollY;
     const left = (window.innerWidth  - rect.width)  / 2 + window.scrollX;
 
-    dialog.style.position = 'absolute';   // nicht fixed! absolute respektiert scroll
+    dialog.style.position = 'absolute';
     dialog.style.top  = `${top}px`;
     dialog.style.left = `${left}px`;
     dialog.style.margin = '0';
-    dialog.style.transform = 'none';      // überschreibt alles andere
+    dialog.style.transform = 'none';
 
     // Optional: sanfter Zoom-Effekt
     dialog.style.opacity = '0';
@@ -3886,13 +3893,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ======================
 function initializeApp() {
     loadData().then(() => {
-        initLevelMode();           // ← neu hinzugefügt
+        initLevelMode();
         startApp();
     });
 }
 
 function initLevelMode() {
-    getLevelMode();                // synchronisiert currentLevelMode
+    getLevelMode();
     if (!localStorage.getItem('levelMode')) {
         showInitialLevelModeModal();
     } else {
@@ -3908,7 +3915,7 @@ if (document.readyState === 'loading') {
     initializeApp();
 }
 
-</script>  <!-- ← ENDE SCRIPT -->
+</script>
 
      <!-- Version-Info -->
     <div class="version-info" id="versionInfo">Lade Version...</div>
@@ -4206,7 +4213,7 @@ tr:last-child td {
 .centered-button-wrapper {
     display: flex;
     justify-content: center;
-    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    margin: 6px 0 12px !important;
     width: 100%;
 }
 
@@ -4228,10 +4235,10 @@ tr:last-child td {
 
 @media (max-width: 768px) {
     .export-group.horizontal {
-        justify-content: flex-start;  /* Auf Mobile links ausrichten, um Wrap zu handhaben */
+        justify-content: flex-start; 
     }
     .export-group.horizontal > div:last-child {
-        margin-left: auto;  /* Hilfe-Button bleibt rechts, auch bei Wrap */
+        margin-left: auto;
     }
 }
 
