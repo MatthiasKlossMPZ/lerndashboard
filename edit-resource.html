@@ -95,15 +95,7 @@ window.addEventListener('message', event => {
 <option>Problemlösen und Handeln</option>
 <option>Analysieren und Reflektieren</option>
 </select></div>
-<<<<<<< HEAD
 <div class="form-group"><label>Niveaustufe *</label><select id="level" required></select></div>
-=======
-<div class="form-group"><label>Niveaustufe *</label><select id="level" required>
-<option value="">– Niveau wählen –</option>
-<option>Niveaustufe 1</option><option>Niveaustufe 2</option><option>Niveaustufe 3</option>
-<option>Niveaustufe 4</option><option>Niveaustufe 5</option>
-</select></div>
->>>>>>> origin/main
 <div class="form-group" style="position:relative;">
 <label>Digitales Tool</label>
 <input type="text" id="tool" autocomplete="off" placeholder="z.B. GeoGebra, Canva, Anton">
@@ -128,34 +120,22 @@ window.addEventListener('message', event => {
 
     if (event.data.type === 'EDIT_RESOURCE' || event.data.type === 'NEW_RESOURCE') {
         allTopics = event.data.allTopics || [];
-<<<<<<< HEAD
         allTools = event.data.allTools || [];
 
         if (!window.autocompleteInitialized) {
             setupAutocomplete('topic', 'topicDropdown', () => allTopics);
             setupAutocomplete('tool', 'toolDropdown', () => allTools);
-=======
-        allTools  = event.data.allTools  || [];
-
-        if (!window.autocompleteInitialized) {
-            setupAutocomplete('topic', 'topicDropdown', () => allTopics);
-            setupAutocomplete('tool',  'toolDropdown',  () => allTools);
->>>>>>> origin/main
             window.autocompleteInitialized = true;
         }
 
         if (event.data.type === 'EDIT_RESOURCE') {
             currentEditIndex = event.data.index;
             const r = event.data.data;
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
             document.getElementById('topic').value = r.topic || '';
             document.getElementById('subject').value = r.subject || '';
             document.getElementById('grade').value = r.grade || '';
             document.getElementById('competence').value = r.competence || '';
-<<<<<<< HEAD
             document.getElementById('tool').value = r.tool || '';
             document.getElementById('description').value = r.description || '';
             document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
@@ -165,23 +145,13 @@ window.addEventListener('message', event => {
 
         } else {
             // Neue Ressource
-=======
-            document.getElementById('level').value = r.level || '';
-            document.getElementById('tool').value = r.tool || '';
-            document.getElementById('description').value = r.description || '';
-            document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
-        } else {
->>>>>>> origin/main
             currentEditIndex = -1;
             document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
             document.querySelectorAll('input, select, textarea').forEach(el => {
                 if (el.type !== 'button') el.value = '';
             });
-<<<<<<< HEAD
 
             populateLevelSelect();
-=======
->>>>>>> origin/main
         }
         document.getElementById('topic').focus();
     }
@@ -208,10 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.opener?.document.body.classList.contains('dark')) {
         document.body.classList.add('dark');
     }
-<<<<<<< HEAD
     populateLevelSelect();   // ← NEU
-=======
->>>>>>> origin/main
 });
 
 // ===== SPEICHERN =====
@@ -312,7 +279,6 @@ function setupAutocomplete(inputId, dropdownId, getSuggestions) {
         }
     });
 }
-<<<<<<< HEAD
 // ======================
 // DYNAMISCHE NIVEAUSTUFEN FÜR EDIT-POPUP (3 oder 5)
 // ======================
@@ -340,8 +306,6 @@ function populateLevelSelect() {
     }
 }
 
-=======
->>>>>>> origin/main
 </script>
 </body>
 </html>

@@ -20,7 +20,6 @@
 <script src="libs/FileSaver.min.js"></script>
 
     <style>
-<<<<<<< HEAD
 /* ==================== LOGO HEADER ==================== */
 .logo-header {
     display: flex;
@@ -85,25 +84,6 @@
         height: 82px !important;
     }
 }
-=======
-    .logo-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        width: 100%;
-    }
-    .logo-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        cursor: pointer;
-    }
-    .logo-right svg {
-        height: 80px !important;
-        width: auto;
-    }
->>>>>>> origin/main
     .logo-title {
         display: flex;
         flex-direction: column;
@@ -356,23 +336,6 @@
         overflow-x: hidden; /* Verhindert horizontales Scrollen */
     }
 
-<<<<<<< HEAD
-=======
-    /* --- HEADER --- */
-    .logo-header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 14px;
-        margin-bottom: 18px;
-    }
-    .logo-left, .logo-right {
-        width: 100%;
-        justify-content: center;
-    }
-    .logo-left svg { height: 85px !important; }
-    .logo-right svg { height: 55px !important; }
->>>>>>> origin/main
     .title-main { font-size: 19px; }
     .title-sub { font-size: 12.5px; }
 
@@ -768,7 +731,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     <div class="main">
         <!-- ZWEI LOGOS + TITEL -->
         <div class="logo-header">
-<<<<<<< HEAD
             <!-- Linkes Logo + Titel -->
             <div class="logo-left" onclick="toggleDarkMode()">
                 <!-- APP-LOGO -->
@@ -829,129 +791,17 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                     </g>
                     <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
                 </svg>
-=======
-            <div class="logo-left" onclick="toggleDarkMode()">
-                <!-- APP-LOGO -->
-<svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: auto; height: 130px; cursor: pointer;">
-    <defs>
-        <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#8e67d6"/>
-            <stop offset="100%" stop-color="#5e3ab0"/>
-        </linearGradient>
-        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#f0f4ff"/>
-            <stop offset="100%" stop-color="#d0e0ff"/>
-        </linearGradient>
-    </defs>
-    <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
-    <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
-    <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
-    <g transform="translate(19.465148,19.604556)">
-        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
-        <circle cx="3.5" cy="2.5" r="1.5" fill="#ffffff"/>
-        <path d="m 2.5,4.5 h 2" stroke="#ffffff" stroke-width="1"/>
-        <g transform="translate(9)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
-            <path d="M 2,2 5,5 M 5,2 2,5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
-        </g>
-        <g transform="translate(18)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
-            <circle cx="3.5" cy="3.5" r="2" fill="#ffffff"/>
-            <circle cx="4" cy="3" r="0.8" fill="#333333"/>
-        </g>
-        <g transform="translate(0,9)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
-            <path d="M 2,5 V 3 L 5,4 V 6 L 2,7 Z" fill="#ffffff"/>
-            <circle cx="4.5" cy="1.5" r="1" fill="#ffffff"/>
-        </g>
-        <g transform="translate(9,9)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
-            <path d="M 2.5,2 5,3.5 v -3 z" fill="#ffffff"/>
-        </g>
-        <g transform="translate(18,9)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
-            <path d="m 1.5,2 h 4 m -4,1.5 h 4 M 1.5,5 h 2" stroke="#ffffff" stroke-width="0.8"/>
-        </g>
-        <g transform="translate(0,18)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
-            <path d="m 1.5,5.5 h 1 v -2 h -1 z m 1.5,0 h 1 v -3 H 3 Z m 1.5,0 h 1 v -1 h -1 z" fill="#ffffff"/>
-        </g>
-        <g transform="translate(9,18)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
-            <circle cx="3.5" cy="3.5" r="2.5" stroke="#ffffff" stroke-width="0.8" fill="none"/>
-            <path d="m 1.5,3.5 h 4 m -2,-2 v 4" stroke="#ffffff" stroke-width="0.6"/>
-        </g>
-        <g transform="translate(18,18)">
-            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
-            <path d="m 1.5,2 h 4 m -4,2 h 4" stroke="#999999" stroke-width="0.8"/>
-            <path d="M 1.5,2 2.2,2.7 M 1.5,2 2.9,3.4" stroke="#4caf50" stroke-width="1"/>
-        </g>
-    </g>
-    <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
-</svg>
->>>>>>> origin/main
                 <div class="logo-title">
                     <div class="title-main">LernDashboard</div>
                     <div class="title-sub">Digital</div>
                 </div>
             </div>
-<<<<<<< HEAD
 
             <!-- Rechtes MV-Logo  -->
             <div class="logo-right">
                 <img src="schule_in_mv.png"
                      alt="Entwickelt für den Einsatz an Schulen in MV"
                      style="height: 115px; width: auto; max-width: 100%; object-fit: contain;">
-=======
-            <!-- BUNDESLAND-LOGO (rechts) -->
-            <div class="logo-right">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 116.22047 61.596849" style="width: auto; height: 80px;">
-                    <defs>
-                        <style>
-                            .cls-1{fill:#005e90;}.cls-2{fill:url(#Unbenannter_Verlauf_5);}.cls-3{fill:url(#Unbenannter_Verlauf_62);}.cls-4{fill:url(#Unbenannter_Verlauf_41);}.cls-5{fill:#f2b700;}.cls-6{fill:url(#Unbenannter_Verlauf_32);}.cls-7{fill:url(#Unbenannter_Verlauf_6);}.cls-8{fill:url(#Unbenannter_Verlauf_6-2);}
-                        </style>
-                        <linearGradient id="Unbenannter_Verlauf_5" x1="77.08391" y1="22.21157" x2="113.43772" y2="30.60451" gradientUnits="userSpaceOnUse">
-                            <stop offset="0.05" stop-color="#5e9841"/><stop offset="0.4596" stop-color="#679d48"/><stop offset="0.65" stop-color="#6da14d"/><stop offset="0.95" stop-color="#5e9841"/>
-                        </linearGradient>
-                        <linearGradient id="Unbenannter_Verlauf_62" x1="77.08391" y1="22.21157" x2="113.43772" y2="30.60451" gradientUnits="userSpaceOnUse">
-                            <stop offset="0.05" stop-color="#289b38"/><stop offset="0.36963" stop-color="#319f41"/><stop offset="0.65" stop-color="#3da54c"/><stop offset="0.95" stop-color="#289b38"/>
-                        </linearGradient>
-                        <linearGradient id="Unbenannter_Verlauf_41" x1="94.87943" y1="13.29865" x2="94.87943" y2="24.93903" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#2676a1"/><stop offset="0.00529" stop-color="#2576a1"/><stop offset="0.17354" stop-color="#116897"/><stop offset="0.33964" stop-color="#046192"/><stop offset="0.5" stop-color="#005e90"/>
-                        </linearGradient>
-                        <linearGradient id="Unbenannter_Verlauf_32" x1="90.27939" y1="14.03253" x2="90.27939" y2="0.00081" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#6dc6e8"/><stop offset="0.19323" stop-color="#58bee5"/><stop offset="0.73219" stop-color="#21a8dc"/><stop offset="0.99375" stop-color="#0ca0d9"/>
-                        </linearGradient>
-                        <linearGradient id="Unbenannter_Verlauf_6" x1="113.26653" y1="13.74329" x2="113.26653" y2="13.73981" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#96c5e2"/><stop offset="0.21183" stop-color="#7fb9dc"/><stop offset="0.51882" stop-color="#64aad5"/><stop offset="0.79155" stop-color="#54a1d1"/><stop offset="1" stop-color="#4e9ecf"/>
-                        </linearGradient>
-                        <linearGradient id="Unbenannter_Verlauf_6-2" x1="112.71431" y1="13.71899" x2="112.71431" y2="13.71558" xlink:href="#Unbenannter_Verlauf_6"/>
-                    </defs>
-                    <title>NEU_Zeichenfläche 1</title>
-                    <g id="tut_gut._40" data-name="tut gut. 40">
-                        <path class="cls-1" d="M53.75344,52.80545a3.9581,3.9581,0,0,1-2.40381.78858c-1.52832,0-2.90527-.84571-2.90527-3.10694V44.70438H46.76028A13.6736,13.6736,0,0,0,46.9761,43.013l1.5791-.2583.271-1.95459a11.66615,11.66615,0,0,1,1.70362-.481V43.013h3.20752a13.6736,13.6736,0,0,1-.21582,1.69141h-2.9917v5.27246c0,1.27686.6372,1.69434,1.50586,1.69434a3.2961,3.2961,0,0,0,1.93408-.68506A5.89055,5.89055,0,0,1,53.75344,52.80545Z"/>
-                        <path class="cls-1" d="M63.99856,53.52469a7.80025,7.80025,0,0,1-.7041-2.63086,3.86811,3.86811,0,0,1-3.79737,2.69971c-2.06787,0-3.312-1.333-3.312-3.77393v-6.48a14.32361,14.32361,0,0,1,2.08545-.58886v6.64062c0,1.45117.70947,2.22656,1.83789,2.22656,1.64355,0,3.10742-1.59668,3.10742-3.915v-1.4624c0-1.61963-.03125-2.77685-.05517-3.19824a10.5755,10.5755,0,0,1,2.10058-.06543c.01709.35889.04053,1.48975.04053,3.26367V49.3953a12.13883,12.13883,0,0,0,.46387,3.69482A4.53265,4.53265,0,0,1,63.99856,53.52469Z"/>
-                        <path class="cls-1" d="M74.62942,52.80545a3.95815,3.95815,0,0,1-2.40381.78858c-1.52832,0-2.90528-.84571-2.90528-3.10694V44.70438H67.63625a13.67169,13.67169,0,0,0,.21582-1.69141l1.5791-.2583.271-1.95459a11.66636,11.66636,0,0,1,1.70361-.481V43.013H74.6133a13.67169,13.67169,0,0,1-.21582,1.69141h-2.9917v5.27246c0,1.27686.63721,1.69434,1.50586,1.69434a3.296,3.296,0,0,0,1.93408-.68506A5.89051,5.89051,0,0,1,74.62942,52.80545Z"/>
-                        <path class="cls-1" d="M88.55569,51.67264c1.75.33594,2.498,1.188,2.498,2.43164,0,2.06543-2.11426,3.78516-5.418,3.78516-2.62841,0-4.54052-1.05371-4.54052-2.6499,0-1.39454,1.23925-2.30274,2.69287-2.69629a2.03468,2.03468,0,0,1-1.27149-1.814,1.89434,1.89434,0,0,1,.78711-1.51123,3.13428,3.13428,0,0,1-1.8042-2.86865c0-2.22461,2.0708-3.59863,4.50147-3.59863a5.61022,5.61022,0,0,1,1.73144.25781H91.2051a11.4867,11.4867,0,0,1-.2207,1.56445l-1.49756-.41553a3.09669,3.09669,0,0,1,.69336,1.99707c0,2.22071-2.05811,3.58448-4.49512,3.58448a5.97529,5.97529,0,0,1-1.24121-.12451.79386.79386,0,0,0-.13672.44287c0,.4375.3291.86279,1.7417,1.13427l2.50684.48145ZM89.06447,54.49c0-.47314-.3208-.82324-1.57617-1.06445l-1.96875-.37793c-1.35449.2749-2.48925.92041-2.48925,1.71582,0,.80908,1.25048,1.42285,2.89013,1.42285C87.77346,56.18631,89.06447,55.4368,89.06447,54.49Zm-5.563-8.19726A2.0449,2.0449,0,0,0,85.77785,48.157a2.165,2.165,0,0,0,2.40088-1.94629,2.05016,2.05016,0,0,0-2.271-1.87842A2.17934,2.17934,0,0,0,83.50149,46.29276Z"/>
-                        <path class="cls-1" d="M101.107,53.52469a7.80046,7.80046,0,0,1-.70411-2.63086,3.86809,3.86809,0,0,1-3.79736,2.69971c-2.06787,0-3.312-1.333-3.312-3.77393v-6.48a14.32325,14.32325,0,0,1,2.08545-.58886v6.64062c0,1.45117.70947,2.22656,1.83789,2.22656,1.64355,0,3.10742-1.59668,3.10742-3.915v-1.4624c0-1.61963-.03125-2.77685-.05518-3.19824a10.57563,10.57563,0,0,1,2.10059-.06543c.01709.35889.04053,1.48975.04053,3.26367V49.3953a12.13883,12.13883,0,0,0,.46387,3.69482A4.53265,4.53265,0,0,1,101.107,53.52469Z"/>
-                        <path class="cls-1" d="M111.73781,52.80545a3.95809,3.95809,0,0,1-2.4038.78858c-1.52832,0-2.90528-.84571-2.90528-3.10694V44.70438h-1.68408a13.67169,13.67169,0,0,0,.21582-1.69141l1.5791-.2583.271-1.95459a11.66636,11.66636,0,0,1,1.70361-.481V43.013h3.20752a13.67169,13.67169,0,0,1-.21582,1.69141h-2.9917v5.27246c0,1.27686.63721,1.69434,1.50586,1.69434a3.29608,3.29608,0,0,0,1.93408-.68506A5.89055,5.89055,0,0,1,111.73781,52.80545Z"/>
-                        <path class="cls-1" d="M113.79616,52.3787a1.31151,1.31151,0,0,1,1.28466-1.3794,1.129,1.129,0,0,1,1.13965,1.21436A1.31177,1.31177,0,0,1,114.9358,53.594,1.12982,1.12982,0,0,1,113.79616,52.3787Z"/>
-                    </g>
-                    <g id="MV_40" data-name="MV 40">
-                        <path class="cls-1" d="M70.86079.186,56.3,31.2433H50.56612L36.00536.186a.09132.09132,0,0,1,.08216-.11994h.90427A13.42714,13.42714,0,0,1,40.578.44591a6.59341,6.59341,0,0,1,3.43214,3.50857c1.51057,2.97876,9.42287,19.602,9.42287,19.602s7.91237-16.6232,9.42294-19.602A6.5933,6.5933,0,0,1,66.28805.44591,13.42772,13.42772,0,0,1,69.87429.06606h.90428A.09135.09135,0,0,1,70.86079.186Z"/>
-                        <path class="cls-1" d="M32.78247.07069h-.41792a15.44729,15.44729,0,0,0-3.88737.42444c-1.77327.625-3.05629,2.13153-5.26713,6.58515-1.48466,2.99024-5.77485,11.94025-5.777,11.94452-.00213-.00427-4.29232-8.95428-5.777-11.94452C9.44525,2.62666,8.16223,1.12013,6.389.49513A15.44716,15.44716,0,0,0,2.50159.07069H2.08368L0,31.2518H5.92717L7.39906,8.8536,15.75948,26.493h3.34718L27.46708,8.8536,28.939,31.2518h5.92717Z"/>
-                    </g>
-                    <g id="Bildzeichen_40" data-name="Bildzeichen 40">
-                        <path class="cls-2" d="M100.9129,20.95462c-5.679.31559-12.82928,2.6454-17.21232,3.37a52.42079,52.42079,0,0,1-7.24636.61441v6.24207h36.85037V21.45885a47.93751,47.93751,0,0,0-8.41788-.61591C103.67309,20.84294,102.34472,20.87528,100.9129,20.95462Z"/>
-                        <path class="cls-3" d="M100.9129,20.95462c-5.679.31559-12.82928,2.6454-17.21232,3.37a52.42079,52.42079,0,0,1-7.24636.61441v6.24207h36.85037V21.45885a47.93751,47.93751,0,0,0-8.41788-.61591C103.67309,20.84294,102.34472,20.87528,100.9129,20.95462Z"/>
-                        <path class="cls-4" d="M94.87955,13.29865c-8.53535,0-18.42531.73388-18.42531.73388V24.939a52.41512,52.41512,0,0,0,7.24635-.61445c4.383-.72454,11.53325-3.05438,17.21228-3.37,1.43183-.07935,2.76024-.11169,3.97382-.11169a47.934,47.934,0,0,1,8.41792.616V13.74329S103.72831,13.29865,94.87955,13.29865Z"/>
-                        <path class="cls-5" d="M104.10456.00061a64.43537,64.43537,0,0,0-2.6283,9.25488,39.51381,39.51381,0,0,0-.687,4.10034c6.72951.11976,12.51539.38746,12.51539.38746V0Z"/>
-                        <path class="cls-6" d="M101.47625,9.25549a64.40366,64.40366,0,0,1,2.6283-9.25407L76.45424.00081V14.03253s9.88995-.73389,18.4253-.73389c1.97325,0,3.9783.02283,5.90967.05719A39.51043,39.51043,0,0,1,101.47625,9.25549Z"/>
-                        <path class="cls-7" d="M113.30461,13.74329l-.07617-.00348Z"/>
-                        <path class="cls-8" d="M112.75442,13.719l-.08022-.00341Z"/>
-                    </g>
-                </svg>
->>>>>>> origin/main
             </div>
         </div>
 
@@ -974,14 +824,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     <label>Niveaustufe</label>
     <select id="filterLevel">
         <option value="">Alle</option>
-<<<<<<< HEAD
-=======
-        <option value="Niveaustufe 1">Niveaustufe 1</option>
-        <option value="Niveaustufe 2">Niveaustufe 2</option>
-        <option value="Niveaustufe 3">Niveaustufe 3</option>
-        <option value="Niveaustufe 4">Niveaustufe 4</option>
-        <option value="Niveaustufe 5">Niveaustufe 5</option>
->>>>>>> origin/main
     </select>
 </div>
 <div class="filter-group">
@@ -1071,7 +913,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                 <div id="resourcesList"></div>
             </div>
             <div class="sidebar">
-<<<<<<< HEAD
     <h3>Fächer-Statistik</h3>
     
     <div style="margin: 12px 0; text-align:center;">
@@ -1104,14 +945,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 
     <div id="statsFach"></div>
 </div>
-=======
-                <h3>Fächer-Statistik</h3>
-                <div style="margin: 12px 0; text-align:center;">
-                <button id="schoolButton" class="new-resource-btn school-btn" onclick="setSchoolName()">
-                <span id="schoolButtonText">Schule einstellen</span></button>
-                </div>
-                <div id="statsFach"></div>
->>>>>>> origin/main
             </div>
         </div>
     </div>
@@ -1131,7 +964,6 @@ window.resources = [];
 window.undoStack = [];
 window.dataReady = false;
 
-<<<<<<< HEAD
 // ======================
 // NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen)
 // ======================
@@ -1264,8 +1096,6 @@ function renderAllMatrices() {
   // Füge hier weitere Matrix-Funktionen hinzu, die du hast
 }
 
-=======
->>>>>>> origin/main
 function loadData() {
     return new Promise(resolve => {
         const idle = window.requestIdleCallback || (cb => setTimeout(cb, 50));
@@ -1289,7 +1119,6 @@ function loadData() {
 function startApp() {
     if (!window.dataReady) return;
 
-<<<<<<< HEAD
     // Event Listener für alle Filter
     ['filterSubject', 'filterGrade', 'filterTool', 'filterCompetence', 'filterLevel', 'filterFavorite'].forEach(id => {
         const el = document.getElementById(id);
@@ -1308,18 +1137,6 @@ function startApp() {
     applyFilters();
 
     // Matrix PDF Button
-=======
-    // Dein alter INIT-Code
-    ['filterSubject','filterGrade','filterTool','filterCompetence','filterLevel','filterFavorite'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', applyFilters);
-    });
-    const searchEl = document.getElementById('searchTopic');
-    if (searchEl) searchEl.addEventListener('input', applyFilters);
-
-    populateDropdowns();
-    applyFilters();
->>>>>>> origin/main
     document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
 
     console.log('LernDashboard vollständig gestartet – butterweich auf iPad!');
@@ -1343,7 +1160,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.40';
+const VERSION = '1.1.41';
 const REPO_PATH = (() => {
   if (location.hostname === 'localhost' || 
       location.hostname === '127.0.0.1' || 
@@ -1416,7 +1233,6 @@ function updateSchoolButton() {
 
 // Beim Laden
 document.addEventListener('DOMContentLoaded', updateSchoolButton);
-<<<<<<< HEAD
     // === FIRST START: Niveaustufen wählen ===
     if (!localStorage.getItem('levelMode')) {
       const modal = document.createElement('dialog');
@@ -1459,9 +1275,6 @@ document.addEventListener('DOMContentLoaded', updateSchoolButton);
         console.log('Initial levelMode gesetzt:', mode);
       };
     }
-=======
-
->>>>>>> origin/main
 // Nach Änderung im Modal
 function setSchoolName() {
     const current = localStorage.getItem('schoolName') || '';
@@ -2463,13 +2276,7 @@ function exportMatrixCSV() {
         return;
     }
 
-<<<<<<< HEAD
     updateCurrentFilters();
-=======
-    // === FILTER-INFO (für Inhalt) ===
-    updateCurrentFilters();
-
->>>>>>> origin/main
     let filterParts = [];
     if (currentFilters.subject) filterParts.push(currentFilters.subject);
     if (currentFilters.grade) filterParts.push(currentFilters.grade);
@@ -2481,14 +2288,9 @@ function exportMatrixCSV() {
     if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
 
     const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
-<<<<<<< HEAD
     const fileTitle = `Matrix_${getDateString()}`;
 
     // === DYNAMISCH ===
-=======
-    const fileTitle = `Matrix_${getDateString()}`;  // ← Nur Datum!
-
->>>>>>> origin/main
     const competences = [
         "Suchen, Verarbeiten und Aufbewahren",
         "Kommunizieren und Kooperieren",
@@ -2497,16 +2299,10 @@ function exportMatrixCSV() {
         "Problemlösen und Handeln",
         "Analysieren und Reflektieren"
     ];
-<<<<<<< HEAD
 
     const levels = getLevelOptions();   // ← entscheidend
 
     // Matrix aufbauen
-=======
-    const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
-
-    // === MATRIX AUFBAUEN (mit Set für Duplikate) ===
->>>>>>> origin/main
     const matrix = {};
     competences.forEach(c => {
         matrix[c] = {};
@@ -2528,77 +2324,40 @@ function exportMatrixCSV() {
         matrix[comp][level].add(entry);
     });
 
-<<<<<<< HEAD
     // CSV erzeugen
     let csv = '\uFEFF';
     csv += `"${documentTitle}"\n\n`;
     csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
 
-=======
-    // === CSV AUFBAUEN ===
-    let csv = '\uFEFF';  // BOM für UTF-8
-    csv += `"${documentTitle}"\n\n`;  // Titelzeile (mit Filtern)
-
-    // Header
-    csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
-
-    // Daten
->>>>>>> origin/main
     competences.forEach(comp => {
         const row = [`"${comp}"`];
         levels.forEach(level => {
             const entries = [...matrix[comp][level]];
             const cell = entries.length > 0 ? entries.join('\n') : '—';
-<<<<<<< HEAD
             row.push(`"${cell.replace(/"/g, '""')}"`);
-=======
-            row.push(`"${cell.replace(/"/g, '""')}"`);  // Escaping von "
->>>>>>> origin/main
         });
         csv += row.join(';') + '\n';
     });
 
-<<<<<<< HEAD
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `${fileTitle}.csv`;
-=======
-    // === DOWNLOAD ===
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${fileTitle}.csv`;  // ← Nur Matrix_2025-11-15.csv
->>>>>>> origin/main
     link.click();
 
     showFancyAlert('Matrix CSV Export erfolgreich!', 'success');
 }
 
 // ──────────────────────────────────────────────────────────────
-<<<<<<< HEAD
 // MATRIX → PDF (dynamisch 3 oder 5 Niveaustufen)
 // ──────────────────────────────────────────────────────────────
 async function exportMatrixPDF() {
     const filtered = getFilteredResources();
     
-=======
-// MATRIX → PDF
-// ──────────────────────────────────────────────────────────────
-
-async function exportMatrixPDF() {
-    const filtered = getFilteredResources();
-
-    // ===== EINHEITLICHE HINWEIS-ABFRAGE FÜR ALLE MATRIX-EXPORTS =====
->>>>>>> origin/main
     if (filtered.length === 0) {
         showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
         return;
     }
-<<<<<<< HEAD
-=======
-    // ==============================================================
->>>>>>> origin/main
 
     try {
         const { jsPDF } = window.jspdf;
@@ -2609,18 +2368,10 @@ async function exportMatrixPDF() {
         const rightMargin = 12;
         const topMargin = 18;
         const usableWidth = pageWidth - leftMargin - rightMargin;
-<<<<<<< HEAD
 
         const compColWidth = usableWidth * 0.22;
         let currentY = topMargin;
 
-=======
-        const compColWidth = usableWidth * 0.22;
-        const levelColWidth = (usableWidth - compColWidth) / 5;
-        let currentY = topMargin;
-
-        // === FILTER-INFO (für Inhalt) ===
->>>>>>> origin/main
         updateCurrentFilters();
         let filterParts = [];
         if (currentFilters.subject) filterParts.push(currentFilters.subject);
@@ -2631,36 +2382,11 @@ async function exportMatrixPDF() {
             filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
         }
         if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
-<<<<<<< HEAD
 
         const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
         const fileTitle = `Matrix_${getDateString()}`;
 
         // === DYNAMISCH ===
-=======
-        const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
-        const fileTitle = `Matrix_${getDateString()}`;
-
-        // === ÜBERSCHRIFT ===
-        doc.setFontSize(13);
-        doc.setTextColor(107, 70, 193);
-        doc.setFont('helvetica', 'bold');
-        const maxTitleWidth = pageWidth - leftMargin - rightMargin - 20;
-        const titleLines = doc.splitTextToSize(documentTitle, maxTitleWidth);
-        doc.text(titleLines, pageWidth / 2, currentY, { align: 'center' });
-        currentY += titleLines.length * 5.5;
-
-        // === SCHULNAME & DATUM ===
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.setFont('helvetica', 'italic');
-        const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
-        doc.text(schoolName, leftMargin, currentY);
-        doc.text(`Export: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - rightMargin, currentY, { align: 'right' });
-        currentY += 8;
-
-        // === DATEN ===
->>>>>>> origin/main
         const competences = [
             "Suchen, Verarbeiten und Aufbewahren",
             "Kommunizieren und Kooperieren",
@@ -2669,7 +2395,6 @@ async function exportMatrixPDF() {
             "Problemlösen und Handeln",
             "Analysieren und Reflektieren"
         ];
-<<<<<<< HEAD
 
         const levels = getLevelOptions();                    // ← dynamisch
         const levelColWidth = (usableWidth - compColWidth) / levels.length;
@@ -2679,14 +2404,6 @@ async function exportMatrixPDF() {
         ].slice(0, levels.length);
 
         // Matrix aufbauen
-=======
-        const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
-        const levelColors = [
-            [76, 175, 80], [139, 195, 74], [255, 193, 7], [255, 152, 0], [244, 67, 54]
-        ];
-
-        // === MATRIX ===
->>>>>>> origin/main
         const matrix = {};
         competences.forEach(c => {
             matrix[c] = {};
@@ -2694,7 +2411,6 @@ async function exportMatrixPDF() {
         });
 
         filtered.forEach(r => {
-<<<<<<< HEAD
             const c = r.competence?.trim();
             const l = r.level?.trim();
             const topic = r.topic?.trim();
@@ -2709,28 +2425,6 @@ async function exportMatrixPDF() {
         });
 
         // Hilfsfunktionen (leicht angepasst)
-=======
-            const s = r.subject?.trim();
-            const g = r.grade?.trim();
-            const t = r.tool?.trim().toLowerCase();
-            const c = r.competence?.trim();
-            const l = r.level?.trim();
-            const topic = r.topic?.trim();
-            if (!c || !l || !topic) return;
-
-            const match = (!currentFilters.subject || s === currentFilters.subject) &&
-                          (!currentFilters.grade || g === currentFilters.grade) &&
-                          (!currentFilters.tool || t === currentFilters.tool) &&
-                          (!currentFilters.competence || c === currentFilters.competence) &&
-                          (!currentFilters.level || l === currentFilters.level);
-
-            if (match) {
-                matrix[c][l].push(`${topic}\nKlasse ${g}${r.tool ? ` – ${r.tool}` : ''}`);
-            }
-        });
-
-        // === HILFSFUNKTIONEN ===
->>>>>>> origin/main
         const drawLine = (x1, y1, x2, y2) => {
             doc.setDrawColor(180);
             doc.setLineWidth(0.25);
@@ -2740,10 +2434,7 @@ async function exportMatrixPDF() {
         const drawHeader = y => {
             const h = 11;
             let x = leftMargin;
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
             doc.setFillColor(107, 70, 193);
             doc.rect(x, y, compColWidth, h, 'F');
             doc.setTextColor(255);
@@ -2776,19 +2467,11 @@ async function exportMatrixPDF() {
             doc.text(lines, x + 4, startY);
         };
 
-<<<<<<< HEAD
         // Header zeichnen
         let headerBottom = drawHeader(currentY);
         currentY = headerBottom;
 
         // Zeilen
-=======
-        // === HEADER ===
-        let headerBottom = drawHeader(currentY);
-        currentY = headerBottom;
-
-        // === ZEILEN ===
->>>>>>> origin/main
         const COMP_FS = 9.5, LEVEL_FS = 8.0;
         const LH_COMP = COMP_FS * 1.2 * 0.3528;
         const LH_LEVEL = LEVEL_FS * 1.2 * 0.3528;
@@ -2797,13 +2480,8 @@ async function exportMatrixPDF() {
         competences.forEach(comp => {
             const compLines = doc.splitTextToSize(comp, compColWidth - 8);
             const compH = compLines.length * LH_COMP;
-<<<<<<< HEAD
 
             let maxLevelH = 0;
-=======
-            let maxLevelH = 0;
-
->>>>>>> origin/main
             levels.forEach(l => {
                 const raw = matrix[comp][l].length ? matrix[comp][l].join('\n\n') : '—';
                 const lines = doc.splitTextToSize(raw, levelColWidth - 8);
@@ -2829,10 +2507,7 @@ async function exportMatrixPDF() {
             const rowY = currentY;
             let x = leftMargin;
 
-<<<<<<< HEAD
             // Kompetenz-Spalte
-=======
->>>>>>> origin/main
             doc.setFillColor(248, 249, 255);
             doc.rect(x, rowY, compColWidth, rowH, 'F');
             doc.setTextColor(0);
@@ -2841,28 +2516,18 @@ async function exportMatrixPDF() {
             drawLine(x + compColWidth, rowY, x + compColWidth, rowY + rowH);
             x += compColWidth;
 
-<<<<<<< HEAD
             // Level-Spalten
             levels.forEach((lvl, j) => {
                 const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
                 const lines = doc.splitTextToSize(raw, levelColWidth - 8);
 
-=======
-            levels.forEach((lvl, j) => {
-                const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
-                const lines = doc.splitTextToSize(raw, levelColWidth - 8);
->>>>>>> origin/main
                 doc.setFillColor(255, 255, 255);
                 doc.rect(x, rowY, levelColWidth, rowH, 'F');
                 doc.setTextColor(60);
                 doc.setFontSize(LEVEL_FS);
                 drawCenteredText(lines, x, rowY, levelColWidth, rowH, LH_LEVEL);
-<<<<<<< HEAD
 
                 if (j < levels.length - 1) drawLine(x + levelColWidth, rowY, x + levelColWidth, rowY + rowH);
-=======
-                if (j < 4) drawLine(x + levelColWidth, rowY, x + levelColWidth, rowY + rowH);
->>>>>>> origin/main
                 x += levelColWidth;
             });
 
@@ -2870,11 +2535,7 @@ async function exportMatrixPDF() {
             currentY += rowH;
         });
 
-<<<<<<< HEAD
         // Abschlusslinien + Seitenzahlen
-=======
-        // === ABSCHLUSS ===
->>>>>>> origin/main
         drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
         drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
 
@@ -2886,10 +2547,6 @@ async function exportMatrixPDF() {
             doc.text(`Seite ${i}`, pageWidth - rightMargin, pageHeight - 8, { align: 'right' });
         }
 
-<<<<<<< HEAD
-=======
-        // === SAVE MIT SAUBEREM DATEINAMEN ===
->>>>>>> origin/main
         doc.save(`${fileTitle}.pdf`);
         showFancyAlert('PDF erfolgreich erstellt!', 'success');
 
@@ -2914,24 +2571,16 @@ function exportMatrixExcel() {
         "Problemlösen und Handeln",
         "Analysieren und Reflektieren"
     ];
-<<<<<<< HEAD
 
     const levels = getLevelOptions();
 
     const baseLevelColors = {
-=======
-    const levels = ["Niveaustufe 1", "Niveaustufe 2", "Niveaustufe 3", "Niveaustufe 4", "Niveaustufe 5"];
-
-    // === FARBEN ===
-    const levelColors = {
->>>>>>> origin/main
         'Niveaustufe 1': 'FF4CAF50',
         'Niveaustufe 2': 'FF8BC34A',
         'Niveaustufe 3': 'FFFFC107',
         'Niveaustufe 4': 'FFFF9800',
         'Niveaustufe 5': 'FFF44336'
     };
-<<<<<<< HEAD
     const levelColors = {};
     levels.forEach((lvl, idx) => {
         levelColors[lvl] = Object.values(baseLevelColors)[idx] || 'FF6B46C1';
@@ -2941,14 +2590,6 @@ function exportMatrixExcel() {
     const contentColor = 'FFF8F9FA';
 
     updateCurrentFilters();
-=======
-    const headerColor = 'FF6B46C1';
-    const contentColor = 'FFF8F9FA';
-
-    // === FILTER-INFO (für Inhalt) ===
-    updateCurrentFilters();
-
->>>>>>> origin/main
     let filterParts = [];
     if (currentFilters.subject) filterParts.push(currentFilters.subject);
     if (currentFilters.grade) filterParts.push(currentFilters.grade);
@@ -2960,7 +2601,6 @@ function exportMatrixExcel() {
     if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
 
     const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
-<<<<<<< HEAD
     const fileTitle = `Matrix_${getDateString()}`;
 
     const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
@@ -2993,40 +2633,11 @@ function exportMatrixExcel() {
     // === KOPFZEILE ===
     const headerTopRow = sheet.addRow(Array(totalColumns).fill(''));
     headerTopRow.height = 55;
-=======
-    const fileTitle = `Matrix_${getDateString()}`;  // ← Nur Datum!
-
-    // === SCHULNAME & DATUM ===
-    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
-    const exportDate = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-    // === MATRIX AUFBAUEN ===
-    const matrix = {};
-    competences.forEach(c => matrix[c] = {});
-    levels.forEach(l => competences.forEach(c => matrix[c][l] = []));
-
-    filtered.forEach(r => {
-        if (r.competence && r.level && matrix[r.competence][r.level]) {
-            const entry = `${r.topic} (${[r.subject, r.grade, r.tool].filter(Boolean).join(', ')})`;
-            const desc = r.description ? `: ${r.description}` : '';
-            matrix[r.competence][r.level].push(entry + desc);
-        }
-    });
-
-    // === WORKBOOK ===
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Kompetenzmatrix');
-
-    // === KOPFZEILE (wie PDF: kleiner, mehrzeilig, wrapText) ===
-    const headerTopRow = sheet.addRow(['', '', '', '', '', '']);
-    headerTopRow.height = 45;  // Platz für 2 Zeilen
->>>>>>> origin/main
 
     const schoolCell = headerTopRow.getCell(1);
     schoolCell.value = schoolName;
     schoolCell.font = { bold: true, size: 12, color: { argb: headerColor } };
     schoolCell.alignment = { horizontal: 'left', vertical: 'middle' };
-<<<<<<< HEAD
 
     sheet.mergeCells(1, 2, 1, totalColumns - 1);
     const titleCell = sheet.getCell(1, 2);
@@ -3063,45 +2674,10 @@ function exportMatrixExcel() {
         const row = sheet.addRow(rowValues);
 
         // Kompetenz-Zelle
-=======
-    schoolCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-
-    sheet.mergeCells('B1:E1');
-    const filterCell = sheet.getCell('B1');
-    filterCell.value = documentTitle;  // ← Inhalt: Filter
-    filterCell.font = { bold: true, size: 12, color: { argb: headerColor } };
-    filterCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-    filterCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-
-    const dateCell = headerTopRow.getCell(6);
-    dateCell.value = `Export: ${exportDate}`;
-    dateCell.font = { size: 11, color: { argb: 'FF666666' } };
-    dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
-    dateCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-
-    sheet.addRow([]);  // Leere Zeile
-
-    // === TABELLENÜBERSCHRIFT ===
-    const headerRow = sheet.addRow(['Kompetenzbereich', ...levels]);
-    headerRow.eachCell((cell, colNumber) => {
-        let fillColor = colNumber === 1 ? headerColor : levelColors[levels[colNumber - 2]];
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
-        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-        cell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-    });
-    headerRow.height = 45;
-
-    // === ZEILEN ===
-    competences.forEach(comp => {
-        const rowValues = [comp, ...levels.map(l => matrix[comp][l].join('\n\n') || '–')];
-        const row = sheet.addRow(rowValues);
->>>>>>> origin/main
         const compCell = row.getCell(1);
         compCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerColor } };
         compCell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
         compCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-<<<<<<< HEAD
         compCell.border = {
             top: { style: 'thin', color: { argb: 'FF999999' } },
             left: { style: 'thin', color: { argb: 'FF999999' } },
@@ -3110,17 +2686,12 @@ function exportMatrixExcel() {
         };
 
         // Level-Zellen mit leichter Umrandung
-=======
-        compCell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-
->>>>>>> origin/main
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             if (colNumber > 1) {
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: contentColor } };
                 cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
                 if (cell.value && cell.value !== '–') cell.value = '\n' + cell.value + '\n';
                 if (cell.value === '–') cell.font = { color: { argb: 'FF999999' }, italic: true };
-<<<<<<< HEAD
 
                 // Leichte Umrandung für alle Ressourcen-Zellen
                 cell.border = {
@@ -3136,15 +2707,6 @@ function exportMatrixExcel() {
         let maxLines = 1;
         row.eachCell({ includeEmpty: true }, (cell) => {
             if (cell.value) {
-=======
-                cell.border = { top: { style: 'thin', color: { argb: 'FFCCCCCC' } }, left: { style: 'thin', color: { argb: 'FFCCCCCC' } }, bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } }, right: { style: 'thin', color: { argb: 'FFCCCCCC' } } };
-            }
-        });
-
-        let maxLines = 1;
-        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-            if (colNumber > 1 && cell.value) {
->>>>>>> origin/main
                 const lines = (cell.value.toString().match(/\n/g) || []).length + 1;
                 if (lines > maxLines) maxLines = lines;
             }
@@ -3152,7 +2714,6 @@ function exportMatrixExcel() {
         row.height = Math.max(70, maxLines * 22);
     });
 
-<<<<<<< HEAD
     // === SPALTENBREITEN ===
     sheet.columns = [
         { width: 36 },
@@ -3163,38 +2724,12 @@ function exportMatrixExcel() {
     workbook.xlsx.writeBuffer().then(buffer => {
         const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
         saveAs(excelBlob, `${fileTitle}.xlsx`);
-=======
-    sheet.columns = [{ width: 36 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }, { width: 44 }];
-
-    // === EXPORT MIT SAUBEREM DATEINAMEN ===
-    workbook.xlsx.writeBuffer().then(buffer => {
-        const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
-        saveAs(excelBlob, `${fileTitle}.xlsx`);  // ← Nur Matrix_2025-11-15
->>>>>>> origin/main
         showFancyAlert('Excel-Matrix erfolgreich erstellt!', 'success');
     }).catch(err => {
         console.error("Export-Fehler:", err);
         showFancyAlert('Export fehlgeschlagen!', 'error');
     });
 }
-<<<<<<< HEAD
-=======
-// === Hilfsfunktion: Base64 → Blob ===
-function base64ToBlob(b64Data, contentType = '', sliceSize = 512) {
-    const byteCharacters = atob(b64Data);
-    const byteArrays = [];
-    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-        const slice = byteCharacters.slice(offset, offset + sliceSize);
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-    }
-    return new Blob(byteArrays, { type: contentType });
-}
->>>>>>> origin/main
 // === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD ===
 function autoBackup() {
     const allResources = JSON.parse(localStorage.getItem('resources') || '[]');
