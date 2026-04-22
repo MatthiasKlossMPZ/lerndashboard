@@ -37,6 +37,7 @@ git clone https://github.com/MatthiasKlossMPZ/lerndashboard.git
 # In den Ordner wechseln und Start-Skript ausführen
 cd lerndashboard
 ./Start.sh
+```
 
 Lizenz
 Quellcode
