@@ -39,14 +39,17 @@ cd lerndashboard
 ./Start.sh
 ```
 
-Lizenz
-Quellcode
+# Lizenz
+## Quellcode
 Der gesamte Quellcode steht unter der MIT-Lizenz – frei nutzbar, anpassbar und weiterverbreitbar.
-Logo und Assets
+
+## Logo und Assets
 Das Logo wurde von Matthias Kloss erstellt und steht unter der CC BY 4.0-Lizenz (Namensnennung erforderlich).
-Namensnennung:
-Logo: Matthias Kloss, Lerndashboard – https://github.com/MatthiasKlossMPZ/lerndashboard
-Mitwirken
+
+## Namensnennung:
+Logos: Matthias Kloss, Lerndashboard – https://github.com/MatthiasKlossMPZ/lerndashboard
+
+## Mitwirken
 Du bist herzlich eingeladen, das Projekt zu verbessern!
 Einfach forken, Änderungen vornehmen und einen Pull Request stellen.
 Besonders willkommen sind:
@@ -55,7 +58,7 @@ Verbesserungen der Benutzeroberfläche
 Neue Features für den Schulalltag
 Bugfixes
 
-Kontakt / Feedback
+## Kontakt / Feedback
 Falls du Fragen, Anregungen oder Feedback hast, melde dich gerne:
 
 Über GitHub Issues
