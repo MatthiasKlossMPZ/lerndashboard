@@ -1,0 +1,4257 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+    <meta charset="UTF-8">
+    <title>LernDashboard Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6b46c1">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="prefetch" href="edit-resource.html">
+    <link rel="prefetch" href="new-resource.html">
+
+<!-- Lokale Bibliotheken (für Offline-Betrieb) -->
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/jspdf.plugin.autotable.min.js"></script>
+<script src="libs/jszip.min.js"></script>
+<script src="libs/exceljs.min.js"></script>
+<script src="libs/FileSaver.min.js"></script>
+
+    <style>
+/* ==================== LOGO HEADER ==================== */
+.logo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    gap: 20px;
+}
+
+.logo-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.logo-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* Linkes SVG-Logo – jetzt noch etwas größer */
+.logo-left svg {
+    height: 155px !important;     /* ← hier vergrößert */
+    width: auto;
+    flex-shrink: 0;
+}
+
+/* Rechtes PNG-Logo – passend angepasst */
+.logo-right img {
+    height: 116px !important;     /* etwas größer als vorher, bleibt aber harmonisch */
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* ==================== MOBILE OPTIMIERUNG ==================== */
+@media (max-width: 768px) {
+    .logo-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+    
+    .logo-left, .logo-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .logo-left svg {
+        height: 110px !important;      /* etwas größer auf Mobile */
+    }
+    
+    .logo-right img {
+        height: 82px !important;
+    }
+}
+    .logo-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .title-main {
+        font-size: 24px;
+        font-weight: 800;
+        color: #333;
+    }
+    .title-sub {
+        font-size: 14px;
+        color: #666;
+    }
+    :root {
+        --primary: #6b46c1;
+        --primary-light: #7e5be0;
+        --danger: #e53e3e;
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        --tool: #1e90ff;
+        --competence: #ff8c00;
+        --grade: #50c878;
+        --subject: #9b59b6;
+        --text: #333;
+        --text-light: #555;
+        --favorite: #f39c12;
+        --level: #00bfff;  
+        }
+    .dark {
+        --bg: #1a1a1a;
+        --card: #2d2d2d;
+        --text: #e0e0e0;
+        --text-light: #bbbbbb;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        background: #111 !important;
+        color: var(--text) !important;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0; padding: 20px;
+        background: var(--bg); color: var(--text);
+    }
+    .main { width: 100%; }
+.centered-button-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    width: 100%;
+}
+.resources-container {
+    flex: 1 1 600px;           /* Mindestbreite 600px, wächst */
+    min-width: 0;              /* Verhindert Overflow */
+    order: 1;
+}
+
+.sidebar {
+    width: 340px !important;
+    min-width: 340px;
+    flex: 0 0 340px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    order: 2;
+    margin-left: auto; /* Schiebt Sidebar ans rechte Ende */
+}
+    .sidebar h3 { margin: 0 0 16px; color: var(--primary); font-size: 16px; text-align: center; }
+    .stat-bar { margin: 12px 0; }
+    .stat-bar label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--text-light); }
+    .bar-container { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+    .bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.4s ease; }
+    .bar-value { font-weight: bold; color: var(--primary); }
+    .filter-container { background: linear-gradient(135deg, #eef5ff, #e0edff); padding: 14px; border-radius: 12px; border: 1px solid #cce0ff; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); width: 100%; }
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
+    .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
+    .filter-group select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; }
+    .search-container {
+    position: relative;          
+    flex: 1;
+    max-width: 280px !important;
+    min-width: 180px;
+    margin-right: 10px;
+    z-index: 10001;             
+}
+    .search-input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+#suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20000;               /* ← das ist der entscheidende Wert */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+    display: none;
+}
+
+#suggestions div {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 13.5px !important;   /* minimal kleiner + super lesbar */
+    line-height: 1.4;
+    transition: background 0.15s ease;
+}
+
+#suggestions div:hover {
+    background: #eef5ff;
+}
+    .reset-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-left: 12px;
+        align-self: flex-end;
+    }
+    .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    .file-input { display: none; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
+    .stat-card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); font-weight: 600; }
+    .stat-card span { display: block; font-size: 22px; color: var(--primary); margin-top: 6px; }
+    .resource-item { margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
+    .resource-item:hover { transform: translateY(-2px); }
+    .resource-content { margin-bottom: 12px; line-height: 1.6; font-size: 15px; }
+    .tag {
+        display: inline-block;
+        padding: 4px 10px;
+        margin: 2px 4px 2px 0;
+        border-radius: 16px;
+        font-size: 11px;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .tag:hover {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+    .grade-tag { background: var(--grade); }
+    .tool-tag { background: var(--tool); }
+    .competence-tag { background: var(--competence); }
+    .level-tag { background: var(--level); }
+    .subject-tag { background: var(--subject); }
+    .description { margin-top: 10px; font-size: 13px; color: var(--text-light); background: #f8f9fa; padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary); }
+    .action-icons { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+    .action-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    .action-icon:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
+    .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
+    .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
+    .favorite-icon { background: #fff8e1; color: #f39c12; } .favorite-icon.active { background: #f39c12; color: white; }
+    #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    #editForm button { margin-right: 10px; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    #editForm button[type="submit"] { background: var(--primary); color: white; }
+    #editForm button[type="button"] { background: #95a5a6; color: white; }
+    .version-info {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        font-size: 11px;
+        color: var(--text-light);
+        background: var(--card);
+        padding: 4px 8px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        z-index: 100;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .version-info:hover { opacity: 1; }
+
+/* === SCHUL-BUTTON: IDENTISCH ZUM NEUE-RESSOURCE-BUTTON (OHNE ICON) === */
+.school-btn {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+    margin: 16px auto 8px !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 14px 20px !important;
+    box-shadow: 0 6px 16px rgba(155, 89, 182, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    width: 100%;
+}
+
+.school-btn:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.4) !important;
+}
+
+.school-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.school-btn:hover::before {
+    left: 100%;
+}
+
+/* Wenn Schulname gesetzt → grün */
+#schoolButton[data-set="true"] {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3) !important;
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.4) !important;
+}
+.content-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+}
+/* ==================== MOBILE OPTIMIERUNGEN – FINAL ==================== */
+@media (max-width: 768px) {
+    body { 
+        padding: 10px; 
+        overflow-x: hidden; /* Verhindert horizontales Scrollen */
+    }
+
+    .title-main { font-size: 19px; }
+    .title-sub { font-size: 12.5px; }
+
+    /* --- FILTER --- */
+    .filter-container { 
+        padding: 12px; 
+        margin-bottom: 14px;
+    }
+    .filters {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    .filter-group, .search-container {
+        min-width: 0;
+        max-width: none !important;
+        flex: 1;
+    }
+    .search-container {
+        margin: 0;
+    }
+    .reset-btn {
+        margin: 8px 0 0 0;
+        align-self: stretch;
+        padding: 10px;
+    }
+
+    /* --- SIDEBAR: KEIN STICKY MEHR, VOLLBREITE --- */
+    .sidebar {
+        width: 100% !important;
+        position: static !important;   /* WICHTIG: sticky deaktivieren */
+        top: auto !important;
+        padding: 14px;
+        order: 2; /* Sidebar NACH Ressourcen */
+        margin-top: 10px;
+        z-index: 1; /* Sicherstellen, dass nichts überlagert */
+    }
+    .resources-container {
+        order: 1;
+        min-width: 0;
+    }
+/* === MOBILE: Sidebar unter Ressourcen === */
+@media (max-width: 992px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+.resources-container,
+    .sidebar {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        order: unset !important;
+        margin-left: 0 !important;
+    }
+    .sidebar {
+        position: static;
+        top: auto;
+        margin-top: 20px;
+    }
+}
+    /* --- SCHULNAME-BUTTON (MOBILE) --- */
+#schoolButton {
+    font-size: 12.5px;
+    padding: 9px 10px;
+    min-height: 42px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#schoolButton:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 4px 10px rgba(197, 143, 224, 0.35);
+}
+
+/* Hover für alle */
+
+    .export-buttons {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: stretch;
+    }
+
+/* --- NEUE RESSOURCE BUTTON (MOBILE) --- */
+.new-resource-btn {
+    max-width: 100%;
+    font-size: 15.5px;
+    padding: 13px 18px;
+    margin: 18px auto;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+}
+
+.new-resource-btn:hover {
+    box-shadow: 0 10px 24px rgba(0, 210, 211, 0.4);
+}
+
+    /* --- STATS --- */
+    .stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .stat-card span { font-size: 17px; }
+
+    /* --- RESSOURCEN --- */
+    .resource-item {
+    margin: 0 0 16px 0;         /* Kein margin links/rechts */
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+    break-inside: avoid;       /* Verhindert Zeilenumbruch in Karten */
+    }
+    .action-icons { gap: 5px; }
+    .action-icon { width: 30px; height: 30px; }
+    .action-icon svg { width: 15px; height: 15px; }
+
+    /* --- VERSION INFO --- */
+    .version-info {
+        position: fixed;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        text-align: center;
+        font-size: 9.5px;
+        padding: 3px 6px;
+        z-index: 10;
+    }
+
+    
+    /* --- TOUCH OPTIMIERUNG --- */
+    .btn, .action-icon, .tag, .reset-btn, .new-resource-btn, select, input {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+
+    .btn.import input[type="file"] {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+}
+/* === NEUE RESSOURCE – TÜRKIS-GRADIENT (DESKTOP & BASIS) === */
+.new-resource-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 14px 28px;
+    font-size: 17px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d2d3, #48cae4);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 360px;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.new-resource-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.new-resource-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 210, 211, 0.4);
+}
+
+.new-resource-btn:hover::before {
+    left: 100%;
+}
+
+
+/* Sehr kleine Bildschirme */
+@media (max-width: 380px) {
+    .stats { grid-template-columns: 1fr; }
+    .export-buttons { flex-direction: column; }
+    .btn { flex: 1 1 auto; }
+}
+/* Filter aktiv: blasses Rot + Akzent OHNE Verschiebung */
+.filter-container.active {
+    background: linear-gradient(135deg, #fff5f5, #ffeaea) !important;
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.08) !important;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-container.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: rgba(255, 0, 0, 0.4);
+    pointer-events: none; /* damit Klicks durchgehen */
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+/* ==================== LÖSCH-CONFIRM-DIALOG ==================== */
+dialog#confirmDeleteDialog {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.35);
+  padding: 28px;
+  max-width: 420px;
+  width: 90vw;
+  background: var(--card);
+  animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+
+  /* Zentrieren */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+dialog#confirmDeleteDialog::backdrop {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+}
+
+dialog#confirmDeleteDialog p {
+  margin: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+dialog#confirmDeleteDialog .buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+dialog#confirmDeleteDialog button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+  transition: all 0.2s;
+}
+
+dialog#confirmDeleteDialog button[value="cancel"] {
+  background: #95a5a6;
+  color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"] {
+  background: var(--danger);
+  color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"]:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
+@keyframes modalPop {
+  from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+}
+
+.filter-container {
+    overflow: visible !important;   /* ← das war der Übeltäter */
+}
+
+/* ============================================================= */
+/* FINALER ZUSTAND – alles perfekt, auch Dark Mode + Innenränder */
+/* ============================================================= */
+
+/* 1. Grundstil aller Buttons */
+.export-buttons .btn,
+.export-buttons label.btn {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 13.8px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 9px !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+    color: white;
+    background: var(--primary);
+    transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+
+.export-buttons .btn.print:hover       { box-shadow: 0 10px 25px rgba(44,62,80,0.5) !important; }
+.export-buttons .btn[onclick="autoBackup()"]:hover {
+    background: #27ae60 !important;
+    box-shadow: 0 10px 25px rgba(46,204,113,0.5) !important;
+}
+
+/* 3. Dark Mode – Grundfarbe */
+.dark .export-buttons .btn,
+.dark .export-buttons label.btn {
+    background: #4a3780 !important;
+    color: #e0e0e0 !important;
+}
+.dark .export-buttons .btn.matrix { opacity: 0.95; filter: brightness(1.1); }
+
+/* 4. SPEZIALKNÖPFE – MÜSSEN ZU LETZT STEHEN → gewinnen immer! */
+.export-buttons .btn.import {
+    background: #2980b9 !important;
+    border: 2px solid #1e5f8a !important;
+    padding: 0 14px !important;
+}
+.dark .export-buttons .btn.import { background: #1e5a8a !important; }
+
+.export-buttons .btn.print                   { background: #2c3e50 !important; }
+.dark .export-buttons .btn.print             { background: #34495e !important; }
+
+.export-buttons .btn[onclick="autoBackup()"] { background: #2ecc71 !important; }
+.dark .export-buttons .btn[onclick="autoBackup()"] { background: #27ae60 !important; }
+
+.export-buttons .matrix-excel {
+    border: 2px solid #1e7e34 !important;
+    padding: 0 14px !important;
+}
+.dark .export-buttons .matrix-excel { border-color: #2e8b57 !important; }
+
+/* File-Input unsichtbar */
+.export-buttons .btn.import input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    font-size: 0; margin: 0; padding: 0; appearance: none;
+}
+
+/* ============================================================= */
+/* ROTER RAHMEN – DIE LETZTE, 100 % SICHERE VERSION (2025)     */
+/* ============================================================= */
+
+.filtered-export.active {
+    outline: 2px solid #e74c3c !important;
+    outline-offset: 3px !important;
+    box-shadow: 
+        0 0 0 2px #e74c3c,
+        0 0 20px rgba(231, 76, 60, 0.6) !important;
+    animation: pulse 2s infinite !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 2px #e74c3c, 0 0 20px rgba(231,76,60,0.6); }
+    50%      { box-shadow: 0 0 0 5px #e74c3c, 0 0 30px rgba(231,76,60,0.9); }
+}
+
+/* Hover bleibt voll sichtbar */
+.export-buttons .btn:hover,
+.export-buttons label.btn:hover {
+    z-index: 20 !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 10px 25px rgba(107,70,193,0.35) !important;
+}
+
+    </style>
+</head>
+<body>
+<!-- DRUCK-FOOTER: Schulname (unsichtbar) -->
+<div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
+    Schule: <span id="printSchoolNameText"></span>
+</div>
+    
+    <div class="main">
+        <!-- ZWEI LOGOS + TITEL -->
+        <div class="logo-header">
+            <!-- Linkes Logo + Titel -->
+            <div class="logo-left" onclick="toggleDarkMode()">
+                <!-- APP-LOGO -->
+                <svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: auto; height: 130px; cursor: pointer;">
+                    <defs>
+                        <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#8e67d6"/>
+                            <stop offset="100%" stop-color="#5e3ab0"/>
+                        </linearGradient>
+                        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#f0f4ff"/>
+                            <stop offset="100%" stop-color="#d0e0ff"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
+                    <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
+                    <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
+                    <g transform="translate(19.465148,19.604556)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
+                        <circle cx="3.5" cy="2.5" r="1.5" fill="#ffffff"/>
+                        <path d="m 2.5,4.5 h 2" stroke="#ffffff" stroke-width="1"/>
+                        <g transform="translate(9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
+                            <path d="M 2,2 5,5 M 5,2 2,5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+                        <g transform="translate(18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
+                            <circle cx="3.5" cy="3.5" r="2" fill="#ffffff"/>
+                            <circle cx="4" cy="3" r="0.8" fill="#333333"/>
+                        </g>
+                        <g transform="translate(0,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
+                            <path d="M 2,5 V 3 L 5,4 V 6 L 2,7 Z" fill="#ffffff"/>
+                            <circle cx="4.5" cy="1.5" r="1" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(9,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
+                            <path d="M 2.5,2 5,3.5 v -3 z" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(18,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
+                            <path d="m 1.5,2 h 4 m -4,1.5 h 4 M 1.5,5 h 2" stroke="#ffffff" stroke-width="0.8"/>
+                        </g>
+                        <g transform="translate(0,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
+                            <path d="m 1.5,5.5 h 1 v -2 h -1 z m 1.5,0 h 1 v -3 H 3 Z m 1.5,0 h 1 v -1 h -1 z" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(9,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
+                            <circle cx="3.5" cy="3.5" r="2.5" stroke="#ffffff" stroke-width="0.8" fill="none"/>
+                            <path d="m 1.5,3.5 h 4 m -2,-2 v 4" stroke="#ffffff" stroke-width="0.6"/>
+                        </g>
+                        <g transform="translate(18,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
+                            <path d="m 1.5,2 h 4 m -4,2 h 4" stroke="#999999" stroke-width="0.8"/>
+                            <path d="M 1.5,2 2.2,2.7 M 1.5,2 2.9,3.4" stroke="#4caf50" stroke-width="1"/>
+                        </g>
+                    </g>
+                    <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
+                </svg>
+                <div class="logo-title">
+                    <div class="title-main">LernDashboard</div>
+                    <div class="title-sub">Digital</div>
+                </div>
+            </div>
+
+            <!-- Rechtes MV-Logo  -->
+            <div class="logo-right">
+                <img src="schule_in_mv.png"
+                     alt="Entwickelt für den Einsatz an Schulen in MV"
+                     style="height: 115px; width: auto; max-width: 100%; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- FILTER -->
+        <div class="filter-container">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Fach</label>
+                    <select id="filterSubject"><option value="">Alle</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Klasse</label>
+                    <select id="filterGrade"><option value="">Alle</option></select>
+                </div>
+                <div class="filter-group">
+    <label>Kompetenz</label>
+    <select id="filterCompetence"><option value="">Alle</option></select>
+</div>
+<div class="filter-group">
+    <label>Niveaustufe</label>
+    <select id="filterLevel">
+        <option value="">Alle</option>
+    </select>
+</div>
+<div class="filter-group">
+    <label>Tool</label>
+    <select id="filterTool"><option value="">Alle</option></select>
+</div>
+                <div class="filter-group">
+                    <label>Favoriten</label>
+                    <select id="filterFavorite">
+                        <option value="">Alle</option>
+                        <option value="true">Nur Favoriten</option>
+                    </select>
+                </div>
+                <div class="search-container">
+                    <label>Thema</label>
+                    <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel">
+                    <div id="suggestions"></div>
+                </div>
+                <button class="reset-btn" onclick="resetFilters()">Reset</button>
+            </div>
+        </div>
+
+        <!-- STATISTIK -->
+        <div class="stats">
+            <div class="stat-card"><div>Gesamt</div><span id="statTotal">0</span></div>
+            <div class="stat-card"><div>Favoriten</div><span id="statFavorites">0</span></div>
+            <div class="stat-card"><div>Tools</div><span id="statTools">0</span></div>
+            <div class="stat-card"><div>Fächer</div><span id="statSubjects">0</span></div>
+        </div>
+
+         <!-- EXPORT – HORIZONTAL GRUPPIERT + FILTERABHÄNGIGKEIT KLAR -->
+        <div class="export-buttons">
+            <!-- GRUPPE 1: Filter-Exporte (CSV, PDF, Matrix) -->
+            <div class="export-group horizontal">
+                <h4 class="export-group-title" id="filterExportTitle">Filter-Exporte</h4>
+                <div class="btn-row">
+                    <button class="btn csv filtered-export" onclick="exportCSV()" 
+                            title="Exportiert gefilterte Ressourcen als CSV (Fach, Klasse, Tool, etc.)"type="button">CSV</button>
+                    <button class="btn pdf filtered-export" onclick="exportPDF()" 
+                            title="Exportiert gefilterte Ressourcen als PDF (nur sichtbare Einträge)"type="button">PDF</button>
+                    <button class="btn matrix filtered-export" onclick="exportMatrixCSV()" 
+                            style="background:#e67e22;" 
+                            title="Matrix als CSV – basierend auf aktuellen Filtern"type="button">Matrix CSV</button>
+                    <button class="btn matrix filtered-export" id="matrixPdfBtn" style="background:#9c27b0; color:white;" title="Matrix als PDF – nur gefilterte Daten" onclick="exportMatrixPDF()"type="button">Matrix PDF</button>
+                    <button class="btn matrix filtered-export" onclick="exportMatrixExcel()" 
+                            style="background:#27ae60; color:white;" 
+                            title="Formatierte Excel-Matrix mit aktuellen Filtern"type="button">Matrix Excel</button>
+                </div>
+            </div>
+
+<!-- GRUPPE 2: Datenmanagement (unabhängig von Filtern) -->
+<div class="export-group horizontal">
+    <h4 class="export-group-title">Datenmanagement</h4>
+    <div class="btn-row">
+        <button class="btn print" onclick="printOptimized()"
+                title="Druckt die aktuelle Ansicht (unabhängig von Filtern)">Drucken</button>
+        <label class="btn import" title="Importiert neue Ressourcen aus einer CSV-Datei">
+            <input type="file" id="importFile" accept=".csv,text/csv" class="file-input" onchange="importCSV(event)">
+            <span>Import</span>
+        </label>
+        <button class="btn template" onclick="exportTemplate()"
+                title="Lädt eine leere CSV-Vorlage zum Ausfüllen">Vorlage</button>
+        <button class="btn" onclick="autoBackup()"
+                title="Erstellt sofort ein lokales Backup aller Daten">Backup jetzt</button>
+    </div>
+    </div>
+        <!-- Hilfe-Button (rechtsbündig) -->
+    <div style="margin-left: auto; padding-top: 10px;">
+        <button class="action-icon edit-icon" onclick="openManual();" title="Bedienungsanleitung anzeigen">
+            <svg width="18" height="18" viewBox="0 0 20 20">
+                <text x="10" y="15" font-size="18" text-anchor="middle" fill="currentColor">?</text>
+            </svg>
+        </button>
+    </div>
+
+<!-- ZENTRIERTE NEUE-RESSOURCE-BUTTON -->
+<div class="centered-button-wrapper">
+    <button class="new-resource-btn" onclick="openNewResourceWindow()"> Neue Ressource
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 6px;">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+</div>
+        <!-- RESSOURCEN + SIDEBAR -->
+        <div class="content-wrapper">
+            <div class="resources-container">
+                <div id="resourcesList"></div>
+            </div>
+            <div class="sidebar">
+    <h3>Fächer-Statistik</h3>
+    
+    <div style="margin: 12px 0; text-align:center;">
+        <button id="schoolButton" class="new-resource-btn school-btn" onclick="setSchoolName()">
+            <span id="schoolButtonText">Schule einstellen</span>
+        </button>
+    </div>
+
+    <!-- NIVEAUSTUFEN-KIPPSCHALTER -->
+    <div style="margin: 24px 0 20px; padding: 16px; background: #f8f9fa; border-radius: 12px; border: 2px solid var(--primary-light);">
+        <h3 style="margin: 0 0 12px 0; color: var(--primary); font-size: 15px; text-align: center;">Niveaustufen-Modus</h3>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="changeLevelMode('3')" 
+                    id="levelBtn3"
+                    style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; 
+                           background: #e2e8f0; color: #333; cursor: pointer;">
+                3 Stufen
+            </button>
+            <button onclick="changeLevelMode('5')" 
+                    id="levelBtn5"
+                    style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; 
+                           background: #e2e8f0; color: #333; cursor: pointer;">
+                5 Stufen
+            </button>
+        </div>
+        <small style="display: block; text-align: center; margin-top: 8px; color: #666; font-size: 12.5px;">
+            Aktuell: <strong id="currentLevelText">5 Niveaustufen</strong>
+        </small>
+    </div>
+
+    <div id="statsFach"></div>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG SYMBOLS -->
+    <svg style="display:none">
+        <symbol id="edit-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+        <symbol id="delete-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+        <symbol id="star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
+    </svg>
+
+<script defer>
+// ===========================
+// ASYNCHRONES DATENLADEN + APP-START (2025-SICHER)
+// ===========================
+window.resources = [];
+window.undoStack = [];
+window.dataReady = false;
+
+// ======================
+// NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen)
+// ======================
+let currentLevelMode = localStorage.getItem('levelMode') || '5';
+
+function getLevelMode() {
+  return currentLevelMode;
+}
+
+function getLevelOptions() {
+  const count = parseInt(currentLevelMode);
+  return Array.from({ length: count }, (_, i) => `Niveaustufe ${i + 1}`);
+}
+
+function getLevelNumber(levelStr) {
+  if (!levelStr) return 0;
+  const match = levelStr.match(/\d+/);
+  return match ? parseInt(match[0]) : 0;
+}
+
+function migrateResourceLevels(resources, oldMode, newMode) {
+  if (!resources?.length || oldMode === newMode) return resources;
+
+  return resources.map(resource => {
+    if (!resource.level) return resource;
+    const oldNum = getLevelNumber(resource.level);
+    if (!oldNum) return resource;
+
+    let newNum = oldNum;
+    if (oldMode === '5' && newMode === '3') {
+      if (oldNum <= 2) newNum = 1;
+      else if (oldNum === 3) newNum = 2;
+      else newNum = 3;
+    } else if (oldMode === '3' && newMode === '5') {
+      if (oldNum === 1) newNum = 1;
+      else if (oldNum === 2) newNum = 3;
+      else if (oldNum === 3) newNum = 5;
+    }
+    resource.level = `Niveaustufe ${newNum}`;
+    return resource;
+  });
+}
+
+function changeLevelMode(newMode) {
+  const oldMode = currentLevelMode;
+  if (oldMode === newMode) return;
+
+  const direction = oldMode === '5' && newMode === '3' 
+    ? "5 → 3 Stufen:\n• Niveaustufe 1+2 → 1\n• Niveaustufe 3 → 2\n• Niveaustufe 4+5 → 3"
+    : "3 → 5 Stufen:\n• Niveaustufe 1 → 1\n• Niveaustufe 2 → 3\n• Niveaustufe 3 → 5";
+
+  if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction}\n\nAlle Ressourcen, Filter und Matrixen werden automatisch angepasst.`)) {
+    
+    const backup = JSON.stringify(resources || []);
+    localStorage.setItem('resources_level_backup', backup);
+
+    resources = migrateResourceLevels(resources, oldMode, newMode);
+    localStorage.setItem('resources', JSON.stringify(resources));
+
+    currentLevelMode = newMode;
+    localStorage.setItem('levelMode', newMode);
+
+    // Alles neu rendern
+    populateLevelFilter();
+    updateLevelModeButtons();   
+    applyFilters();
+    renderAllMatrices();
+
+    alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!\nFilter und Matrixen wurden aktualisiert.`);
+  }
+}
+// ======================
+// DYNAMISCHER NIVEAUSTUFEN-FILTER
+// ======================
+function populateLevelFilter() {
+    const select = document.getElementById('filterLevel');
+    if (!select) {
+        console.warn('filterLevel Select nicht gefunden!');
+        return;
+    }
+
+    const currentValue = select.value;   // aktuelle Auswahl merken
+
+    // Reset + "Alle" Option
+    select.innerHTML = '<option value="">Alle</option>';
+
+    // Dynamisch mit 3 oder 5 Optionen befüllen
+    getLevelOptions().forEach(level => {
+        const opt = document.createElement('option');
+        opt.value = level;
+        opt.textContent = level;
+        select.appendChild(opt);
+    });
+
+    // Vorherige Auswahl wiederherstellen, falls sie noch existiert
+    if (currentValue && getLevelOptions().includes(currentValue)) {
+        select.value = currentValue;
+    } else {
+        select.value = ''; // sonst "Alle" auswählen
+    }
+}
+
+// ======================
+// SIDEBAR-BUTTONS AKTUALISIEREN (3/5 Stufen)
+// ======================
+function updateLevelModeButtons() {
+    const btn3 = document.getElementById('levelBtn3');
+    const btn5 = document.getElementById('levelBtn5');
+    const textEl = document.getElementById('currentLevelText');
+    
+    if (btn3) {
+        btn3.style.background = currentLevelMode === '3' ? '#00bfff' : '#e2e8f0';
+        btn3.style.color = currentLevelMode === '3' ? 'white' : '#333';
+    }
+    if (btn5) {
+        btn5.style.background = currentLevelMode === '5' ? '#6b46c1' : '#e2e8f0';
+        btn5.style.color = currentLevelMode === '5' ? 'white' : '#333';
+    }
+    if (textEl) {
+        textEl.textContent = `${currentLevelMode} Niveaustufen`;
+    }
+}
+
+// Hilfsfunktion zum Neu-Rendern aller Matrixen
+function renderAllMatrices() {
+  // Hier alle deine Matrix-Funktionen aufrufen, z.B.:
+  if (typeof renderCompetenceMatrix === 'function') renderCompetenceMatrix();
+  if (typeof renderGradeLevelMatrix === 'function') renderGradeLevelMatrix();
+  if (typeof renderSubjectLevelMatrix === 'function') renderSubjectLevelMatrix();
+  // Füge hier weitere Matrix-Funktionen hinzu, die du hast
+}
+
+function loadData() {
+    return new Promise(resolve => {
+        const idle = window.requestIdleCallback || (cb => setTimeout(cb, 50));
+        idle(() => {
+            try {
+                const r = localStorage.getItem('resources');
+                const u = localStorage.getItem('undoStack');
+                window.resources = r ? JSON.parse(r) : [];
+                window.undoStack = u ? JSON.parse(u) : [];
+            } catch (e) {
+                console.warn('Daten konnten nicht geladen werden', e);
+                window.resources = [];
+                window.undoStack = [];
+            }
+            window.dataReady = true;
+            resolve();
+        });
+    });
+}
+
+function startApp() {
+    if (!window.dataReady) return;
+
+    // Event Listener für alle Filter
+    ['filterSubject', 'filterGrade', 'filterTool', 'filterCompetence', 'filterLevel', 'filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', applyFilters);
+    });
+
+    const searchEl = document.getElementById('searchTopic');
+    if (searchEl) searchEl.addEventListener('input', applyFilters);
+
+    // === NIVEAUSTUFEN INITIALISIERUNG ===
+    populateLevelFilter();
+    updateLevelModeButtons();
+
+    // Weitere Initialisierungen
+    populateDropdowns();
+    applyFilters();
+
+    // Matrix PDF Button
+    document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
+
+    console.log('LernDashboard vollständig gestartet – butterweich auf iPad!');
+}
+
+// === GLOBALE FILTER-VARIABLEN (einmalig!) ===
+let currentFilters = {
+    subject: '',
+    grade: '',
+    competence: '',
+    level: '',
+    tool: ''
+};
+
+function updateCurrentFilters() {
+    currentFilters.subject = document.getElementById('filterSubject')?.value?.trim() || '';
+    currentFilters.grade = document.getElementById('filterGrade')?.value?.trim() || '';
+    currentFilters.competence = document.getElementById('filterCompetence')?.value?.trim() || '';
+    currentFilters.level = document.getElementById('filterLevel')?.value?.trim() || '';
+    currentFilters.tool = document.getElementById('filterTool')?.value?.trim().toLowerCase() || '';
+}
+
+// === GLOBALE VARIABLEN (EINZIGER ORT!) ===
+const VERSION = '1.1.40';
+const REPO_PATH = (() => {
+  if (location.hostname === 'localhost' || 
+      location.hostname === '127.0.0.1' || 
+      location.protocol === 'file:') {
+    return '/';
+  }
+  const path = location.pathname.split('/').filter(Boolean);
+  return location.origin + '/' + (path[0] || '') + '/';  // ← Immer mit trailing '/'
+})();
+console.log('Frontend REPO_PATH:', REPO_PATH);  // Debug: Sollte /lerndashboard/ sein
+
+let resources = JSON.parse(localStorage.getItem('resources') || '[]');
+let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]'); // neu!
+let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+let dropdownsInitialized = false;
+
+let targetVersion = null;
+let allowReload = false;          
+let newServiceWorker = null;
+
+// === DROPDOWN-DATEN ===
+const subjects = ['Deutsch','Mathematik','Englisch','Biologie','Chemie','Physik','Geschichte','Geografie','Politik','Wirtschaft','Informatik','Kunst','Musik','Sport','Ethik','Religion'];
+const grades = ['Klasse 1','Klasse 2','Klasse 3','Klasse 4','Klasse 5','Klasse 6','Klasse 7','Klasse 8','Klasse 9','Klasse 10','Klasse 11','Klasse 12','Klasse 13'];
+const competences = [
+  'Suchen, Verarbeiten und Aufbewahren',
+  'Kommunizieren und Kooperieren',
+  'Produzieren und Präsentieren',
+  'Schützen und sicher Agieren',
+  'Problemlösen und Handeln',
+  'Analysieren und Reflektieren'
+];
+// === BEDIENUNGSANLEITUNG ===
+function openManual() {
+    const dialog = document.createElement('dialog');
+    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow);';
+    dialog.innerHTML = `
+        <iframe src="https://matthiasklossmpz.github.io/lerndashboard/docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height:100%; border:none;"></iframe>
+        <button onclick="this.parentNode.close()" style="position:absolute; top:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer;">Schließen</button>`;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+}
+
+// === ALLE FUNKTIONEN ===
+function escapeJs(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, "\\\"");
+}
+
+function getSchoolName() {
+    return localStorage.getItem('schoolName');
+}
+
+// === SCHULBUTTON DAUERHAFT AKTUALISIEREN ===
+function updateSchoolButton() {
+    const btnText = document.getElementById('schoolButtonText');
+    const btn = document.getElementById('schoolButton');
+    if (!btnText || !btn) return;
+
+    const name = localStorage.getItem('schoolName') || '';
+    if (name) {
+        btnText.textContent = name;
+        btn.title = 'Schulname ändern';
+        btn.dataset.set = 'true';
+    } else {
+        btnText.textContent = 'Schule einstellen';
+        btn.title = 'Schulname festlegen';
+        btn.dataset.set = 'false';
+    }
+}
+
+// Beim Laden
+document.addEventListener('DOMContentLoaded', updateSchoolButton);
+    // === FIRST START: Niveaustufen wählen ===
+    if (!localStorage.getItem('levelMode')) {
+      const modal = document.createElement('dialog');
+      modal.style.cssText = `
+        max-width: 520px; 
+        border: none; 
+        border-radius: 20px; 
+        padding: 0; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: var(--card);
+      `;
+      modal.innerHTML = `
+        <div style="padding:40px 30px 20px; text-align:center;">
+          <h2 style="margin:0 0 20px; color:var(--primary);">Willkommen im LernDashboard Digital!</h2>
+          <p style="font-size:17px; margin-bottom:28px; line-height:1.5;">
+            Mit wie vielen Niveaustufen möchtest du arbeiten?
+          </p>
+          
+          <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="selectInitialLevelMode('5'); this.closest('dialog').close()" 
+                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
+                           background:linear-gradient(135deg,#6b46c1,#7e5be0); color:white; min-width:190px; cursor:pointer;">
+              5 Niveaustufen<br>
+              <small style="font-size:14px; opacity:0.9;">(detailliert)</small>
+            </button>
+            <button onclick="selectInitialLevelMode('3'); this.closest('dialog').close()" 
+                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
+                           background:linear-gradient(135deg,#00bfff,#00d2d3); color:white; min-width:190px; cursor:pointer;">
+              3 Niveaustufen<br>
+              <small style="font-size:14px; opacity:0.9;">(übersichtlich)</small>
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.showModal();
+
+      window.selectInitialLevelMode = function(mode) {
+        currentLevelMode = mode;
+        localStorage.setItem('levelMode', mode);
+        console.log('Initial levelMode gesetzt:', mode);
+      };
+    }
+// Nach Änderung im Modal
+function setSchoolName() {
+    const current = localStorage.getItem('schoolName') || '';
+    // ... dein bestehender Modal-Code ...
+
+    // Am Ende des "Speichern"-Buttons:
+    modal.querySelector('#saveSchoolBtn').onclick = () => {
+        const name = input.value.trim();
+        if (name) {
+            localStorage.setItem('schoolName', name);
+        } else {
+            localStorage.removeItem('schoolName');
+        }
+        updateSchoolButton();  // ← HIER AKTUALISIEREN
+        document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
+        // ... Modal schließen ...
+    };
+}
+
+
+// === SCHULNAME MODAL (MODERNES DESIGN) ===
+function setSchoolName() {
+    const current = getSchoolName() || '';
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 20000; padding: 20px; box-sizing: border-box;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: var(--card); padding: 28px; border-radius: 16px;
+            width: 100%; max-width: 420px; box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            transform: scale(0.9); opacity: 0;
+            animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        ">
+            <h3 style="
+                margin: 0 0 16px; font-size: 18px; font-weight: 700; color: var(--text);
+                text-align: center;
+            ">Schulname eingeben</h3>
+            <p style="
+                margin: 0 0 16px; font-size: 14px; color: var(--text-light); text-align: center;
+            ">Wird in Exports und Druckansicht angezeigt.</p>
+            <input type="text" id="schoolNameInput" value="${current}"
+                placeholder="z.B. Grundschule Campus"
+                style="
+                    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: 10px;
+                    font-size: 15px; margin-bottom: 20px; box-sizing: border-box;
+                    transition: border 0.2s, box-shadow 0.2s;
+                "
+                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(107,70,193,0.15)'"
+                onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'"
+            />
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="cancelSchoolBtn" style="
+                    padding: 10px 18px; background: #95a5a6; color: white; border: none;
+                    border-radius: 10px; font-weight: 600; cursor: pointer; min-width: 90px;
+                    transition: all 0.2s;
+                " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Abbrechen
+                </button>
+                <button id="saveSchoolBtn" style="
+                    padding: 10px 18px; background: var(--primary); color: white; border: none;
+                    border-radius: 10px; font-weight: 600; cursor: pointer; min-width: 90px;
+                    position: relative; overflow: hidden; box-shadow: 0 6px 16px rgba(107,70,193,0.3);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 24px rgba(107,70,193,0.4)'"
+                onmouseout="this.style.transform=''; this.style.boxShadow='0 6px 16px rgba(107,70,193,0.3)'">
+                    Speichern
+                    <span style="
+                        content: ''; position: absolute; top: 0; left: -100%;
+                        width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                        transition: left 0.7s;
+                    "></span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Animation einblenden
+    requestAnimationFrame(() => {
+        modal.querySelector('div').style.transform = 'scale(1)';
+        modal.querySelector('div').style.opacity = '1';
+    });
+
+    // Fokus
+    const input = modal.querySelector('#schoolNameInput');
+    setTimeout(() => input.focus(), 100);
+
+    // Buttons
+    modal.querySelector('#cancelSchoolBtn').onclick = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('#saveSchoolBtn').onclick = () => {
+        const name = input.value.trim();
+        if (name) {
+            localStorage.setItem('schoolName', name);
+        } else {
+            localStorage.removeItem('schoolName');
+        }
+        updateSchoolButton();
+        document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
+
+        // Shine-Effekt beim Speichern
+        const shine = modal.querySelector('#saveSchoolBtn span');
+        shine.style.left = '100%';
+        setTimeout(() => {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 300);
+        }, 400);
+    };
+
+    // ESC-Taste
+    const closeOnEsc = (e) => {
+        if (e.key === 'Escape') {
+            modal.querySelector('#cancelSchoolBtn').click();
+            document.removeEventListener('keydown', closeOnEsc);
+        }
+    };
+    document.addEventListener('keydown', closeOnEsc);
+}
+
+// === ANIMATIONEN ===
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalPop {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+function setFilterAndApply(filterId, value) {
+    const select = document.getElementById(filterId);
+    if (!select) return;
+
+    // 1. Wert setzen (auch wenn leer → Reset)
+    select.value = value || '';
+
+    // 2. Filter-Container des betroffenen Selects finden und markieren
+    const filterContainer = select.closest('.filter-container');
+    if (filterContainer) {
+        // Alle anderen aktiv entfernen? Optional: nur diesen aktivieren
+        document.querySelectorAll('.filter-container').forEach(fc => fc.classList.remove('active'));
+        if (value) {
+            filterContainer.classList.add('active');
+        } else {
+            filterContainer.classList.remove('active');
+        }
+    }
+
+    // 3. Filter anwenden
+    applyFilters();
+
+    // 4. Nur zum richtigen Filter-Container scrollen
+    if (filterContainer) {
+        filterContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function updateToolFilter() {
+    const s = document.getElementById('filterTool');
+    if (s) {
+        s.innerHTML = '<option value="">Alle</option>';
+        const uniqueTools = [...new Set(resources.map(r => r.tool).filter(Boolean))];
+        uniqueTools.sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' })).forEach(tool => {
+            s.add(new Option(tool, tool.toLowerCase()));
+        });
+    }
+}
+
+function updateFilterHighlight() {
+    const container = document.querySelector('.filter-container');
+    if (!container) return;
+    const selects = container.querySelectorAll('select');
+    const search = container.querySelector('#searchTopic');
+    const isActive = Array.from(selects).some(s => s.value && s.value !== '') ||
+                     (search && search.value.trim() !== '');
+    container.classList.toggle('active', isActive);
+}
+
+function updateFilterStatus() {
+    const isFiltered = getFilteredResources().length < resources.length;
+    const title = document.getElementById('filterExportTitle');
+    if (title) {
+        title.textContent = isFiltered ? 'Filter-Exporte (aktiv)' : 'Filter-Exporte';
+        title.style.color = isFiltered ? '#e74c3c' : 'var(--primary)';
+    }
+    document.querySelectorAll('.filtered-export').forEach(btn => {
+        btn.classList.toggle('active', isFiltered);
+    });
+}
+
+function populateDropdowns() {
+    const addOptions = (id, options) => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '<option value="">Alle</option>';
+            options.forEach(opt => select.add(new Option(opt, opt)));
+        }
+    };
+    addOptions('filterSubject', subjects);
+    addOptions('filterGrade', grades);
+    addOptions('filterCompetence', competences);
+    updateToolFilter();
+}
+
+function getFilteredResources() {
+    const f = {
+        subject: document.getElementById('filterSubject')?.value?.toLowerCase() || '',
+        grade: document.getElementById('filterGrade')?.value || '',
+        competence: document.getElementById('filterCompetence')?.value || '',
+        level: document.getElementById('filterLevel')?.value || '',
+        tool: document.getElementById('filterTool')?.value?.toLowerCase() || '',
+        favorite: document.getElementById('filterFavorite')?.value === 'true',
+        topic: document.getElementById('searchTopic')?.value?.toLowerCase().trim() || ''
+    };
+    return resources.filter(r => {
+        const topic = r.topic?.toLowerCase() || '';
+        const subject = r.subject?.toLowerCase() || '';
+        const grade = r.grade || '';
+        const competence = r.competence || '';
+        const level = r.level || '';
+        const tool = r.tool?.toLowerCase() || '';
+        const isFavorite = r.favorite || false;
+        if (f.subject && subject !== f.subject) return false;
+        if (f.grade && grade !== f.grade) return false;
+        if (f.competence && competence !== f.competence) return false;
+        if (f.level && level !== f.level) return false;
+        if (f.tool && tool !== f.tool) return false;
+        if (f.favorite && !isFavorite) return false;
+        if (f.topic && !topic.includes(f.topic)) return false;
+        return true;
+    });
+}
+
+function updateStats() {
+    const filtered = getFilteredResources();
+    document.getElementById('statTotal').textContent = filtered.length;
+    document.getElementById('statFavorites').textContent = filtered.filter(r => r.favorite).length;
+    document.getElementById('statTools').textContent = [...new Set(filtered.map(r => r.tool).filter(Boolean))].length;
+    document.getElementById('statSubjects').textContent = [...new Set(filtered.map(r => r.subject))].length;
+    updateSubjectStats(filtered);
+}
+
+function updateSubjectStats(filtered) {
+    const count = filtered.reduce((a, r) => (a[r.subject] = (a[r.subject] || 0) + 1, a), {});
+    const container = document.getElementById('statsFach');
+    if (!container) return;
+    container.innerHTML = '';
+    const max = Math.max(...Object.values(count)) || 1;
+    Object.entries(count)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([k, v]) => {
+            const div = document.createElement('div');
+            div.className = 'stat-bar';
+            div.innerHTML = `
+                <label>${k} <span class="bar-value">${v}</span></label>
+                <div class="bar-container">
+                    <div class="bar" style="width:${(v / max * 100)}%"></div>
+                </div>`;
+            container.appendChild(div);
+        });
+}
+
+function applyFilters() {
+    const filtered = getFilteredResources();
+    displayResources(filtered);
+    updateStats();
+    updateFilterHighlight();
+    updateFilterStatus();   // ← nur noch hier, alles perfekt
+}
+
+// ==================== AUTOCOMPLETE FÜR THEMA-SUCHE ====================
+const searchInput = document.getElementById('searchTopic');
+const suggestionsDiv = document.getElementById('suggestions');
+
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.trim().toLowerCase();
+  suggestionsDiv.innerHTML = '';
+  
+  if (query.length === 0) {
+    suggestionsDiv.style.display = 'none';
+    return;
+  }
+
+  // Alle Themen aus resources sammeln und filtern
+  const matches = resources
+    .map(r => r.topic || '')
+    .filter(topic => topic.toLowerCase().includes(query))
+    .sort()                                 // alphabetisch
+    .slice(0, 8);                           // max. 8 Vorschläge (passt optisch)
+
+  if (matches.length === 0) {
+    suggestionsDiv.style.display = 'none';
+    return;
+  }
+
+  matches.forEach(topic => {
+    const item = document.createElement('div');
+    item.textContent = topic;
+
+    // Highlight des eingegebenen Teils
+    const regex = new RegExp(`(${query})`, 'gi');
+    item.innerHTML = topic.replace(regex, '<strong>$1</strong>');
+
+    item.addEventListener('click', () => {
+      searchInput.value = topic;
+      suggestionsDiv.innerHTML = '';
+      suggestionsDiv.style.display = 'none';
+      applyFilters();                       // sofort filtern
+    });
+
+    suggestionsDiv.appendChild(item);
+  });
+
+  suggestionsDiv.style.display = 'block';
+});
+
+// Klick außerhalb → Vorschläge schließen
+document.addEventListener('click', (e) => {
+  if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+    suggestionsDiv.style.display = 'none';
+  }
+});
+
+// Enter oder Tab → ersten Vorschlag übernehmen
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    const first = suggestionsDiv.querySelector('div');
+    if (first) {
+      e.preventDefault();
+      searchInput.value = first.textContent;
+      suggestionsDiv.style.display = 'none';
+      applyFilters();
+    }
+  }
+  if (e.key === 'Escape') {
+    suggestionsDiv.style.display = 'none';
+  }
+});
+
+function resetFilters() {
+    ['filterSubject','filterGrade','filterCompetence','filterLevel','filterTool','filterFavorite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const search = document.getElementById('searchTopic');
+    if (search) search.value = '';
+    applyFilters();
+}
+
+// === VERSION SOFORT UND NACH UPDATE ANZEIGEN ===
+function updateVersionDisplay() {
+    const el = document.getElementById('versionInfo');
+    if (el) {
+        el.innerHTML = `© 2025 <strong>Matthias Kloß</strong> | Version ${VERSION}`;
+    }
+}
+
+// Beim ersten Laden
+window.addEventListener('load', updateVersionDisplay);
+
+// WICHTIG: Nach jedem Service-Worker-Update sofort neu anzeigen (auch ohne Reload!)
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('SW gewechselt → Version sofort aktualisieren');
+    updateVersionDisplay();        // ← Das fehlte!
+    if (allowReload) {
+        window.location.reload();
+    }
+});
+
+// === NACHRICHTEN-EMPFANG (postMessage + BroadcastChannel) – MUSS DRIN SEIN! ===
+function handleResourceMessage(event) {
+    if (!event.data) return;
+
+    // Kompatibilität für ganz alte Versionen
+    if (event.data.action === 'addResource' && event.data.resource) {
+        event.data = { type: 'ADD_RESOURCE', data: event.data.resource };
+    }
+
+    // === UPDATE RESSOURCE ===
+    if (event.data.type === 'UPDATE_RESOURCE') {
+        const { index, data } = event.data;
+        if (index >= 0 && index < resources.length) {
+            resources[index] = data;
+            localStorage.setItem('resources', JSON.stringify(resources));
+            applyFilters();
+
+            const anim = document.getElementById('editAnimation');
+            if (anim) {
+                anim.classList.add('edit-active');
+                setTimeout(() => anim.classList.remove('edit-active'), 1200);
+            }
+        }
+    }
+    if (event.data.type === 'SHOW_EDIT_SUCCESS') {
+    setTimeout(() => {
+        const anim = document.getElementById('editAnimation');
+        if (anim) {
+            anim.classList.add('edit-active');
+            setTimeout(() => anim.classList.remove('edit-active'), 1200);
+        }
+    }, 250); 
+    }
+
+// === EINZIGER ORT FÜR ADD_RESOURCE (verhindert Duplikate!) ===
+if (event.data.type === 'ADD_RESOURCE') {
+  const { data, undoFullBackup, undoMessage } = event.data;
+
+  // WICHTIG: Nur hinzufügen, wenn noch NICHT vorhanden!
+  const alreadyExists = resources.some(r =>
+    r.topic === data.topic &&
+    r.subject === data.subject &&
+    r.grade === data.grade &&
+    r.competence === data.competence &&
+    r.level === data.level &&
+    (r.tool || '').trim() === (data.tool || '').trim() &&
+    (r.description || '') === (data.description || '')
+  );
+
+  if (alreadyExists) {
+    console.log('Ressource bereits vorhanden – wird nicht doppelt angelegt');
+    applyFilters();
+    return;
+  }
+
+  const backupBeforeAdd = undoFullBackup || JSON.parse(JSON.stringify(resources));
+  resources.push(data);
+  localStorage.setItem('resources', JSON.stringify(resources));
+  applyFilters();
+  updateToolFilter();
+  populateDropdowns();
+
+  const undoEntry = {
+    action: 'add',
+    timestamp: Date.now(),
+    resourcesBackup: backupBeforeAdd,
+    message: undoMessage || 'Neue Ressource entfernen'
+  };
+  undoStack.unshift(undoEntry);
+  if (undoStack.length > 15) undoStack.pop();
+  localStorage.setItem('undoStack', JSON.stringify(undoStack));
+  showUndoToast(undoEntry.message);
+}
+
+// === UPDATE_RESOURCE (überschreiben) ===
+if (event.data.type === 'UPDATE_RESOURCE') {
+  const { index, data, undoFullBackup, undoBackup, undoMessage } = event.data;
+  if (index >= 0 && index < resources.length) {
+
+    // Vollständiges Backup vor der Änderung (wenn mitgeschickt, sonst aktuell nehmen)
+    const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
+
+    resources[index] = data;
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+
+    const undoEntry = {
+      action: 'override',
+      timestamp: Date.now(),
+      resourcesBackup: backupBeforeUpdate,
+      message: undoMessage || 'Überschreibung rückgängig machen'
+    };
+    undoStack.unshift(undoEntry);
+    if (undoStack.length > 15) undoStack.pop();
+    localStorage.setItem('undoStack', JSON.stringify(undoStack));
+
+    showUndoToast(undoEntry.message);
+  }
+}
+}
+
+// 1. Klassischer Listener
+window.addEventListener('message', handleResourceMessage);
+// 2. Fallback: BroadcastChannel (für installierte PWAs)
+try {
+    const channel = new BroadcastChannel('lerndashboard-channel');
+    channel.onmessage = handleResourceMessage;
+} catch (e) {
+    console.warn('BroadcastChannel nicht unterstützt');
+}
+
+// === NEUE, ROBUSTE VERSION ===
+function showPWAInstallBanner() {
+  // Nur einmal pro Tag (oder Sitzung) zeigen
+  const lastShown = localStorage.getItem('pwaBannerLastShown');
+  const now = Date.now();
+  if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
+
+  // Falls noch kein Prompt bereit → nicht anzeigen
+  if (!installPromptEvent) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwaInstallBanner';
+  banner.style.cssText = `
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: white; color: #333; padding: 18px 28px; border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35); z-index: 99999;
+    display: flex; align-items: center; gap: 16px; max-width: 90%;
+    font-family: system-ui, sans-serif; animation: slideUp 0.6s ease;
+    border: 4px solid #6b46c1;
+  `;
+  banner.innerHTML = `
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="#6b46c1">
+      <path d="M17 18H7V6h10v1h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v1z"/>
+      <path d="M14 9h5l-7 7-7-7h5V3h4v6z"/>
+    </svg>
+    <div style="flex:1;">
+      <strong style="font-size:17px;display:block;margin-bottom:4px;">
+        LernDashboard als App installieren?
+      </strong>
+      <span style="font-size:14px;color:#555;">
+        Direkt vom Homescreen starten – schneller & offline nutzbar!
+      </span>
+    </div>
+    <button id="installPwaBtn" style="
+      background:#6b46c1;color:white;border:none;padding:12px 24px;
+      border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;
+    ">Installieren</button>
+    <button id="closePwaBanner" style="
+      background:none;border:none;font-size:28px;cursor:pointer;color:#999;
+      margin-left:8px;
+    ">×</button>
+  `;
+  document.body.appendChild(banner);
+
+  // Installieren – jetzt 100 % sicher
+  const installBtn = banner.querySelector('#installPwaBtn');
+  installBtn.onclick = async () => {
+    if (!installPromptEvent) return;
+
+    banner.style.animation = 'slideDown 0.5s ease forwards';
+    
+    // Prompt anzeigen
+    installPromptEvent.prompt();
+    
+    const { outcome } = await installPromptEvent.userChoice;
+    
+    if (outcome === 'accepted') {
+      showFancyAlert('LernDashboard wurde installiert!', 'success');
+    } else {
+      // Falls abgelehnt → Banner einfach schließen
+      console.log('Installation abgelehnt');
+    }
+    
+    // Aufräumen
+    installPromptEvent = null;
+    localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+    setTimeout(() => banner.remove(), 500);
+  };
+
+  // Schließen-Button
+  banner.querySelector('#closePwaBanner').onclick = () => {
+    banner.style.animation = 'slideDown 0.5s ease forwards';
+    setTimeout(() => banner.remove(), 500);
+    localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+  };
+
+  // Auto-Close nach 12 Sekunden
+  setTimeout(() => {
+    if (banner && banner.parentElement) {
+      banner.style.animation = 'slideDown 0.5s ease forwards';
+      setTimeout(() => banner.remove(), 500);
+      localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+    }
+  }, 12000);
+}
+
+// === PWA-INSTALLATIONS-BANNER: Animationen (kein Konflikt mehr!) ===
+const pwaBannerStyle = document.createElement('style');
+pwaBannerStyle.textContent = `
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    }
+`;
+document.head.appendChild(pwaBannerStyle);
+
+// === PWA-INSTALLATIONS-BANNER ===
+function showPWAInstallBanner() {
+    // Nur einmal pro Tag zeigen
+    const lastShown = localStorage.getItem('pwaBannerLastShown');
+    const now = Date.now();
+    if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'pwaInstallBanner';
+    banner.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: white; color: #333; padding: 16px 28px; border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.35); z-index: 99999;
+        display: flex; align-items: center; gap: 16px; max-width: 90%;
+        font-family: system-ui, sans-serif; animation: slideUp 0.6s ease;
+        border: 4px solid #6b46c1;
+    `;
+    banner.innerHTML = `
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="#6b46c1">
+            <path d="M17 18H7V6h10v1h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v1z"/>
+            <path d="M14 9h5l-7 7-7-7h5V3h4v6z"/>
+        </svg>
+        <div style="flex:1;">
+            <strong style="font-size:17px;display:block;margin-bottom:4px;">
+                LernDashboard als App installieren?
+            </strong>
+            <span style="font-size:14px;color:#555;">
+                Direkt vom Homescreen starten – schneller & offline nutzbar!
+            </span>
+        </div>
+        <button id="installPwaBtn" style="
+            background:#6b46c1;color:white;border:none;padding:12px 24px;
+            border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;
+        ">Installieren</button>
+        <button id="closePwaBanner" style="
+            background:none;border:none;font-size:28px;cursor:pointer;color:#999;
+            margin-left:8px;
+        ">×</button>
+    `;
+
+    document.body.appendChild(banner);
+
+    // Installieren
+    document.getElementById('installPwaBtn').onclick = async () => {
+        banner.remove();
+        if (!installPromptEvent) return;
+        installPromptEvent.prompt();
+        const { outcome } = await installPromptEvent.userChoice;
+        installPromptEvent = null;
+        if (outcome === 'accepted') {
+            showFancyAlert('LernDashboard wurde installiert!', 'success');
+        }
+    };
+
+    // Schließen
+    document.getElementById('closePwaBanner').onclick = () => {
+        banner.style.animation = 'slideDown 0.5s ease forwards';
+        setTimeout(() => banner.remove(), 500);
+        localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+    };
+
+    // Auto-Close nach 10 Sekunden (genug Zeit!)
+    setTimeout(() => {
+        if (banner && banner.parentElement) {
+            banner.style.animation = 'slideDown 0.5s ease forwards';
+            setTimeout(() => banner.remove(), 500);
+            localStorage.setItem('pwaBannerLastShown', Date.now().toString());
+        }
+    }, 10000);
+}
+
+// === NUR NACH KICK RELOAD (bleibt genau so!) ===
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (allowReload) {
+    window.location.reload();
+  }
+});
+
+// === UPDATE-BANNER: Neue Version verfügbar ===
+let updateBannerShown = false;
+
+function showUpdateBanner() {
+  if (updateBannerShown) return;
+  updateBannerShown = true;
+
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+    background: linear-gradient(135deg, #6b46c1, #8e44ad);
+    color: white; padding: 18px 20px; text-align: center;
+    font-family: system-ui, sans-serif; font-size: 16px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: slideInDown 0.5s ease;
+  `;
+  banner.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 10px;">
+      <path d="M19 13V18C19 19.1 18.1 20 17 20H7C5.9 20 5 19.1 5 18V13"/>
+      <path d="M12 4L12 13M12 13L15.5 9.5M12 13L8.5 9.5"/>
+    </svg>
+    Eine neue Version ist verfügbar!
+    <button id="updateNowBtn" style="
+      margin-left: 16px; background: white; color: #6b46c1;
+      border: none; padding: 10px 20px; border-radius: 12px;
+      font-weight: bold; font-size: 15px; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    ">Jetzt aktualisieren</button>
+  `;
+
+  document.body.prepend(banner);
+
+  document.getElementById('updateNowBtn').onclick = () => {
+  // 1. Banner schön ausblenden
+  banner.style.animation = 'slideInDown 0.4s ease reverse forwards';
+
+  // 2. Kurze Bestätigung anzeigen
+  const confirmBanner = document.createElement('div');
+  confirmBanner.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+    background: #27ae60; color: white; padding: 16px 20px; text-align: center;
+    font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: slideInDown 0.4s ease;
+  `;
+  confirmBanner.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle; margin-right: 8px;">
+      <path d="M20 6 L9 17 L4 12" />
+    </svg>
+    Aktualisiert! Die neue Version wird gleich geladen…
+  `;
+  document.body.prepend(confirmBanner);
+
+  // 3. SW aktivieren + Seite neu laden
+  setTimeout(() => {
+    if (newServiceWorker) {
+      allowReload = true;
+      newServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+    // Optional: kurze Pause für Schönheit, dann Reload
+    setTimeout(() => location.reload(), 800);
+  }, 400);
+};
+}
+
+// Animation für das Banner
+const bannerStyle = document.createElement('style');
+bannerStyle.textContent = `
+  @keyframes slideInDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+`;
+document.head.appendChild(bannerStyle);
+
+// === SERVICE WORKER REGISTRIERUNG ===
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js', { scope: './' })  // ← scope: './' statt '/'
+      .then(reg => {
+        console.log('SW registriert:', reg.scope);
+
+        function trackInstalling(worker) {
+          newServiceWorker = worker;
+
+          worker.onstatechange = () => {
+            console.log('SW state:', worker.state);
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateBanner();
+            }
+          };
+        }
+
+        // 1. Wartender Worker?
+        if (reg.waiting) {
+          newServiceWorker = reg.waiting;
+          showUpdateBanner();
+          return;
+        }
+
+        // 2. Laufende Installation?
+        if (reg.installing) {
+          trackInstalling(reg.installing);
+        }
+
+        // 3. Zukünftige Updates
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) trackInstalling(newWorker);
+        });
+
+        // 4. Update suchen
+        reg.update();
+      })
+      .catch(err => console.error('SW Fehler:', err));
+  });
+}
+
+// === NUR NACH KICK RELOAD ===
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (allowReload) {
+    window.location.reload();
+  }
+});
+
+// ===================================================================
+// PWA-INSTALLATION – FINAL, EINZIGER, PERFEKTER LISTENER
+// ===================================================================
+let installPromptEvent = null;  // Globale Variable (ersetzt deferredPrompt)
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPromptEvent = e;
+
+  // Banner nur anzeigen, wenn:
+  // - Service Worker bereits aktiv ist (normale Nutzung) ODER
+  // - Es der allererste Besuch ist (noch kein localStorage-Eintrag)
+  const swActive = !!navigator.serviceWorker?.controller;
+  const firstVisit = !localStorage.getItem('pwaBannerLastShown');
+
+  if (swActive || firstVisit) {
+    showPWAInstallBanner();
+  }
+});
+
+// === INIT ===
+['filterSubject','filterGrade','filterTool','filterCompetence','filterLevel','filterFavorite'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyFilters);
+});
+const searchEl = document.getElementById('searchTopic');
+if (searchEl) searchEl.addEventListener('input', applyFilters);
+
+populateDropdowns();
+applyFilters();
+applyFilters();
+document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
+
+function exportTemplate() {
+    const template = [
+        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung',
+        'Beispiel: Klimawandel,Geografie,Klasse 7,Analysieren und Reflektieren,Niveaustufe 3,Google Earth,"Beschreibung des Einsatzes..."'
+    ].join('\n');
+
+    const csvBlob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(csvBlob);
+    link.download = 'Lerndashboard_Vorlage.csv';
+    link.click();
+}
+
+function exportCSV() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
+        return;
+    }
+
+    const COLUMNS = ['Thema', 'Unterrichtsfach', 'Klassenstufe', 'Kompetenzbereich', 'Niveaustufe', 'Digitales_Hilfsmittel', 'Beschreibung'];
+    const csvContent = filtered.map(r => [
+        `"${(r.topic || '').replace(/"/g, '""')}"`,
+        `"${(r.subject || '')}"`,
+        `"${(r.grade || '')}"`,
+        `"${(r.competence || '')}"`,
+        `"${(r.level || '')}"`,
+        `"${(r.tool || '').replace(/"/g, '""')}"`,
+        `"${(r.description || '').replace(/"/g, '""')}"`
+    ].join(',')).join('\n');
+
+    const fullCsv = `${COLUMNS.join(',')}\n${csvContent}`;
+    const csvBlob = new Blob(['\uFEFF' + fullCsv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(csvBlob);
+    link.download = `LernDashboard_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    // Nach dem Download des CSV
+    showFancyAlert('CSV Export erfolgreich!', 'success');}
+
+function exportPDF() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        let y = 30;
+        const lineHeight = 6;
+        const startX = 15;
+        let pageNumber = 1;
+
+        // Schulname
+        const schoolName = getSchoolName() || 'Deine Schule';
+        doc.setFontSize(11);
+        doc.setTextColor(schoolName === 'Deine Schule' ? 150 : 80);
+        doc.setFont('helvetica', 'italic');
+        doc.text(schoolName, pageWidth - 15, 15, { align: 'right' });
+
+        // Titel
+        doc.setFontSize(20);
+        doc.setTextColor(107, 70, 193);
+        doc.setFont('helvetica', 'bold');
+        doc.text('LernDashboard Digital', pageWidth / 2, y, { align: 'center' });
+        y += 8;
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text('Gefilterte Unterrichtsideen', pageWidth / 2, y, { align: 'center' });
+        y += 10;
+        doc.setFontSize(9);
+        doc.setTextColor(120);
+        doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, y, { align: 'right' });
+        y += 12;
+
+        const addPageIfNeeded = (h) => {
+            if (y + h > pageHeight - 25) {
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Seite ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+                doc.addPage();
+                pageNumber++;
+                y = 20;
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text('LernDashboard Digital – Fortsetzung', pageWidth / 2, y, { align: 'center' });
+                y += 8;
+            }
+        };
+
+        const tagColors = { subject: [155,89,182], grade: [80,200,120], competence: [255,140,0], level: [0,191,255], tool: [30,144,255] };
+
+        filtered.forEach((r, i) => {
+            const topic = r.topic || '—';
+            const subject = r.subject || '—';
+            const grade = r.grade || '—';
+            const competence = r.competence || '—';
+            const level = r.level || '—';
+            const tool = r.tool || '—';
+            const description = r.description || '';
+
+            doc.setFontSize(11);
+            doc.setTextColor(0);
+            doc.setFont('helvetica', 'bold');
+            const topicLines = doc.splitTextToSize(`${i + 1}. ${topic}`, pageWidth - 30);
+            addPageIfNeeded(topicLines.length * lineHeight + 5);
+            doc.text(topicLines, startX, y);
+            y += topicLines.length * lineHeight + 3;
+
+            let x = startX;
+            const tagHeight = 5, tagPadding = 2, tagGap = 6, textY = y - 0.7;
+            const tags = [{text:subject,type:'subject'},{text:grade,type:'grade'},{text:competence,type:'competence'},{text:level,type:'level'},{text:tool,type:'tool'}];
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'normal');
+            tags.forEach(tag => {
+                if (tag.text === '—') return;
+                const color = tagColors[tag.type];
+                const textWidth = doc.getTextWidth(tag.text);
+                const tagWidth = textWidth + 2 * tagPadding;
+                doc.setFillColor(...color);
+                doc.roundedRect(x, y - tagHeight + 0.8, tagWidth, tagHeight, 1.8, 1.8, 'F');
+                doc.setTextColor(255);
+                doc.text(tag.text, x + tagPadding, textY);
+                x += tagWidth + tagGap;
+            });
+            y += 6;
+
+            if (description) {
+                doc.setFontSize(9);
+                doc.setTextColor(70);
+                doc.setFont('helvetica', 'italic');
+                const descLines = doc.splitTextToSize(description, pageWidth - 30);
+                const descHeight = descLines.length * lineHeight;
+                addPageIfNeeded(descHeight + 8);
+                doc.setFillColor(248, 250, 252);
+                doc.rect(startX - 1, y - 1.5, pageWidth - 30 + 2, descHeight + 3, 'F');
+                doc.text(descLines, startX, y + lineHeight - 1);
+                y += descHeight + 6;
+            } else y += 4;
+
+            doc.setDrawColor(220);
+            doc.setLineWidth(0.3);
+            doc.line(startX, y, pageWidth - 15, y);
+            y += 8;
+        });
+
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Seite ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+        doc.save(`LernDashboard_${new Date().toISOString().slice(0, 10)}.pdf`);
+        showFancyAlert('PDF Export erfolgreich!', 'success');
+    } catch (err) {
+        console.error('PDF-Export fehlgeschlagen:', err);
+        showAlert('Fehler beim PDF-Export. Bitte Seite neu laden.');
+    }
+}
+
+// === HELPER: Sauberes Datum für Dateinamen ===
+function getDateString() {
+    return new Date().toISOString().slice(0, 10); // → "2025-11-15"
+}
+
+function exportMatrixCSV() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
+        return;
+    }
+
+    updateCurrentFilters();
+    let filterParts = [];
+    if (currentFilters.subject) filterParts.push(currentFilters.subject);
+    if (currentFilters.grade) filterParts.push(currentFilters.grade);
+    if (currentFilters.level) filterParts.push(currentFilters.level);
+    if (currentFilters.competence) {
+        const kb = currentFilters.competence.match(/(\d+)$/);
+        filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+    }
+    if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+    const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+    const fileTitle = `Matrix_${getDateString()}`;
+
+    // === DYNAMISCH ===
+    const competences = [
+        "Suchen, Verarbeiten und Aufbewahren",
+        "Kommunizieren und Kooperieren",
+        "Produzieren und Präsentieren",
+        "Schützen und sicher Agieren",
+        "Problemlösen und Handeln",
+        "Analysieren und Reflektieren"
+    ];
+
+    const levels = getLevelOptions();   // ← entscheidend
+
+    // Matrix aufbauen
+    const matrix = {};
+    competences.forEach(c => {
+        matrix[c] = {};
+        levels.forEach(l => matrix[c][l] = new Set());
+    });
+
+    filtered.forEach(r => {
+        const comp = (r.competence || '').trim();
+        const level = (r.level || '').trim();
+        const topic = (r.topic || '').trim();
+        const grade = (r.grade || '').trim();
+        const tool = (r.tool || '').trim();
+
+        if (!comp || !level || !topic) return;
+        if (!competences.includes(comp)) return;
+        if (!levels.includes(level)) return;
+
+        const entry = `${topic} (${grade}${tool ? ` – ${tool}` : ''})`;
+        matrix[comp][level].add(entry);
+    });
+
+    // CSV erzeugen
+    let csv = '\uFEFF';
+    csv += `"${documentTitle}"\n\n`;
+    csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
+
+    competences.forEach(comp => {
+        const row = [`"${comp}"`];
+        levels.forEach(level => {
+            const entries = [...matrix[comp][level]];
+            const cell = entries.length > 0 ? entries.join('\n') : '—';
+            row.push(`"${cell.replace(/"/g, '""')}"`);
+        });
+        csv += row.join(';') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${fileTitle}.csv`;
+    link.click();
+
+    showFancyAlert('Matrix CSV Export erfolgreich!', 'success');
+}
+
+// ──────────────────────────────────────────────────────────────
+// MATRIX → PDF (dynamisch 3 oder 5 Niveaustufen)
+// ──────────────────────────────────────────────────────────────
+async function exportMatrixPDF() {
+    const filtered = getFilteredResources();
+    
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const leftMargin = 12;
+        const rightMargin = 12;
+        const topMargin = 18;
+        const usableWidth = pageWidth - leftMargin - rightMargin;
+
+        const compColWidth = usableWidth * 0.22;
+        let currentY = topMargin;
+
+        updateCurrentFilters();
+        let filterParts = [];
+        if (currentFilters.subject) filterParts.push(currentFilters.subject);
+        if (currentFilters.grade) filterParts.push(currentFilters.grade);
+        if (currentFilters.level) filterParts.push(currentFilters.level);
+        if (currentFilters.competence) {
+            const kb = currentFilters.competence.match(/(\d+)$/);
+            filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+        }
+        if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+        const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+        const fileTitle = `Matrix_${getDateString()}`;
+
+        // === DYNAMISCH ===
+        const competences = [
+            "Suchen, Verarbeiten und Aufbewahren",
+            "Kommunizieren und Kooperieren",
+            "Produzieren und Präsentieren",
+            "Schützen und sicher Agieren",
+            "Problemlösen und Handeln",
+            "Analysieren und Reflektieren"
+        ];
+
+        const levels = getLevelOptions();                    // ← dynamisch
+        const levelColWidth = (usableWidth - compColWidth) / levels.length;
+
+        const levelColors = [
+            [76, 175, 80], [139, 195, 74], [255, 193, 7], [255, 152, 0], [244, 67, 54]
+        ].slice(0, levels.length);
+
+        // Matrix aufbauen
+        const matrix = {};
+        competences.forEach(c => {
+            matrix[c] = {};
+            levels.forEach(l => matrix[c][l] = []);
+        });
+
+        filtered.forEach(r => {
+            const c = r.competence?.trim();
+            const l = r.level?.trim();
+            const topic = r.topic?.trim();
+            const g = r.grade?.trim();
+            const tool = r.tool?.trim();
+
+            if (!c || !l || !topic) return;
+            if (!competences.includes(c)) return;
+            if (!levels.includes(l)) return;
+
+            matrix[c][l].push(`${topic}\nKlasse ${g}${tool ? ` – ${tool}` : ''}`);
+        });
+
+        // Hilfsfunktionen (leicht angepasst)
+        const drawLine = (x1, y1, x2, y2) => {
+            doc.setDrawColor(180);
+            doc.setLineWidth(0.25);
+            doc.line(x1, y1, x2, y2);
+        };
+
+        const drawHeader = y => {
+            const h = 11;
+            let x = leftMargin;
+
+            doc.setFillColor(107, 70, 193);
+            doc.rect(x, y, compColWidth, h, 'F');
+            doc.setTextColor(255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Kompetenz', x + 4, y + 7.5);
+            x += compColWidth;
+
+            levels.forEach((lvl, i) => {
+                doc.setFillColor(...levelColors[i]);
+                doc.rect(x, y, levelColWidth, h, 'F');
+                doc.setTextColor(255);
+                const lines = doc.splitTextToSize(lvl, levelColWidth - 8);
+                const lineH = 3.8;
+                const startY = y + (h - lines.length * lineH) / 2 + lineH;
+                doc.text(lines, x + levelColWidth / 2, startY, { align: 'center' });
+                x += levelColWidth;
+            });
+
+            doc.setDrawColor(120);
+            doc.setLineWidth(0.5);
+            doc.line(leftMargin, y + h, pageWidth - rightMargin, y + h);
+            return y + h;
+        };
+
+        const drawCenteredText = (lines, x, y, w, h, lineH, bold = false) => {
+            const totalH = lines.length * lineH;
+            const startY = y + (h - totalH) / 2 + lineH * 0.7;
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.text(lines, x + 4, startY);
+        };
+
+        // Header zeichnen
+        let headerBottom = drawHeader(currentY);
+        currentY = headerBottom;
+
+        // Zeilen
+        const COMP_FS = 9.5, LEVEL_FS = 8.0;
+        const LH_COMP = COMP_FS * 1.2 * 0.3528;
+        const LH_LEVEL = LEVEL_FS * 1.2 * 0.3528;
+        const MIN_ROW_H = 16;
+
+        competences.forEach(comp => {
+            const compLines = doc.splitTextToSize(comp, compColWidth - 8);
+            const compH = compLines.length * LH_COMP;
+
+            let maxLevelH = 0;
+            levels.forEach(l => {
+                const raw = matrix[comp][l].length ? matrix[comp][l].join('\n\n') : '—';
+                const lines = doc.splitTextToSize(raw, levelColWidth - 8);
+                const h = lines.length * LH_LEVEL;
+                if (h > maxLevelH) maxLevelH = h;
+            });
+
+            const rowH = Math.max(MIN_ROW_H, Math.max(compH, maxLevelH) + 8);
+
+            if (currentY + rowH > pageHeight - 20) {
+                drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
+                drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
+                doc.addPage();
+                currentY = topMargin;
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Fortsetzung – Seite ${doc.getCurrentPageInfo().pageNumber}`, pageWidth - rightMargin, currentY, { align: 'right' });
+                currentY += 8;
+                headerBottom = drawHeader(currentY);
+                currentY = headerBottom;
+            }
+
+            const rowY = currentY;
+            let x = leftMargin;
+
+            // Kompetenz-Spalte
+            doc.setFillColor(248, 249, 255);
+            doc.rect(x, rowY, compColWidth, rowH, 'F');
+            doc.setTextColor(0);
+            doc.setFontSize(COMP_FS);
+            drawCenteredText(compLines, x, rowY, compColWidth, rowH, LH_COMP, true);
+            drawLine(x + compColWidth, rowY, x + compColWidth, rowY + rowH);
+            x += compColWidth;
+
+            // Level-Spalten
+            levels.forEach((lvl, j) => {
+                const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
+                const lines = doc.splitTextToSize(raw, levelColWidth - 8);
+
+                doc.setFillColor(255, 255, 255);
+                doc.rect(x, rowY, levelColWidth, rowH, 'F');
+                doc.setTextColor(60);
+                doc.setFontSize(LEVEL_FS);
+                drawCenteredText(lines, x, rowY, levelColWidth, rowH, LH_LEVEL);
+
+                if (j < levels.length - 1) drawLine(x + levelColWidth, rowY, x + levelColWidth, rowY + rowH);
+                x += levelColWidth;
+            });
+
+            drawLine(leftMargin, rowY + rowH, pageWidth - rightMargin, rowY + rowH);
+            currentY += rowH;
+        });
+
+        // Abschlusslinien + Seitenzahlen
+        drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
+        drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
+
+        const totalPages = doc.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Seite ${i}`, pageWidth - rightMargin, pageHeight - 8, { align: 'right' });
+        }
+
+        doc.save(`${fileTitle}.pdf`);
+        showFancyAlert('PDF erfolgreich erstellt!', 'success');
+
+    } catch (err) {
+        console.error('PDF-Erstellung fehlgeschlagen:', err);
+        showAlert('Fehler beim Erstellen der PDF. Bitte Seite neu laden und erneut versuchen.');
+    }
+}
+
+function exportMatrixExcel() {
+    const filtered = getFilteredResources();
+    if (filtered.length === 0) {
+        showFancyAlert('Keine gefilterten Daten!', 'warning', 'Es wurden keine Ressourcen gefunden, die den aktuellen Filtern entsprechen.');
+        return;
+    }
+
+    const competences = [
+        "Suchen, Verarbeiten und Aufbewahren",
+        "Kommunizieren und Kooperieren",
+        "Produzieren und Präsentieren",
+        "Schützen und sicher Agieren",
+        "Problemlösen und Handeln",
+        "Analysieren und Reflektieren"
+    ];
+
+    const levels = getLevelOptions();
+
+    const baseLevelColors = {
+        'Niveaustufe 1': 'FF4CAF50',
+        'Niveaustufe 2': 'FF8BC34A',
+        'Niveaustufe 3': 'FFFFC107',
+        'Niveaustufe 4': 'FFFF9800',
+        'Niveaustufe 5': 'FFF44336'
+    };
+    const levelColors = {};
+    levels.forEach((lvl, idx) => {
+        levelColors[lvl] = Object.values(baseLevelColors)[idx] || 'FF6B46C1';
+    });
+
+    const headerColor = 'FF6B46C1';
+    const contentColor = 'FFF8F9FA';
+
+    updateCurrentFilters();
+    let filterParts = [];
+    if (currentFilters.subject) filterParts.push(currentFilters.subject);
+    if (currentFilters.grade) filterParts.push(currentFilters.grade);
+    if (currentFilters.level) filterParts.push(currentFilters.level);
+    if (currentFilters.competence) {
+        const kb = currentFilters.competence.match(/(\d+)$/);
+        filterParts.push(kb ? `KB ${kb[1]}` : currentFilters.competence);
+    }
+    if (currentFilters.tool) filterParts.push(`Tool: ${currentFilters.tool}`);
+
+    const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
+    const fileTitle = `Matrix_${getDateString()}`;
+
+    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+    const exportDate = `Export: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+
+    // Matrix aufbauen
+    const matrix = {};
+    competences.forEach(c => {
+        matrix[c] = {};
+        levels.forEach(l => matrix[c][l] = []);
+    });
+
+    filtered.forEach(r => {
+        const comp = r.competence?.trim();
+        const level = r.level?.trim();
+        if (!comp || !level || !matrix[comp]?.[level]) return;
+
+        const entry = `${r.topic} (${[r.subject, r.grade, r.tool].filter(Boolean).join(', ')})`;
+        const desc = r.description ? `: ${r.description}` : '';
+        matrix[comp][level].push(entry + desc);
+    });
+
+    // Workbook
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Kompetenzmatrix');
+
+    const numLevels = levels.length;
+    const totalColumns = numLevels + 1;
+
+    // === KOPFZEILE ===
+    const headerTopRow = sheet.addRow(Array(totalColumns).fill(''));
+    headerTopRow.height = 55;
+
+    const schoolCell = headerTopRow.getCell(1);
+    schoolCell.value = schoolName;
+    schoolCell.font = { bold: true, size: 12, color: { argb: headerColor } };
+    schoolCell.alignment = { horizontal: 'left', vertical: 'middle' };
+
+    sheet.mergeCells(1, 2, 1, totalColumns - 1);
+    const titleCell = sheet.getCell(1, 2);
+    titleCell.value = documentTitle;
+    titleCell.font = { bold: true, size: 12, color: { argb: headerColor } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+
+    const dateCell = headerTopRow.getCell(totalColumns);
+    dateCell.value = exportDate;
+    dateCell.font = { size: 11, color: { argb: 'FF666666' } };
+    dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+    sheet.addRow([]); // Leerzeile
+
+    // === TABELLENHEADER ===
+    const headerRow = sheet.addRow(['Kompetenzbereich', ...levels]);
+    headerRow.eachCell((cell, colNumber) => {
+        let fillColor = colNumber === 1 ? headerColor : levelColors[levels[colNumber - 2]] || headerColor;
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = {
+            top: { style: 'thin', color: { argb: 'FF999999' } },
+            left: { style: 'thin', color: { argb: 'FF999999' } },
+            bottom: { style: 'thin', color: { argb: 'FF999999' } },
+            right: { style: 'thin', color: { argb: 'FF999999' } }
+        };
+    });
+    headerRow.height = 45;
+
+    // === ZEILEN mit leichter Umrandung ===
+    competences.forEach(comp => {
+        const rowValues = [comp, ...levels.map(l => matrix[comp][l].join('\n\n') || '–')];
+        const row = sheet.addRow(rowValues);
+
+        // Kompetenz-Zelle
+        const compCell = row.getCell(1);
+        compCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerColor } };
+        compCell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        compCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        compCell.border = {
+            top: { style: 'thin', color: { argb: 'FF999999' } },
+            left: { style: 'thin', color: { argb: 'FF999999' } },
+            bottom: { style: 'thin', color: { argb: 'FF999999' } },
+            right: { style: 'thin', color: { argb: 'FF999999' } }
+        };
+
+        // Level-Zellen mit leichter Umrandung
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            if (colNumber > 1) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: contentColor } };
+                cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+                if (cell.value && cell.value !== '–') cell.value = '\n' + cell.value + '\n';
+                if (cell.value === '–') cell.font = { color: { argb: 'FF999999' }, italic: true };
+
+                // Leichte Umrandung für alle Ressourcen-Zellen
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                    left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                    right: { style: 'thin', color: { argb: 'FFCCCCCC' } }
+                };
+            }
+        });
+
+        // Zeilenhöhe dynamisch
+        let maxLines = 1;
+        row.eachCell({ includeEmpty: true }, (cell) => {
+            if (cell.value) {
+                const lines = (cell.value.toString().match(/\n/g) || []).length + 1;
+                if (lines > maxLines) maxLines = lines;
+            }
+        });
+        row.height = Math.max(70, maxLines * 22);
+    });
+
+    // === SPALTENBREITEN ===
+    sheet.columns = [
+        { width: 36 },
+        ...levels.map(() => ({ width: 44 }))
+    ];
+
+    // === EXPORT ===
+    workbook.xlsx.writeBuffer().then(buffer => {
+        const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
+        saveAs(excelBlob, `${fileTitle}.xlsx`);
+        showFancyAlert('Excel-Matrix erfolgreich erstellt!', 'success');
+    }).catch(err => {
+        console.error("Export-Fehler:", err);
+        showFancyAlert('Export fehlgeschlagen!', 'error');
+    });
+}
+// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD ===
+function autoBackup() {
+    const allResources = JSON.parse(localStorage.getItem('resources') || '[]');
+    
+    if (allResources.length === 0) {
+        showFancyAlert('Keine Daten zum Sichern!', 'warning');
+        return;
+    }
+
+    // Modal erstellen (unverändert)
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position:fixed; top:0; left:0; width:100%; height:100%;
+        background:rgba(0,0,0,0.6); backdrop-filter:blur(8px);
+        display:flex; justify-content:center; align-items:center;
+        z-index:20000; font-family:Segoe UI,sans-serif;
+    `;
+    modal.innerHTML = `
+        <div style="
+            background:var(--card); padding:32px; border-radius:20px; text-align:center;
+            width:90%; max-width:420px; box-shadow:0 16px 48px rgba(0,0,0,0.3);
+            transform:scale(0.9); opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+        ">
+            <div id="backupIcon" style="width:80px; height:80px; margin:0 auto 20px;">
+                <svg width="80" height="80" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle id="backupCircle" cx="50" cy="50" r="44" fill="none" stroke="#6b46c1" stroke-width="4"
+                            stroke-dasharray="276.46" stroke-dashoffset="276.46"
+                            style="transition:stroke-dashoffset 1s ease;"/>
+                    <path id="backupCheck" d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100; stroke-dashoffset:100;"/>
+                </svg>
+            </div>
+            <p id="backupTitle" style="font-size:19px; font-weight:700; color:var(--text); margin:0 0 8px;">
+                Backup wird erstellt...
+            </p>
+            <p id="backupSubtitle" style="font-size:14px; color:var(--text-light); margin:0;">
+                ${allResources.length} Ressourcen werden gesichert
+            </p>
+            <div style="margin-top:20px; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden;">
+                <div id="backupProgress" style="width:0%; height:100%; background:#6b46c1; border-radius:3px; transition:width 0.8s ease;"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Animation: Modal einblenden (unverändert)
+    requestAnimationFrame(() => {
+        modal.querySelector('div').style.transform = 'scale(1)';
+        modal.querySelector('div').style.opacity = '1';
+    });
+
+    // Fortschritt simulieren (unverändert)
+    const progress = modal.querySelector('#backupProgress');
+    const circle = modal.querySelector('#backupCircle');
+    const title = modal.querySelector('#backupTitle');
+    const subtitle = modal.querySelector('#backupSubtitle');
+    const check = modal.querySelector('#backupCheck');
+
+    setTimeout(() => {
+        progress.style.width = '100%';
+        circle.style.strokeDashoffset = '0';
+    }, 100);
+
+    // CSV generieren & downloaden – FRÜHER AUSLÖSEN (nach 300ms, während Animation läuft)
+    setTimeout(() => {
+        const headers = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung'];
+        const csv = [
+            headers.join(','),
+            ...allResources.map(r => [
+                `"${(r.topic||'').replace(/"/g,'""')}"`,
+                `"${r.subject||''}"`,
+                `"${r.grade||''}"`,
+                `"${r.competence||''}"`,
+                `"${r.level||''}"`,
+                `"${(r.tool||'').replace(/"/g,'""')}"`,
+                `"${(r.description||'').replace(/"/g,'""')}"`
+            ].join(','))
+        ].join('\n');
+
+        const csvBlob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(csvBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `LernDashboard_Backup_${new Date().toISOString().slice(0,10)}.csv`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Erfolg anzeigen (unverändert)
+        title.textContent = 'Backup erfolgreich!';
+        title.style.color = '#27ae60';
+        subtitle.textContent = 'Datei wird heruntergeladen...';
+        check.style.strokeDashoffset = '0';
+        check.style.animation = 'draw 0.6s ease forwards';
+
+        // Modal nach 1,5 Sek schließen (unverändert)
+        setTimeout(() => {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 400);
+        }, 1500);
+    }, 300);  // ← Hier früher: 300ms statt 1000ms
+}
+
+// Hilfsfunktion: HTML escapen (sicherer für Inhalte)
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showAlert(msg) {
+    alert(msg);
+}
+
+function printOptimized() {
+    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+    const allResources = resources;
+
+    if (allResources.length === 0) {
+        showFancyAlert('Keine Ressourcen zum Drucken.', 'warning');
+        return;
+    }
+
+    // --- Statistik berechnen ---
+    const subjectCount = allResources.reduce((a, r) => {
+        const s = r.subject || 'Unbekannt';
+        a[s] = (a[s] || 0) + 1;
+        return a;
+    }, {});
+
+    const uniqueTools = new Set(allResources.map(r => r.tool).filter(Boolean)).size;
+    const favorites = allResources.filter(r => r.favorite).length;
+
+    // --- HTML generieren ---
+    let printHtml = `
+        <div class="print-content" style="
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 12mm 10mm;
+            line-height: 1.35;
+            font-size: 10.5pt;
+            color: #000;
+        ">
+            <h1 style="
+                text-align: center;
+                color: #6b46c1;
+                margin: 0 0 8mm;
+                font-size: 16pt;
+                font-weight: 700;
+            ">
+                LernDashboard Digital – Alle Ressourcen
+            </h1>
+            <p style="
+                text-align: center;
+                color: #555;
+                margin: 0 0 12mm;
+                font-size: 10pt;
+            ">
+                Schule: <strong>${escapeHtml(schoolName)}</strong> | 
+                Exportiert: ${new Date().toLocaleDateString('de-DE')}
+            </p>
+    `;
+
+    allResources.forEach((r, i) => {
+        printHtml += `
+            <div class="print-resource" style="
+                margin-bottom: 5mm;
+                padding-bottom: 4mm;
+                border-bottom: 1px solid #ddd;
+                page-break-inside: auto;
+                break-inside: auto;
+            ">
+                <h3 style="
+                    margin: 0 0 1.5mm;
+                    color: #6b46c1;
+                    font-size: 11.5pt;
+                    font-weight: 600;
+                ">
+                    ${i + 1}. ${escapeHtml(r.topic || '–')}
+                </h3>
+                <p style="
+                    margin: 1mm 0;
+                    font-size: 10pt;
+                    line-height: 1.25;
+                    color: #333;
+                ">
+                    <strong>Fach:</strong> ${escapeHtml(r.subject || '–')} | 
+                    <strong>Klasse:</strong> ${escapeHtml(r.grade || '–')} | 
+                    <strong>Kompetenz:</strong> ${escapeHtml(r.competence || '–')}
+                </p>
+                <p style="
+                    margin: 1mm 0;
+                    font-size: 10pt;
+                    line-height: 1.25;
+                    color: #333;
+                ">
+                    <strong>Niveau:</strong> ${escapeHtml(r.level || '–')} | 
+                    <strong>Tool:</strong> ${escapeHtml(r.tool || '–')}
+                </p>
+                ${r.description ? `
+                <div style="
+                    margin: 2mm 0 0;
+                    padding: 2mm 6mm;
+                    background: #f9f9f9;
+                    border-left: 3px solid #6b46c1;
+                    font-size: 10pt;
+                    line-height: 1.3;
+                    border-radius: 0 5px 5px 0;
+                    display: inline-block;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                ">
+                    ${escapeHtml(r.description)}
+                </div>` : ''}
+            </div>
+        `;
+    });
+
+    // --- Statistik ---
+    printHtml += `
+        <div class="print-stats" style="
+            margin-top: 12mm;
+            padding-top: 8mm;
+            border-top: 2px solid #6b46c1;
+            page-break-before: avoid;
+        ">
+            <h2 style="
+                color: #6b46c1;
+                margin: 0 0 5mm;
+                font-size: 13pt;
+                font-weight: 600;
+            ">Statistik</h2>
+            <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 3mm 8mm;
+                font-size: 10pt;
+                margin-bottom: 6mm;
+            ">
+                <div><strong>Gesamt:</strong> ${allResources.length} Ressourcen</div>
+                <div><strong>Favoriten:</strong> ${favorites}</div>
+                <div><strong>Tools:</strong> ${uniqueTools}</div>
+                <div><strong>Fächer:</strong> ${Object.keys(subjectCount).length}</div>
+            </div>
+            <p style="margin: 0 0 3mm; font-size: 10pt;"><strong>Nach Fächern:</strong></p>
+            <ul style="
+                columns: 2;
+                column-gap: 10mm;
+                margin: 0;
+                padding-left: 12mm;
+                font-size: 9.5pt;
+                line-height: 1.25;
+            ">
+    `;
+
+    Object.entries(subjectCount)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([subj, count]) => {
+            printHtml += `<li><strong>${escapeHtml(subj)}:</strong> ${count}</li>`;
+        });
+
+    printHtml += `</ul></div></div>`;
+
+    // --- In .main einfügen ---
+    const mainContainer = document.querySelector('.main');
+    const originalMain = mainContainer.innerHTML;
+
+    mainContainer.innerHTML = printHtml;
+
+    // --- Drucken ---
+    window.print();
+
+    // --- Zurücksetzen ---
+    setTimeout(() => {
+        mainContainer.innerHTML = originalMain;
+    }, 500);
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+// ==================== CSV IMPORT – KOMPLETT NEU, ROBUST & FUNKTIONIEREND ====================
+function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csv = e.target.result;
+        if (!csv.trim()) {
+            showFancyAlert('CSV-Datei ist leer!', 'warning');
+            return;
+        }
+        showImportPreview(csv);
+    };
+    reader.readAsText(file, 'UTF-8');
+    event.target.value = '';
+}
+
+function showImportPreview(csvString) {
+    const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 1) return showFancyAlert('Keine Daten gefunden.', 'warning');
+
+    const headers = parseCSVLine(lines[0]);
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
+        if (row['Thema'] || row['Unterrichtsfach']) data.push(row);
+    }
+
+    if (data.length === 0) return showFancyAlert('Keine gültigen Einträge gefunden.', 'warning');
+
+    let previewHtml = `<div style="max-height:300px;overflow-y:auto;margin:10px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">`;
+    previewHtml += `<tr style="background:#6b46c1;color:white;"><th style="padding:8px;text-align:left;">${headers.slice(0,6).join('</th><th style="padding:8px;text-align:left;">')}</th></tr>`;
+    data.slice(0, 8).forEach(row => {
+        previewHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">${Object.values(row).slice(0,6).map(escapeHtml).join('</td><td style="padding:8px;">')}</td></tr>`;
+    });
+    if (data.length > 8) previewHtml += `<tr><td colspan="6" style="text-align:center;color:#666;padding:8px;font-style:italic;">… und ${data.length - 8} weitere</td></tr>`;
+    previewHtml += `</table></div>`;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:20000;padding:20px;`;
+    modal.innerHTML = `
+        <div style="background:var(--card);padding:28px;border-radius:16px;max-width:90%;width:600px;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 12px;color:var(--text);font-size:19px;font-weight:700;">Import-Vorschau</h3>
+            <p style="margin:0 0 16px;color:var(--text-light);font-size:14px;">
+            ${data.length} Datensatz${data.length === 1 ? '' : 'e'} in der Import-Datei gefunden<br>
+            <small style="color:#777;">Duplikate und ähnliche Einträge werden im nächsten Schritt geprüft.</small>
+            </p>
+            ${previewHtml}
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                <button id="cancelImportBtn" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;">Abbrechen</button>
+                <button id="confirmImportBtn" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;">Importieren</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
+    modal.querySelector('#confirmImportBtn').onclick = () => {
+        modal.remove();
+        performImport(data);
+    };
+    modal.querySelector('#confirmImportBtn').focus();
+}
+
+function performImport(data) {
+    const toImport = [];
+    const duplicates = [];
+    const similar = [];
+
+    data.forEach(entry => {
+        const thema = (entry['Thema'] || entry['Thema'] || '').trim();
+        const beschreibung = (entry['Beschreibung'] || entry['Beschreibung'] || '').trim();
+        const fach = (entry['Unterrichtsfach'] || entry['Unterrichtsfach'] || '').trim();
+        const klasse = (entry['Klassenstufe'] || entry['Klassenstufe'] || '').trim();
+        const kompetenz = (entry['Kompetenzbereich'] || entry['Kompetenzbereich'] || '').trim();
+        const niveau = (entry['Niveaustufe'] || entry['Niveaustufe'] || '').trim();
+        const tool = (entry['Digitales_Hilfsmittel'] || entry['Digitales_Hilfsmittel'] || '').trim();
+
+        if (!thema && !fach && !klasse && !kompetenz && !niveau && !tool && !beschreibung) return;
+
+        const normalized = {
+            topic: thema || '(Ohne Thema)',
+            subject: fach,
+            grade: klasse,
+            competence: kompetenz,
+            level: niveau,
+            tool: tool,
+            description: beschreibung
+        };
+
+        const exact = resources.some(r =>
+            (r.topic || '').trim() === normalized.topic &&
+            (r.subject || '').trim() === normalized.subject &&
+            (r.grade || '').trim() === normalized.grade &&
+            (r.competence || '').trim() === normalized.competence &&
+            (r.level || '').trim() === normalized.level &&
+            (r.tool || '').trim() === normalized.tool &&
+            (r.description || '').trim() === normalized.description
+        );
+
+        if (exact) {
+            duplicates.push(normalized);
+            return;
+        }
+
+const similarMatch = resources.find(r =>
+    (r.subject || '').trim().toLowerCase() === normalized.subject.toLowerCase() &&
+    (r.grade || '').trim() === normalized.grade &&
+    (r.competence || '').trim().toLowerCase() === normalized.competence.toLowerCase() &&
+    (r.level || '').trim() === normalized.level &&
+    ((r.tool || '').trim().toLowerCase()) === (normalized.tool.toLowerCase())
+);
+
+        if (similarMatch) {
+            similar.push({ ...normalized, existing: similarMatch });
+        } else {
+            toImport.push(normalized);
+        }
+    });
+
+    // Ein einziger Dialog für alle Fälle
+showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
+return;
+}
+
+// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKe (ersetzt die alte showSimilarDecisionDialog) ===
+function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
+    const totalNew = newOnes.length;
+    const totalSimilar = similarOnes.length;
+    const totalToShow = totalNew + totalSimilar;
+
+    if (totalToShow === 0) {
+        showFancyAlert('Keine neuen oder ähnlichen Einträge gefunden.', 'info');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+        display:flex;justify-content:center;align-items:center;z-index:20000;padding:20px;`;
+
+    modal.innerHTML = `
+        <div style="background:var(--card);padding:28px;border-radius:16px;max-width:1160px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <h3 style="margin:0 0 16px;color:var(--text);font-size:20px;">Import abschließen</h3>
+            <p style="margin:0 0 20px;color:var(--text-light);font-size:15px;line-height:1.5;">
+                <strong>${totalNew}</strong> komplett neue ${totalNew === 1 ? 'Ressource' : 'Ressourcen'} • 
+                <strong>${totalSimilar}</strong> ähnliche ${totalSimilar === 1 ? 'Ressource' : 'Ressourcen'} • 
+                <strong>${duplicateCount}</strong> exakte ${duplicateCount === 1 ? 'Duplikat' : 'Duplikate'} ${duplicateCount > 0 ? 'wird übersprungen' : ''}
+            </p>
+
+            <div style="max-height:540px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;">
+                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                    <thead style="background:#6b46c1;color:white;position:sticky;top:0;z-index:10;">
+                        <tr>
+                            <th style="padding:12px;width:80px;text-align:center;">
+                                Importieren?<br>
+                                <input type="checkbox" id="importAll" checked style="width:18px;height:18px;margin-top:4px;">
+                            </th>
+                            <th style="padding:12px;width:100px;text-align:center;">
+                                Überschreiben?<br>
+                                <input type="checkbox" id="replaceAll" style="width:18px;height:18px;margin-top:4px;">
+                            </th>
+                            <th style="padding:12px;">Thema</th>
+                            <th style="padding:12px;width:38%;">Unterschied / Hinweis</th>
+                            <th style="padding:12px;font-size:13px;">Fach • Klasse • Kompetenz • Tool</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 1) Komplett neue Einträge -->
+                        ${newOnes.map((n, i) => `
+                            <tr style="background:#f8fff8;">
+                                <td style="padding:10px;text-align:center;">
+                                    <input type="checkbox" class="import-check new-check" data-index="${i}" checked>
+                                </td>
+                                <td style="padding:10px;text-align:center;color:#aaa;">–</td>
+                                <td style="padding:10px;font-weight:600;color:#27ae60;">${escapeHtml(n.topic)}</td>
+                                <td style="padding:10px;color:#27ae60;font-style:italic;">wird neu hinzugefügt</td>
+                                <td style="padding:10px;font-size:13px;color:#555;">
+                                    ${escapeHtml(n.subject)} • ${n.grade} • ${escapeHtml(n.competence)} • ${n.tool || '–'}
+                                </td>
+                            </tr>
+                        `).join('')}
+
+                        <!-- 2) Ähnliche Einträge -->
+                        ${similarOnes.map((s, i) => `
+                            <tr style="border-top:2px solid #ddd;">
+                                <td style="padding:10px;text-align:center;">
+                                    <input type="checkbox" class="import-check similar-check" data-index="${i}" checked>
+                                </td>
+                                <td style="padding:10px;text-align:center;">
+                                    <input type="checkbox" class="replace-check" data-index="${i}">
+                                </td>
+                                <td style="padding:10px;font-weight:600;color:#27ae60;">${escapeHtml(s.topic)}</td>
+                                <td style="padding:10px;line-height:1.5;">
+                                    ${s.description !== s.existing.description 
+                                        ? `<strong style="color:#e67e22;">Beschreibung geändert</strong><br>
+                                           <small style="color:#27ae60;">${escapeHtml((s.description||'–').substring(0,100))}${s.description?.length>100?'…':''}</small><br>
+                                           <small style="color:#e74c3c;">${escapeHtml((s.existing.description||'–').substring(0,100))}${s.existing.description?.length>100?'…':''}</small>`
+                                        : s.tool !== s.existing.tool 
+                                            ? `<strong style="color:#e67e22;">Tool geändert</strong>: ${escapeHtml(s.tool||'–')} → ${escapeHtml(s.existing.tool||'–')}`
+                                            : '<span style="color:#999;">Beschreibung unverändert</span>'
+                                    }
+                                </td>
+                                <td style="padding:10px;font-size:13px;color:#555;">
+                                    ${escapeHtml(s.subject)} • ${s.grade} • ${escapeHtml(s.competence)} • ${s.tool || '–'}<br>
+                                    <small style="color:#e74c3c;">bestehend: ${escapeHtml(s.existing.topic)}</small>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+                <button id="cancelImport" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;">Abbrechen</button>
+                <button id="confirmImport" style="padding:12px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;font-size:16px;">
+                    ${totalNew + totalSimilar} importieren
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const importAll = modal.querySelector('#importAll');
+    const replaceAll = modal.querySelector('#replaceAll');
+    const importChecks = modal.querySelectorAll('.import-check');
+    const replaceChecks = modal.querySelectorAll('.replace-check');
+    const confirmBtn = modal.querySelector('#confirmImport');
+
+    const updateButtonText = () => {
+    const importingNew = newOnes.filter((n, i) => 
+        modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
+    ).length;
+
+    const importingSimilarAsNew = similarOnes.filter((s, i) => {
+        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+        const replaceChk = replaceChecks[i];
+        return importChk?.checked && !replaceChk?.checked;
+    }).length;
+
+    const overwriting = similarOnes.filter((s, i) => {
+        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+        const replaceChk = replaceChecks[i];
+        return importChk?.checked && replaceChk?.checked;
+    }).length;
+
+    const totalAdded = importingNew + importingSimilarAsNew;
+
+    if (totalAdded === 0 && overwriting === 0) {
+        confirmBtn.textContent = 'Nichts importieren';
+    } else if (overwriting === 0) {
+        confirmBtn.textContent = `${totalAdded} hinzufügen`;
+    } else if (totalAdded === 0) {
+        confirmBtn.textContent = `${overwriting} überschreiben`;
+    } else {
+        confirmBtn.textContent = `${totalAdded} hinzufügen • ${overwriting} überschreiben`;
+    }
+};
+
+    importChecks.forEach(chk => {
+        chk.onchange = () => {
+            const idx = chk.dataset.index;
+            const isSimilar = chk.classList.contains('similar-check');
+            const replaceChk = isSimilar ? replaceChecks[idx] : null;
+            if (replaceChk) replaceChk.disabled = !chk.checked;
+            if (!chk.checked && replaceChk) replaceChk.checked = false;
+            importAll.checked = [...importChecks].every(c => c.checked);
+            importAll.indeterminate = [...importChecks].some(c => c.checked) && !importAll.checked;
+            updateButtonText();
+        };
+    });
+
+    replaceChecks.forEach(chk => chk.onchange = updateButtonText);
+
+    importAll.onchange = () => {
+        const checked = importAll.checked;
+        importChecks.forEach((chk, i) => {
+            chk.checked = checked;
+            if (!checked && replaceChecks[i]) replaceChecks[i].checked = false;
+            if (replaceChecks[i]) replaceChecks[i].disabled = !checked;
+        });
+        updateButtonText();
+    };
+
+    replaceAll.onchange = () => {
+        if (replaceAll.disabled) return;
+        const checked = replaceAll.checked;
+        replaceChecks.forEach((chk, i) => {
+            if (importChecks[i].checked) chk.checked = checked;
+        });
+        updateButtonText();
+    };
+
+    // Initial
+    updateButtonText();
+
+    modal.querySelector('#cancelImport').onclick = () => modal.remove();
+
+modal.querySelector('#confirmImport').onclick = () => {
+    // 1. Backup vor allen Änderungen!
+    const backupBeforeImport = JSON.parse(JSON.stringify(resources));
+
+    // 2. Änderungen durchführen
+    newOnes.forEach((n, i) => {
+        if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
+            resources.push({ ...n, favorite: false });
+        }
+    });
+
+    similarOnes.forEach((s, i) => {
+        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+        const replaceChk = replaceChecks[i];
+        if (!importChk?.checked) return;
+
+        if (replaceChk?.checked) {
+            const idx = resources.findIndex(r =>
+                r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
+                r.grade === s.grade &&
+                r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
+                r.level === s.level &&
+                (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
+            );
+            if (idx !== -1) {
+                resources[idx] = { ...resources[idx], ...s, lastModified: new Date().toLocaleDateString('de-DE') };
+            }
+        } else {
+            resources.push({ ...s, favorite: false });
+        }
+    });
+
+    // 3. GENAU ZÄHLEN: Was wurde wirklich gemacht?
+    const newAdded = newOnes.filter((n, i) => 
+        modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
+    ).length;
+
+    const similarAddedAsNew = similarOnes.filter((s, i) => {
+        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+        const replaceChk = replaceChecks[i];
+        return importChk?.checked && !replaceChk?.checked;
+    }).length;
+
+    const overwritten = similarOnes.filter((s, i) => {
+        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+        const replaceChk = replaceChecks[i];
+        return importChk?.checked && replaceChk?.checked;
+    }).length;
+
+    const totalNew = newAdded + similarAddedAsNew;
+
+    // 4. Sofort speichern
+    localStorage.setItem('resources', JSON.stringify(resources));
+
+    // 5. Undo-Eintrag mit korrektem Backup
+    const undoEntry = {
+        action: 'import',
+        timestamp: Date.now(),
+        resourcesBackup: backupBeforeImport,
+        message: totalNew > 0 && overwritten > 0 
+            ? `${totalNew} hinzugefügt, ${overwritten} überschrieben`
+            : totalNew > 0 ? `${totalNew} hinzugefügt` 
+            : `${overwritten} überschrieben`
+    };
+    undoStack.unshift(undoEntry);
+    if (undoStack.length > 15) undoStack.pop();
+    localStorage.setItem('undoStack', JSON.stringify(undoStack));
+
+    // 6. UI aktualisieren
+    populateDropdowns();
+    applyFilters();
+    updateStats();
+    updateToolFilter();
+
+    // 7. PERFEKTE ERFOLGSMELDUNG
+    let title = 'Fertig!';
+    let subtitle = '';
+
+    if (totalNew > 0 && overwritten > 0) {
+        subtitle = `<strong style="color:#27ae60;">${totalNew} neue Einträge</strong> hinzugefügt • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
+    } else if (totalNew > 0) {
+        title = `${totalNew} Ressource${totalNew !== 1 ? 'n' : ''} importiert!`;
+        subtitle = 'Erfolgreich hinzugefügt';
+    } else if (overwritten > 0) {
+        title = `${overwritten} Ressource${overwritten !== 1 ? 'n' : ''} aktualisiert!`;
+        subtitle = 'Bestehende Einträge wurden überschrieben';
+    } else {
+        title = 'Keine Änderungen';
+        subtitle = 'Alles wurde übersprungen';
+    }
+
+    if (duplicateCount > 0) {
+        subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
+    }
+
+    showFancyAlert(
+        title,
+        'success',
+        subtitle,
+        () => showUndoToast('Import rückgängig machen')
+    );
+
+    modal.remove();
+};
+}
+
+function saveAndRefresh(imported = 0, skipped = 0) {
+    populate_dropdowns();
+    applyFilters();
+    updateStats();
+    updateToolFilter();
+
+    // === EXAKTE ZÄHLUNG: Was wurde wirklich gemacht? ===
+const newAdded = newOnes.filter((n, i) => 
+    modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
+).length;
+
+const similarAddedAsNew = similarOnes.filter((s, i) => {
+    const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+    const replaceChk = replaceChecks[i];
+    return importChk?.checked && !replaceChk?.checked;
+}).length;
+
+const overwritten = similarOnes.filter((s, i) => {
+    const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+    const replaceChk = replaceChecks[i];
+    return importChk?.checked && replaceChk?.checked;
+}).length;
+
+const totalNew = newAdded + similarAddedAsNew;
+
+// === KLARER, EHRLICHER TEXT ===
+let title = 'Fertig!';
+let subtitle = '';
+
+if (totalNew > 0 && overwritten > 0) {
+    subtitle = `<strong style="color:#27ae60;">${totalNew} neue Einträge</strong> hinzugefügt • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
+} else if (totalNew > 0) {
+    title = `${totalNew} Ressource${totalNew !== 1 ? 'n' : ''} importiert!`;
+    subtitle = 'Erfolgreich hinzugefügt';
+} else if (overwritten > 0) {
+    title = `${overwritten} Ressource${overwritten !== 1 ? 'n' : ''} aktualisiert!`;
+    subtitle = 'Bestehende Einträge wurden überschrieben';
+} else {
+    title = 'Keine Änderungen';
+    subtitle = 'Alles war bereits vorhanden oder wurde deaktiviert';
+}
+
+// Duplikate hinzufügen (wenn vorhanden)
+if (duplicateCount > 0) {
+    subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikat${duplicateCount !== 1 ? 'e' : ''} ignoriert</small>`;
+}
+
+// === ENDGÜLTIGER ERFOLGS-POPUP ===
+showFancyAlert(
+    title,
+    'success',
+    subtitle,
+    () => showUndoToast('Import rückgängig machen')
+);
+}
+
+// ============================================================
+// UNDO-SYSTEM – zentraler Toast + Rückgängig-Funktion
+// ============================================================
+
+function showUndoToast(message) {
+    // Alten Toast entfernen (falls noch da)
+    const old = document.getElementById('undoToast');
+    if (old) old.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'undoToast';
+    toast.style.cssText = `
+        position:fixed;bottom:24px;right:24px;z-index:40000;
+        background:var(--card);color:var(--text);padding:14px 20px;
+        border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.25);
+        display:flex;align-items:center;gap:16px;
+        font-size:15px;font-weight:600;
+        animation:slideUp 0.4s ease;
+        border-left:5px solid #27ae60;
+        max-width:90%;
+    `;
+
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="undoLastAction()" style="
+            background:var(--primary);color:white;border:none;
+            padding:8px 18px;border-radius:10px;font-weight:700;
+            cursor:pointer;font-size:14px;white-space:nowrap;
+        ">
+            Rückgängig
+        </button>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto-verbergen nach 8 Sekunden
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.style.animation = 'slideUp 0.4s ease reverse';
+            setTimeout(() => toast.remove(), 400);
+        }
+    }, 8000);
+}
+
+function undoLastAction() {
+    if (undoStack.length === 0) {
+        showFancyAlert('Nichts zum Rückgängigmachen.', 'info');
+        return;
+    }
+
+    const last = undoStack.shift();           // letzten Eintrag entfernen
+    resources = last.resourcesBackup;         // alten Zustand wiederherstellen
+
+    // Alles wieder speichern
+    localStorage.setItem('resources', JSON.stringify(resources));
+    localStorage.setItem('undoStack', JSON.stringify(undoStack));
+
+    // UI aktualisieren
+    populateDropdowns();
+    applyFilters();
+    updateStats();
+    updateToolFilter();
+
+    // Erfolgsmeldung
+    showFancyAlert('Rückgängig gemacht!', 'success');
+
+    // Toast entfernen
+    const toast = document.getElementById('undoToast');
+    if (toast) toast.remove();
+}
+
+
+
+function showFancyAlert(title, type = 'info', subtitle = '', onClose = null) {
+    // Alte entfernen
+    document.querySelectorAll('[data-fancy-alert]').forEach(m => m.remove());
+
+    const modal = document.createElement('div');
+    modal.dataset.fancyAlert = 'true';
+    modal.style.cssText = `
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+        display:flex;justify-content:center;align-items:center;
+        z-index:30000;padding:20px;box-sizing:border-box;
+    `;
+
+    const colors = { success: '#27ae60', warning: '#f39c12', info: '#6b46c1', error: '#e74c3c' };
+
+    modal.innerHTML = `
+        <div id="fancyDialog" style="background:var(--card);padding:32px;border-radius:16px;text-align:center;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <div style="margin:0 auto 20px;width:70px;height:70px;">
+                <svg width="70" height="70" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="${colors[type]}" stroke-width="4" stroke-dasharray="276.46" stroke-dashoffset="276.46" style="animation:drawCircle 1s ease forwards;"/>
+                    <path d="M30 50 L45 65 L70 35" fill="none" stroke="${colors[type]}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:100;stroke-dashoffset:100;animation:draw 0.6s ease forwards 0.5s;"/>
+                </svg>
+            </div>
+            <p style="font-size:19px;font-weight:700;color:${colors[type]};margin:0 0 8px;">${title}</p>
+            ${subtitle ? `<p style="font-size:14px;color:var(--text-light);margin:0 0 24px;line-height:1.5;">${subtitle}</p>` : ''}
+            <button id="fancyAlertOK" style="padding:11px 28px;background:${colors[type]};color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;" autofocus>OK</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const okBtn = modal.querySelector('#fancyAlertOK');
+
+    // DIE WICHTIGE ZEILE: Arrow-Function OHNE const/let/var → onClose ist garantiert im Scope!
+    okBtn.onclick = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+            if (onClose) onClose();   // ← Jetzt wird’s ausgeführt!
+        }, 350);
+    };
+
+    // Enter & Escape
+    modal.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            okBtn.click();
+        }
+    });
+
+    // Klick außerhalb
+    modal.addEventListener('click', e => {
+        if (e.target === modal) okBtn.click();
+    });
+
+    modal.querySelector('#fancyDialog').focus();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// === INSTALLATIONS-FENSTER AUSLÖSEN ===
+window.addEventListener('load', () => {
+    // Warte kurz, bis SW aktiv ist
+    setTimeout(() => {
+        // LÖSE EINEN FETCH AUS (z. B. Bild laden)
+        fetch(`${REPO_PATH}/icon-192.png?t=${Date.now()}`)
+            .then(() => console.log('Fetch ausgelöst → PWA-Install bereit'))
+            .catch(() => {});
+    }, 1000);
+});
+
+function displayResources(list) {
+    const c = document.getElementById('resourcesList');
+    if (!c) return;
+    c.innerHTML = '';
+    list.forEach((r, i) => {
+        // SICHERER INDEX: Vergleich aller Felder
+        const realIndex = resources.findIndex(res => 
+            res.topic === r.topic && 
+            res.subject === r.subject && 
+            res.grade === r.grade && 
+            res.competence === r.competence &&
+            (res.tool || '') === (r.tool || '') &&
+            (res.description || '') === (r.description || '')
+        );
+
+        const d = document.createElement('div');
+        d.className = 'resource-item';
+        d.dataset.index = realIndex >= 0 ? realIndex : i; // Fallback
+
+        d.innerHTML = `
+            <div class="resource-content">
+                <strong>${r.topic}</strong>
+                <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
+                <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
+                <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
+                <span class="tag level-tag" onclick="setFilterAndApply('filterLevel', '${escapeJs(r.level || '')}')">${r.level || '—'}</span>
+               ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${escapeJs(r.tool)}</span>` : ''}
+                ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
+            </div>
+            <div class="action-icons">
+                <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}"
+                     onclick="toggleFavorite(${realIndex})">
+                    <svg><use xlink:href="#star-icon"/></svg>
+                </div>
+                <div class="action-icon edit-icon"
+                     onclick="editResource(${realIndex})">
+                    <svg><use xlink:href="#edit-icon"/></svg>
+                </div>
+                <div class="action-icon delete-icon"
+                     onclick="deleteResource(${realIndex})">
+                    <svg><use xlink:href="#delete-icon"/></svg>
+                </div>
+            </div>`;
+        c.appendChild(d);
+    });
+}
+
+function toggleFavorite(i) {
+    if (i >= 0 && i < resources.length) {
+        resources[i].favorite = !resources[i].favorite;
+        localStorage.setItem('resources', JSON.stringify(resources));
+        applyFilters();
+    }
+}
+
+async function deleteResource(i) {
+  if (i < 0 || i >= resources.length) return;
+
+  const dialog = document.getElementById('confirmDeleteDialog');
+
+  dialog.showModal();
+
+  // Das ist der einzige Trick, der in allen Browsern (auch Chrome 2025) funktioniert
+  setTimeout(() => {
+    const rect = dialog.getBoundingClientRect();
+    const top  = (window.innerHeight - rect.height) / 2 + window.scrollY;
+    const left = (window.innerWidth  - rect.width)  / 2 + window.scrollX;
+
+    dialog.style.position = 'absolute';   // nicht fixed! absolute respektiert scroll
+    dialog.style.top  = `${top}px`;
+    dialog.style.left = `${left}px`;
+    dialog.style.margin = '0';
+    dialog.style.transform = 'none';      // überschreibt alles andere
+
+    // Optional: sanfter Zoom-Effekt
+    dialog.style.opacity = '0';
+    dialog.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    requestAnimationFrame(() => {
+      dialog.style.opacity = '1';
+      dialog.style.transform = 'scale(1)';
+    });
+  }, 10);   // 10 ms reicht – nur damit showModal() erst fertig ist
+
+  const result = await new Promise(resolve => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
+  });
+
+  if (result === 'delete') {
+    resources.splice(i, 1);
+    localStorage.setItem('resources', JSON.stringify(resources));
+    applyFilters();
+
+    const anim = document.getElementById('deleteAnimation');
+    anim.classList.add('delete-active');
+    setTimeout(() => anim.classList.remove('delete-active'), 1200);
+  }
+}
+
+    // === BEARBEITEN ===
+function editResource(i) {
+    const r = resources[i];
+
+    // Autocomplete-Listen vorbereiten
+    const allTopics = [...new Set(resources.map(x => x.topic).filter(Boolean))].sort();
+    const allTools  = [...new Set(resources.map(x => x.tool).filter(Boolean))].sort();
+
+    // Popup öffnen
+    const popup = window.open('edit-resource.html', 'editResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    if (!popup) {
+        alert('Popup wurde blockiert – bitte erlauben!');
+        return;
+    }
+
+    // WICHTIG: Sofort senden, bevor Safari blockiert!
+    const message = {
+        type: 'EDIT_RESOURCE',
+        index: i,
+        data: r,
+        allTopics: allTopics,
+        allTools: allTools
+    };
+
+    // 1. Sofort versuchen
+    try { popup.postMessage(message, location.origin); } catch(e) {}
+
+    // 2. Beim load nochmal
+    popup.addEventListener('load', () => {
+        try { popup.postMessage(message, location.origin); } catch(e) {}
+    });
+
+    // 3. Poll-Fallback für Safari (der entscheidende Trick!)
+    let attempts = 0;
+    const trySend = () => {
+        if (attempts++ > 50) return; // max. 5 Sekunden
+        try {
+            popup.postMessage(message, location.origin);
+        } catch(e) {
+            setTimeout(trySend, 100);
+        }
+    };
+    setTimeout(trySend, 50);
+}
+
+function openNewResourceWindow() {
+    const popup = window.open('new-resource.html', 'newResource', 'width=680,height=760,resizable=yes,scrollbars=yes');
+    if (!popup) {
+        alert('Popup wurde blockiert – bitte erlauben!');
+        return;
+    }
+
+    const send = () => popup.postMessage({ type: 'NEW_RESOURCE' }, location.origin);
+    send();
+    popup.addEventListener('load', send, { once: true });
+}
+function openManual() {
+    const dialog = document.createElement('dialog');
+    dialog.id = 'manualDialog';  // Für Styling
+    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow); background: var(--card); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);';
+    dialog.innerHTML = `
+        <iframe src="docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height: calc(100% - 40px); border:none;"></iframe>
+        <button onclick="this.parentNode.close()" style="position:absolute; bottom:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Schließen</button>`;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+}
+
+// === DARK MODE TOGGLE ===
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    
+    // Zustand speichern
+    if (document.body.classList.contains('dark')) {
+        localStorage.setItem('darkMode', 'on');
+    } else {
+        localStorage.removeItem('darkMode');
+    }
+}
+
+// Beim Laden wiederherstellen
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('darkMode') === 'on') {
+        document.body.classList.add('dark');
+    }
+});
+
+// ======================
+// START DER APP
+// ======================
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadData().then(startApp));
+} else {
+    loadData().then(startApp);
+}
+
+</script>  <!-- ← ENDE SCRIPT -->
+
+     <!-- Version-Info -->
+    <div class="version-info" id="versionInfo">Lade Version...</div>
+
+    <!-- === LÖSCH-ANIMATION === -->
+    <div id="deleteAnimation" style="
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+        display:none;justify-content:center;align-items:center;
+        z-index:10000;
+    ">
+        <div style="
+            background:var(--card);padding:40px;border-radius:20px;text-align:center;
+            box-shadow:0 16px 48px rgba(0,0,0,0.25);
+            transform:scale(0.8);opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.4s ease;
+        ">
+            <div style="width:90px;height:90px;margin:0 auto 18px;position:relative;">
+                <svg width="90" height="90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                    <path d="M30 50 L45 65 L70 35" fill="none" stroke="#e74c3c" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100;stroke-dashoffset:100;animation:draw 0.6s ease forwards 0.3s;"/>
+                </svg>
+            </div>
+            <p style="font-size:20px;font-weight:700;color:#e74c3c;margin:0 0 6px;">
+                Gelöscht!
+            </p>
+            <p style="font-size:14px;color:var(--text-light);margin:0;">
+                Die Ressource wurde entfernt.
+            </p>
+        </div>
+    </div>
+
+
+    <style>
+        @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+        from { transform: translateY(-100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .delete-active { display: flex !important; }
+        .delete-active > div { transform: scale(1) !important; opacity: 1 !important; }
+        .edit-active { display: flex !important; }
+         .edit-active > div { transform: scale(1) !important; opacity: 1 !important; }
+        .add-active { display: flex !important; }
+         .add-active > div { transform: scale(1) !important; opacity: 1 !important; }
+    /* === TABELLEN: KEINE LÜCKEN ZWISCHEN ZELLEN === */
+table, th, td {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: none !important;
+}
+
+th {
+    background: #6b46c1 !important;
+    color: white !important;
+    padding: 14px 16px !important;
+    font-weight: 600;
+    text-align: left;
+    font-size: 15px;
+}
+
+td {
+    background: #f8f9fa !important;
+    padding: 12px 16px !important;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd !important;
+}
+
+/* Optional: Letzte Zeile ohne unteren Rand */
+tr:last-child td {
+    border-bottom: none !important;
+}
+/* === EXPORT: HORIZONTAL + FILTERABHÄNGIGKEIT KLAR === */
+.export-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+    margin: 15px 0;
+    justify-content: flex-start;
+}
+
+.export-group.horizontal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 300px;
+    flex: 1;
+}
+
+.export-group-title {
+    margin: 0 !important;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--primary-light);
+    text-align: left;
+}
+
+#filterExportTitle {
+    transition: color 0.3s ease;
+}
+
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* === FILTER-EXPORT BUTTONS: Hervorhebung bei aktiven Filtern === */
+.filtered-export {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 2px #e74c3c; }
+    50% { box-shadow: 0 0 0 4px #e74c3c, 0 0 12px rgba(231, 76, 60, 0.4); }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+/* === TOOLTIPS === */
+.btn[title] {
+    position: relative;
+    cursor: pointer;
+}
+.btn[title]:hover::after,
+.btn[title]:focus::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin-bottom: 8px;
+    max-width: 300px;
+    white-space: normal;
+    line-height: 1.4;
+}
+.btn[title]:hover::before,
+.btn[title]:focus::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #333;
+    margin-bottom: 2px;
+    z-index: 1000;
+}
+/* === TOOLTIP MIT CSS-VARIABLEN (für JS-Steuerung) === */
+.btn[title]::after,
+.btn[title]::before {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.btn[title][style*="--show-tooltip: block"]::after,
+.btn[title][style*="--show-tooltip: block"]::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* === MOBILE === */
+@media (max-width: 768px) {
+    .export-buttons {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .export-group.horizontal {
+        min-width: 100%;
+    }
+    .export-group-title {
+        text-align: center;
+        font-size: 13.5px;
+    }
+    .btn-row {
+        justify-content: center;
+    }
+    .btn[title]:hover::after,
+    .btn[title]:hover::before {
+        display: none;
+    }
+    .btn[title]:active::after,
+    .btn[title]:active::before {
+        display: block;
+    }
+}
+@media print {
+    /* Alles verstecken außer .main */
+    body * {
+        visibility: hidden !important;
+    }
+    .main, .main * {
+        visibility: visible !important;
+    }
+    .main {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 12mm 10mm !important;
+        margin: 0 !important;
+    }
+
+    /* TESTVERSION-BANNER & andere Störer verstecken */
+    .test-banner,
+    [class*="test"],
+    [style*="TESTVERSION"],
+    [style*="nicht live"],
+    .version-info,
+    .logo-header,
+    .filter-container,
+    .export-buttons,
+    .sidebar,
+    .new-resource-btn,
+    #deleteAnimation,
+    #editAnimation,
+    #addAnimation {
+        display: none !important;
+    }
+
+    /* Kein unnötiger Platz */
+    * {
+        float: none !important;
+        position: static !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Ressourcen: mehr pro Seite */
+    .print-resource {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        margin-bottom: 5mm !important;
+    }
+
+    /* Beschreibung: passt sich an */
+    .print-resource > div[style*="background"] {
+        display: inline-block !important;
+        width: auto !important;
+        margin: 2mm 0 0 !important;
+        padding: 2mm 6mm !important;
+    }
+
+    /* Seitenlayout */
+    @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 18mm 10mm;
+        @bottom-left {
+            content: "Seite " counter(page);
+            font-size: 8pt;
+            color: #666;
+        }
+        @bottom-right {
+            content: "LernDashboard Digital";
+            font-size: 8pt;
+            color: #666;
+        }
+    }
+
+    /* Schulname unten */
+    #printSchoolName {
+        display: block !important;
+        position: fixed !important;
+        bottom: 8mm !important;
+        left: 10mm !important;
+        font-size: 8pt !important;
+        color: #666 !important;
+    }
+}
+/* === ZENTRIERTER BUTTON-WRAPPER === */
+.centered-button-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 12px !important;   /* Kleiner Abstand oben/unten – einheitlich */
+    width: 100%;
+}
+
+/* PWA Mobile: Banner immer sichtbar, auch in App-Modus */
+#updateBanner {
+  padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+}
+
+/* Fallback für Android/iOS ohne safe-area */
+@supports not (padding-top: env(safe-area-inset-top)) {
+  #updateBanner {
+    padding-top: 32px !important;
+  }
+}
+.export-group.horizontal {
+    gap: 16px;  /* Abstand zwischen Gruppen */
+}
+
+@media (max-width: 768px) {
+    .export-group.horizontal {
+        justify-content: flex-start;  /* Auf Mobile links ausrichten, um Wrap zu handhaben */
+    }
+    .export-group.horizontal > div:last-child {
+        margin-left: auto;  /* Hilfe-Button bleibt rechts, auch bei Wrap */
+    }
+}
+
+#manualDialog::backdrop {
+    background: rgba(0,0,0,0.5);  /* Dunkler Hintergrund */
+    backdrop-filter: blur(6px);
+}
+#manualDialog iframe {
+    overflow: auto;  /* Scrollbar in der PDF, falls nötig */
+}
+.dark #manualDialog {
+    background: var(--card);  /* Dark-Mode-Anpassung */
+}
+
+
+    </style>
+<!-- === BEARBEITUNGS-BESTÄTIGUNG (ANIMATION – OHNE TON) === -->
+<div id="editAnimation" style="
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
+    display:none; justify-content:center; align-items:center;
+    z-index:10000;
+">
+    <div style="
+        background:var(--card); padding:40px; border-radius:20px; text-align:center;
+        box-shadow:0 16px 48px rgba(0,0,0,0.25);
+        transform:scale(0.8); opacity:0;
+        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+    ">
+        <div style="width:90px; height:90px; margin:0 auto 18px;">
+            <svg width="90" height="90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                <path d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
+                      stroke-linecap="round" stroke-linejoin="round"
+                      style="stroke-dasharray:100; stroke-dashoffset:100; animation:draw 0.6s ease forwards 0.3s;"/>
+            </svg>
+        </div>
+        <p style="font-size:20px; font-weight:700; color:#27ae60; margin:0 0 6px;">
+            Bearbeitet!
+        </p>
+        <p style="font-size:14px; color:var(--text-light); margin:0;">
+            Die Ressource wurde aktualisiert.
+        </p>
+    </div>
+</div>
+        <!-- === HINZUFÜGEN-BESTÄTIGUNG (ANIMATION) === -->
+<div id="addAnimation" style="
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
+    display:none; justify-content:center; align-items:center;
+    z-index:10000;
+">
+    <div style="
+        background:var(--card); padding:40px; border-radius:20px; text-align:center;
+        box-shadow:0 16px 48px rgba(0,0,0,0.25);
+        transform:scale(0.8); opacity:0;
+        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+    ">
+        <div style="width:90px; height:90px; margin:0 auto 18px;">
+            <svg width="90" height="90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                <path d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
+                      stroke-linecap="round" stroke-linejoin="round"
+                      style="stroke-dasharray:100; stroke-dashoffset:100; animation:draw 0.6s ease forwards 0.3s;"/>
+            </svg>
+        </div>
+        <p style="font-size:20px; font-weight:700; color:#27ae60; margin:0 0 6px;">
+            Hinzugefügt!
+        </p>
+        <p style="font-size:14px; color:var(--text-light); margin:0;">
+            Die Ressource ist im Dashboard.
+        </p>
+    </div>
+</div>
+<!-- LÖSCH-BESTÄTIGUNGSDIALOG -->
+<dialog id="confirmDeleteDialog">
+  <form method="dialog">
+    <p>Möchtest du diese Ressource <strong>wirklich löschen</strong>?<br>Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+    <div class="buttons">
+      <button value="cancel">Abbrechen</button>
+      <button value="delete" autofocus>Löschen</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>
