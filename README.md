@@ -41,12 +41,15 @@ cd lerndashboard
 
 ## Lizenz
 
-Dieses Projekt steht unter der **GNU Affero General Public License Version 3 (AGPLv3)**.
+Der Quellcode dieses Projekts steht unter der **MIT-Lizenz** – frei nutzbar, veränderbar und weiterverbreitbar.
 
-### Was bedeutet das?
-- Jeder darf den Quellcode **frei nutzen, verändern und weiterverbreiten**.
-- Wenn jemand die App (oder eine veränderte Version) **öffentlich zugänglich macht** (z. B. auf einem Server hostet), muss er seinen Quellcode ebenfalls unter der AGPLv3 veröffentlichen.
-- Das soll verhindern, dass die App kommerziell „geschlossen“ oder als bezahlter Dienst angeboten wird, ohne dass die Änderungen der Gemeinschaft zur Verfügung stehen.
+### Bitte beachten:
+Dieses Projekt wurde **kostenlos für Schulen und Bildungseinrichtungen** entwickelt.  
+Ich freue mich sehr, wenn Lehrkräfte, Schulen und Bildungsinitiativen die App nutzen, anpassen und weiterverbreiten.
+
+**Eine rein kommerzielle Nutzung** (z. B. Verkauf der App, Einbau in kommerzielle Produkte oder Anbieten als kostenpflichtiger Dienst ohne wesentliche eigene Weiterentwicklung) entspricht **nicht dem Geist dieses Projekts**.
+
+Wer die App kommerziell einsetzen möchte, wird gebeten, vorher mit mir Kontakt aufzunehmen.
 
 Siehe die Datei [`LICENSE`](LICENSE) für den vollständigen Lizenztext.
 
