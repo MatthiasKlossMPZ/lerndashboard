@@ -899,10 +899,13 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     <div class="btn-row">
         <button class="btn print" onclick="printOptimized()"
                 title="Druckt die aktuelle Ansicht (unabhängig von Filtern)">Drucken</button>
-        <label class="btn import" title="Importiert neue Ressourcen aus einer CSV-Datei">
-            <input type="file" id="importFile" accept=".csv,text/csv" class="file-input" onchange="importCSV(event)">
-            <span>Import</span>
-        </label>
+       <label class="btn import" title="Importiert CSV oder JSON-Backup">
+                <input type="file" id="importFile" 
+                accept=".csv,.json,text/csv,application/json" 
+                class="file-input" 
+                onchange="importFile(event)">
+                <span>Import</span>
+                </label>
         <button class="btn template" onclick="exportTemplate()"
                 title="Lädt eine leere CSV-Vorlage zum Ausfüllen">Vorlage</button>
         <button class="btn" onclick="autoBackup()"
@@ -932,35 +935,41 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                 <div id="resourcesList"></div>
             </div>
             <div class="sidebar">
-    <h3>Fächer-Statistik</h3>
-    
-    <div style="margin: 12px 0; text-align:center;">
+
+    <!-- Schul-Button -->
+    <div style="margin: 12px 0 20px; text-align:center;">
         <button id="schoolButton" class="new-resource-btn school-btn" onclick="setSchoolName()">
             <span id="schoolButtonText">Schule einstellen</span>
         </button>
     </div>
 
-    <!-- NIVEAUSTUFEN-KIPPSCHALTER -->
-    <div style="margin: 24px 0 20px; padding: 16px; background: #f8f9fa; border-radius: 12px; border: 2px solid var(--primary-light);">
+    <!-- Niveaustufen-Modus -->
+    <div style="margin: 0 0 24px; padding: 16px; background: #f8f9fa; border-radius: 12px; border: 2px solid var(--primary-light);">
         <h3 style="margin: 0 0 12px 0; color: var(--primary); font-size: 15px; text-align: center;">Niveaustufen-Modus</h3>
         <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="changeLevelMode('3')" 
-                    id="levelBtn3"
-                    style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; 
-                           background: #e2e8f0; color: #333; cursor: pointer;">
-                3 Stufen
-            </button>
-            <button onclick="changeLevelMode('5')" 
-                    id="levelBtn5"
-                    style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; 
-                           background: #e2e8f0; color: #333; cursor: pointer;">
-                5 Stufen
-            </button>
+            <button onclick="changeLevelMode('3')" id="levelBtn3" style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; background: #e2e8f0; color: #333; cursor: pointer;">3 Stufen</button>
+            <button onclick="changeLevelMode('5')" id="levelBtn5" style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; background: #e2e8f0; color: #333; cursor: pointer;">5 Stufen</button>
         </div>
         <small style="display: block; text-align: center; margin-top: 8px; color: #666; font-size: 12.5px;">
             Aktuell: <strong id="currentLevelText">5 Niveaustufen</strong>
         </small>
     </div>
+
+    <!-- Fächer-Statistik -->
+    <h3 style="margin: 8px 0 16px 0; color: var(--primary); font-size: 16px; text-align: center;">Fächer-Statistik</h3>
+    <div id="statsFach"></div>
+
+    <!-- Notfall-Button -->
+    <div style="margin: 28px 0 12px;">
+        <button onclick="showRestoreDialog()" 
+                style="width:100%; padding:13px 16px; background:#e74c3c; color:white; border:none; 
+                       border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; 
+                       box-shadow:0 4px 12px rgba(231,76,60,0.3);">
+            🛡️ Ressourcen wiederherstellen (Notfall)
+        </button>
+    </div>
+
+</div>
 
     <div id="statsFach"></div>
 </div>
@@ -989,7 +998,6 @@ window.dataReady = false;
 let currentLevelMode = localStorage.getItem('levelMode') || '5';
 
 function getLevelMode() {
-    // Immer den aktuellen Wert aus localStorage holen (sicher gegen Timing-Probleme)
     const saved = localStorage.getItem('levelMode');
     if (saved) currentLevelMode = saved;
     return currentLevelMode;
@@ -1006,12 +1014,13 @@ function getLevelNumber(levelStr) {
     return match ? parseInt(match[0]) : 0;
 }
 
+// Migration beim manuellen Wechsel
 function migrateResourceLevels(resources, oldMode, newMode) {
     if (!resources?.length || oldMode === newMode) return resources;
 
     return resources.map(resource => {
         if (!resource.level) return resource;
-        const oldNum = getLevelNumber(resource.level);
+        let oldNum = getLevelNumber(resource.level);
         if (!oldNum) return resource;
 
         let newNum = oldNum;
@@ -1024,6 +1033,7 @@ function migrateResourceLevels(resources, oldMode, newMode) {
             else if (oldNum === 2) newNum = 3;
             else if (oldNum === 3) newNum = 5;
         }
+
         resource.level = `Niveaustufe ${newNum}`;
         return resource;
     });
@@ -1033,12 +1043,12 @@ function changeLevelMode(newMode) {
     const oldMode = getLevelMode();
     if (oldMode === newMode) return;
 
-    const direction = oldMode === '5' && newMode === '3' 
-        ? "5 → 3 Stufen:\n• Niveaustufe 1+2 → 1\n• Niveaustufe 3 → 2\n• Niveaustufe 4+5 → 3"
-        : "3 → 5 Stufen:\n• Niveaustufe 1 → 1\n• Niveaustufe 2 → 3\n• Niveaustufe 3 → 5";
+    const direction = oldMode === '5' && newMode === '3'
+        ? "5 → 3 Stufen:\n• 1+2 → 1\n• 3 → 2\n• 4+5 → 3"
+        : "3 → 5 Stufen:\n• 1 → 1\n• 2 → 3\n• 3 → 5";
 
-    if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction}\n\nAlle Ressourcen, Filter und Matrixen werden automatisch angepasst.`)) {
-        
+    if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction}\n\nAlle Ressourcen werden automatisch angepasst.`)) {
+        createSafetyBackup(`Level-Modus-Wechsel: ${oldMode} → ${newMode}`);
         const backup = JSON.stringify(resources || []);
         localStorage.setItem('resources_level_backup', backup);
 
@@ -1048,65 +1058,62 @@ function changeLevelMode(newMode) {
         currentLevelMode = newMode;
         localStorage.setItem('levelMode', newMode);
 
-        // Alles neu rendern
         populateLevelFilter();
-        updateLevelModeButtons();   
+        updateLevelModeButtons();
         applyFilters();
         renderAllMatrices();
 
-        alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!\nFilter und Matrixen wurden aktualisiert.`);
+        alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!`);
     }
 }
 
 // ======================
-// ERSTER START: Niveaustufen-Auswahl (jetzt robust)
+// ERSTER START: Niveaustufen-Auswahl (korrigiert)
 // ======================
 function showInitialLevelModeModal() {
     if (localStorage.getItem('levelMode')) return;
 
     const modal = document.createElement('dialog');
     modal.style.cssText = `
-        max-width: 520px; 
-        border: none; 
-        border-radius: 20px; 
-        padding: 0; 
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        background: var(--card);
+        max-width: 520px; border: none; border-radius: 20px; padding: 0;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3); background: var(--card);
     `;
+
     modal.innerHTML = `
-        <div style="padding:40px 30px 20px; text-align:center;">
-          <h2 style="margin:0 0 20px; color:var(--primary);">Willkommen im LernDashboard Digital!</h2>
-          <p style="font-size:17px; margin-bottom:28px; line-height:1.5;">
-            Mit wie vielen Niveaustufen möchtest du arbeiten?
-          </p>
-          
-          <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
-            <button onclick="selectInitialLevelMode('5'); this.closest('dialog').close()" 
-                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
-                           background:linear-gradient(135deg,#6b46c1,#7e5be0); color:white; min-width:190px; cursor:pointer;">
-              5 Niveaustufen<br>
-              <small style="font-size:14px; opacity:0.9;">(detailliert)</small>
-            </button>
-            <button onclick="selectInitialLevelMode('3'); this.closest('dialog').close()" 
-                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
-                           background:linear-gradient(135deg,#00bfff,#00d2d3); color:white; min-width:190px; cursor:pointer;">
-              3 Niveaustufen<br>
-              <small style="font-size:14px; opacity:0.9;">(übersichtlich)</small>
-            </button>
-          </div>
+        <div style="padding:40px 30px 30px; text-align:center;">
+            <h2 style="margin:0 0 20px; color:var(--primary);">Willkommen im LernDashboard Digital!</h2>
+            <p style="font-size:17px; margin-bottom:32px; line-height:1.5;">
+                Mit wie vielen Niveaustufen möchtest du arbeiten?
+            </p>
+            <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+                <button onclick="selectInitialLevel('5'); this.closest('dialog').close()" 
+                        style="padding:24px 42px; font-size:18px; font-weight:700; border:none; border-radius:16px;
+                               background:linear-gradient(135deg,#6b46c1,#7e5be0); color:white; min-width:200px; cursor:pointer;">
+                    5 Niveaustufen<br>
+                    <small style="font-size:14px; opacity:0.9;">(detailliert)</small>
+                </button>
+                <button onclick="selectInitialLevel('3'); this.closest('dialog').close()" 
+                        style="padding:24px 42px; font-size:18px; font-weight:700; border:none; border-radius:16px;
+                               background:linear-gradient(135deg,#00bfff,#00d2d3); color:white; min-width:200px; cursor:pointer;">
+                    3 Niveaustufen<br>
+                    <small style="font-size:14px; opacity:0.9;">(übersichtlich)</small>
+                </button>
+            </div>
         </div>`;
+
     document.body.appendChild(modal);
     modal.showModal();
 
-    window.selectInitialLevelMode = function(mode) {
+    // Globale Funktion einmalig definieren
+    window.selectInitialLevel = function(mode) {
         currentLevelMode = mode;
         localStorage.setItem('levelMode', mode);
-        console.log('Initial levelMode gesetzt:', mode);
+        console.log('Initialer Level-Modus gesetzt:', mode);
 
-        // Sofort alles aktualisieren
         populateLevelFilter();
         updateLevelModeButtons();
         applyFilters();
+        renderAllMatrices();
     };
 }
 
@@ -1224,25 +1231,29 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.42';
+const VERSION = '1.1.44';
+
 const REPO_PATH = (() => {
-  if (location.hostname === 'localhost' || 
-      location.hostname === '127.0.0.1' || 
-      location.protocol === 'file:') {
-    return '/';
-  }
-  const path = location.pathname.split('/').filter(Boolean);
-  return location.origin + '/' + (path[0] || '') + '/';  
+    if (location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.protocol === 'file:') {
+        return '/';
+    }
+    const path = location.pathname.split('/').filter(Boolean);
+    return location.origin + '/' + (path[0] || '') + '/';
 })();
-console.log('Frontend REPO_PATH:', REPO_PATH);  
 
 let resources = JSON.parse(localStorage.getItem('resources') || '[]');
-let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]'); 
-let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
-let dropdownsInitialized = false;
+let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]');
 
+let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
+
+window.lastMigrationInfo = ''; // Nur einmal!
+window.dataReady = false;
+
+let dropdownsInitialized = false;
 let targetVersion = null;
-let allowReload = false;          
+let allowReload = false;
 let newServiceWorker = null;
 
 // === DROPDOWN-DATEN ===
@@ -2064,6 +2075,87 @@ function showUpdateBanner() {
 };
 }
 
+// ==================== NOTFALL-WIEDERHERSTELLUNG ====================
+
+// Automatisches Sicherheits-Backup erstellen
+function createSafetyBackup(actionName) {
+    const backup = {
+        timestamp: Date.now(),
+        date: new Date().toLocaleString('de-DE'),
+        action: actionName,
+        resourceCount: resources.length,
+        resources: JSON.parse(JSON.stringify(resources))
+    };
+
+    let safetyBackups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    safetyBackups.unshift(backup);
+    
+    if (safetyBackups.length > 8) safetyBackups.pop();   // nur letzte 8 behalten
+    
+    localStorage.setItem('safetyBackups', JSON.stringify(safetyBackups));
+}
+
+// Dialog zum Wiederherstellen
+function showRestoreDialog() {
+    const backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    
+    if (backups.length === 0) {
+        showFancyAlert('Keine Sicherungen', 'info', 'Es wurden noch keine Notfall-Backups erstellt.');
+        return;
+    }
+
+    let html = `<div style="max-height:340px; overflow-y:auto; padding:8px 6px; margin-bottom:20px;">`;
+    
+    backups.forEach((b, i) => {
+        html += `
+            <div style="display:flex; align-items:center; justify-content:space-between; 
+                        background:#fff5f5; padding:14px 16px; margin:10px 0; 
+                        border-radius:12px; border-left:5px solid #e74c3c;">
+                
+                <div style="flex:1; padding-right:12px;">
+                    <div style="font-weight:700; font-size:15px; color:#222;">
+                        ${b.date}
+                    </div>
+                    <div style="color:#555; font-size:14px; margin-top:4px; line-height:1.35;">
+                        ${b.action}<br>
+                        <strong style="color:#e74c3c;">${b.resourceCount} Ressourcen</strong>
+                    </div>
+                </div>
+                
+                <button onclick="restoreFromSafetyBackup(${i}); this.closest('div[data-fancy-alert]').remove()" 
+                        style="padding:10px 20px; background:#e74c3c; color:white; border:none; 
+                               border-radius:9px; font-weight:700; font-size:14.5px; 
+                               white-space:nowrap; flex-shrink:0;">
+                    Wiederherstellen
+                </button>
+            </div>`;
+    });
+    
+    html += `</div>`;
+
+    showFancyAlert('🛡️ Ressourcen wiederherstellen', 'warning', html, null, true);
+}
+
+window.restoreFromSafetyBackup = function(index) {
+    const backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    if (!backups[index]) return;
+
+    if (!confirm('⚠️ ALLE aktuellen Ressourcen werden überschrieben!\n\nWirklich die Sicherung vom ' + backups[index].date + ' wiederherstellen?')) {
+        return;
+    }
+
+    resources = JSON.parse(JSON.stringify(backups[index].resources));
+    localStorage.setItem('resources', JSON.stringify(resources));
+
+    applyFilters();
+    updateStats();
+    populateDropdowns();
+    updateToolFilter();
+
+    showFancyAlert('Erfolgreich wiederhergestellt!', 'success', 
+        `${backups[index].resourceCount} Ressourcen wurden geladen.`);
+};
+
 // Animation für das Banner
 const bannerStyle = document.createElement('style');
 bannerStyle.textContent = `
@@ -2784,16 +2876,17 @@ function exportMatrixExcel() {
         showFancyAlert('Export fehlgeschlagen!', 'error');
     });
 }
-// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD ===
+// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD - jetzt JSON Ausgabe ===
 function autoBackup() {
+    createSafetyBackup('Manuelles Backup');
+
     const allResources = JSON.parse(localStorage.getItem('resources') || '[]');
-    
+   
     if (allResources.length === 0) {
         showFancyAlert('Keine Daten zum Sichern!', 'warning');
         return;
     }
 
-    // Modal erstellen (unverändert)
     const modal = document.createElement('div');
     modal.style.cssText = `
         position:fixed; top:0; left:0; width:100%; height:100%;
@@ -2801,44 +2894,39 @@ function autoBackup() {
         display:flex; justify-content:center; align-items:center;
         z-index:20000; font-family:Segoe UI,sans-serif;
     `;
+
     modal.innerHTML = `
-        <div style="
-            background:var(--card); padding:32px; border-radius:20px; text-align:center;
-            width:90%; max-width:420px; box-shadow:0 16px 48px rgba(0,0,0,0.3);
-            transform:scale(0.9); opacity:0;
-            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
-        ">
+        <div style="background:var(--card); padding:32px; border-radius:20px; text-align:center;
+                    width:90%; max-width:420px; box-shadow:0 16px 48px rgba(0,0,0,0.3);">
             <div id="backupIcon" style="width:80px; height:80px; margin:0 auto 20px;">
                 <svg width="80" height="80" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="4"/>
                     <circle id="backupCircle" cx="50" cy="50" r="44" fill="none" stroke="#6b46c1" stroke-width="4"
-                            stroke-dasharray="276.46" stroke-dashoffset="276.46"
-                            style="transition:stroke-dashoffset 1s ease;"/>
+                            stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
                     <path id="backupCheck" d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
-                          stroke-linecap="round" stroke-linejoin="round"
-                          style="stroke-dasharray:100; stroke-dashoffset:100;"/>
+                          stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:100; stroke-dashoffset:100;"/>
                 </svg>
             </div>
             <p id="backupTitle" style="font-size:19px; font-weight:700; color:var(--text); margin:0 0 8px;">
                 Backup wird erstellt...
             </p>
             <p id="backupSubtitle" style="font-size:14px; color:var(--text-light); margin:0;">
-                ${allResources.length} Ressourcen werden gesichert
+                ${allResources.length} Ressourcen • ${getLevelMode()} Niveaustufen
             </p>
             <div style="margin-top:20px; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden;">
                 <div id="backupProgress" style="width:0%; height:100%; background:#6b46c1; border-radius:3px; transition:width 0.8s ease;"></div>
             </div>
         </div>
     `;
+
     document.body.appendChild(modal);
 
-    // Animation: Modal einblenden (unverändert)
+    // Animation starten
     requestAnimationFrame(() => {
         modal.querySelector('div').style.transform = 'scale(1)';
         modal.querySelector('div').style.opacity = '1';
     });
-
-    // Fortschritt simulieren (unverändert)
+ 
     const progress = modal.querySelector('#backupProgress');
     const circle = modal.querySelector('#backupCircle');
     const title = modal.querySelector('#backupTitle');
@@ -2848,48 +2936,41 @@ function autoBackup() {
     setTimeout(() => {
         progress.style.width = '100%';
         circle.style.strokeDashoffset = '0';
-    }, 100);
+    }, 120);
 
-    // CSV generieren & downloaden – FRÜHER AUSLÖSEN (nach 300ms, während Animation läuft)
+    // === EIGENTLICHER BACKUP (JSON mit Metadaten) ===
     setTimeout(() => {
-        const headers = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung'];
-        const csv = [
-            headers.join(','),
-            ...allResources.map(r => [
-                `"${(r.topic||'').replace(/"/g,'""')}"`,
-                `"${r.subject||''}"`,
-                `"${r.grade||''}"`,
-                `"${r.competence||''}"`,
-                `"${r.level||''}"`,
-                `"${(r.tool||'').replace(/"/g,'""')}"`,
-                `"${(r.description||'').replace(/"/g,'""')}"`
-            ].join(','))
-        ].join('\n');
+        const backupData = {
+            version: "1.2",
+            exportDate: new Date().toISOString(),
+            numLevels: parseInt(getLevelMode()),     // ← WICHTIG für spätere Migration
+            levelMode: getLevelMode(),
+            resources: allResources
+        };
 
-        const csvBlob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(csvBlob);
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = `LernDashboard_Backup_${new Date().toISOString().slice(0,10)}.csv`;
-        a.style.display = 'none';
-        document.body.appendChild(a);
+        a.download = `LernDashboard_Backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
-        document.body.removeChild(a);
+
         URL.revokeObjectURL(url);
 
-        // Erfolg anzeigen (unverändert)
+        // Erfolgsanzeige
         title.textContent = 'Backup erfolgreich!';
         title.style.color = '#27ae60';
-        subtitle.textContent = 'Datei wird heruntergeladen...';
+        subtitle.textContent = 'JSON-Datei wurde heruntergeladen';
         check.style.strokeDashoffset = '0';
         check.style.animation = 'draw 0.6s ease forwards';
 
-        // Modal nach 1,5 Sek schließen (unverändert)
-        setTimeout(() => {
+            setTimeout(() => {
             modal.style.opacity = '0';
             setTimeout(() => modal.remove(), 400);
-        }, 1500);
-    }, 300);  // ← Hier früher: 300ms statt 1000ms
+        }, 1400);
+    }, 450);
 }
 
 // Hilfsfunktion: HTML escapen (sicherer für Inhalte)
@@ -3091,108 +3172,149 @@ function parseCSVLine(line) {
     result.push(current);
     return result;
 }
+// Intelligente Migration beim Import
+function migrateImportedResources(importedResources, sourceLevels, targetLevels) {
+    if (sourceLevels === targetLevels || !importedResources?.length) return importedResources;
 
-// ==================== CSV IMPORT ====================
-function importCSV(event) {
+    console.log(`Migriere von ${sourceLevels} auf ${targetLevels} Stufen`);
+
+    return importedResources.map(r => {
+        if (!r.level) return r;
+        let num = getLevelNumber(r.level);
+        if (!num) return r;
+
+        let newNum = num;
+        if (sourceLevels === 5 && targetLevels === 3) {
+            if (num <= 2) newNum = 1;
+            else if (num === 3) newNum = 2;
+            else newNum = 3;
+        } else if (sourceLevels === 3 && targetLevels === 5) {
+            if (num === 1) newNum = 1;
+            else if (num === 2) newNum = 3;
+            else if (num === 3) newNum = 5;
+        }
+
+        r.level = `Niveaustufe ${newNum}`;
+        return r;
+    });
+}
+
+// ==================== CSV + JSON IMPORT (einheitlich, mit Migration + Undo) ====================
+
+function importFile(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const csv = e.target.result;
-        if (!csv.trim()) {
-            showFancyAlert('CSV-Datei ist leer!', 'warning');
-            return;
+        const content = e.target.result;
+        const lowerName = file.name.toLowerCase();
+
+        if (lowerName.endsWith('.json')) {
+            handleJSONImport(content);
+        } else if (lowerName.endsWith('.csv')) {
+            handleCSVImport(content);
+        } else {
+            showFancyAlert('Falsches Format', 'warning', 'Bitte nur .csv oder .json Dateien auswählen.');
         }
-        showImportPreview(csv);
     };
     reader.readAsText(file, 'UTF-8');
-    event.target.value = '';
+    event.target.value = ''; // Reset
 }
 
-function showImportPreview(csvString) {
+// ───────────────────── JSON Import (neue Backups) ─────────────────────
+// ───────────────────── JSON Import (neue Backups) ─────────────────────
+function handleJSONImport(jsonString) {
+    try {
+        const backup = JSON.parse(jsonString);
+        let importedResources = backup.resources || backup.data || [];
+
+        if (!Array.isArray(importedResources) || importedResources.length === 0) {
+            throw new Error("Keine Ressourcen gefunden");
+        }
+
+        const sourceLevels = backup.numLevels || 5;
+        const targetLevels = parseInt(getLevelMode());
+
+        let migrationInfo = '';
+
+        // Migration in beide Richtungen
+        if (sourceLevels !== targetLevels) {
+            importedResources = migrateImportedResources(importedResources, sourceLevels, targetLevels);
+            migrationInfo = `Niveaustufen angepasst (${sourceLevels} → ${targetLevels} Stufen)`;
+        }
+
+        // WICHTIG: Info für die Erfolgsmeldung speichern
+        window.lastMigrationInfo = migrationInfo;
+
+        prepareImportData(importedResources);
+
+    } catch (err) {
+        console.error(err);
+        showFancyAlert('JSON-Datei ungültig', 'error', 'Das Backup konnte nicht gelesen werden.');
+    }
+}
+
+// ───────────────────── CSV Import (altes Format) ─────────────────────
+function handleCSVImport(csvString) {
     const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
-    if (lines.length < 1) return showFancyAlert('Keine Daten gefunden.', 'warning');
+    if (lines.length < 2) return showFancyAlert('CSV-Datei ist leer!', 'warning');
 
     const headers = parseCSVLine(lines[0]);
-    const data = [];
+    const importedResources = [];
+
     for (let i = 1; i < lines.length; i++) {
         const values = parseCSVLine(lines[i]);
         const row = {};
         headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
-        if (row['Thema'] || row['Unterrichtsfach']) data.push(row);
+
+        if (row['Thema'] || row['Unterrichtsfach']) {
+            importedResources.push({
+                topic: row['Thema'] || '(Ohne Thema)',
+                subject: row['Unterrichtsfach'] || '',
+                grade: row['Klassenstufe'] || '',
+                competence: row['Kompetenzbereich'] || '',
+                level: row['Niveaustufe'] || '',
+                tool: row['Digitales_Hilfsmittel'] || '',
+                description: row['Beschreibung'] || ''
+            });
+        }
     }
 
-    if (data.length === 0) return showFancyAlert('Keine gültigen Einträge gefunden.', 'warning');
+    if (importedResources.length === 0) {
+        return showFancyAlert('Keine gültigen Einträge gefunden.', 'warning');
+    }
 
-    let previewHtml = `<div style="max-height:300px;overflow-y:auto;margin:10px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">`;
-    previewHtml += `<tr style="background:#6b46c1;color:white;"><th style="padding:8px;text-align:left;">${headers.slice(0,6).join('</th><th style="padding:8px;text-align:left;">')}</th></tr>`;
-    data.slice(0, 8).forEach(row => {
-        previewHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">${Object.values(row).slice(0,6).map(escapeHtml).join('</td><td style="padding:8px;">')}</td></tr>`;
-    });
-    if (data.length > 8) previewHtml += `<tr><td colspan="6" style="text-align:center;color:#666;padding:8px;font-style:italic;">… und ${data.length - 8} weitere</td></tr>`;
-    previewHtml += `</table></div>`;
-
-    const modal = document.createElement('div');
-    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:20000;padding:20px;`;
-    modal.innerHTML = `
-        <div style="background:var(--card);padding:28px;border-radius:16px;max-width:90%;width:600px;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
-            <h3 style="margin:0 0 12px;color:var(--text);font-size:19px;font-weight:700;">Import-Vorschau</h3>
-            <p style="margin:0 0 16px;color:var(--text-light);font-size:14px;">
-            ${data.length} Datensatz${data.length === 1 ? '' : 'e'} in der Import-Datei gefunden<br>
-            <small style="color:#777;">Duplikate und ähnliche Einträge werden im nächsten Schritt geprüft.</small>
-            </p>
-            ${previewHtml}
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button id="cancelImportBtn" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;">Abbrechen</button>
-                <button id="confirmImportBtn" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;">Importieren</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
-    modal.querySelector('#confirmImportBtn').onclick = () => {
-        modal.remove();
-        performImport(data);
-    };
-    modal.querySelector('#confirmImportBtn').focus();
+    prepareImportData(importedResources);
 }
 
-function performImport(data) {
+// ───────────────────── Gemeinsame Weiterverarbeitung ─────────────────────
+function prepareImportData(importedResources) {
+    createSafetyBackup('Vor Import');
     const toImport = [];
     const duplicates = [];
     const similar = [];
 
-    data.forEach(entry => {
-        const thema = (entry['Thema'] || entry['Thema'] || '').trim();
-        const beschreibung = (entry['Beschreibung'] || entry['Beschreibung'] || '').trim();
-        const fach = (entry['Unterrichtsfach'] || entry['Unterrichtsfach'] || '').trim();
-        const klasse = (entry['Klassenstufe'] || entry['Klassenstufe'] || '').trim();
-        const kompetenz = (entry['Kompetenzbereich'] || entry['Kompetenzbereich'] || '').trim();
-        const niveau = (entry['Niveaustufe'] || entry['Niveaustufe'] || '').trim();
-        const tool = (entry['Digitales_Hilfsmittel'] || entry['Digitales_Hilfsmittel'] || '').trim();
-
-        if (!thema && !fach && !klasse && !kompetenz && !niveau && !tool && !beschreibung) return;
-
+    importedResources.forEach(entry => {
         const normalized = {
-            topic: thema || '(Ohne Thema)',
-            subject: fach,
-            grade: klasse,
-            competence: kompetenz,
-            level: niveau,
-            tool: tool,
-            description: beschreibung
+            topic: (entry.topic || entry.Thema || '(Ohne Thema)').trim(),
+            subject: (entry.subject || entry['Unterrichtsfach'] || '').trim(),
+            grade: (entry.grade || entry['Klassenstufe'] || '').trim(),
+            competence: (entry.competence || entry['Kompetenzbereich'] || '').trim(),
+            level: (entry.level || entry['Niveaustufe'] || '').trim(),
+            tool: (entry.tool || entry['Digitales_Hilfsmittel'] || '').trim(),
+            description: (entry.description || entry['Beschreibung'] || '').trim()
         };
 
+        // Exakter Duplikat-Check
         const exact = resources.some(r =>
-            (r.topic || '').trim() === normalized.topic &&
-            (r.subject || '').trim() === normalized.subject &&
-            (r.grade || '').trim() === normalized.grade &&
-            (r.competence || '').trim() === normalized.competence &&
-            (r.level || '').trim() === normalized.level &&
-            (r.tool || '').trim() === normalized.tool &&
-            (r.description || '').trim() === normalized.description
+            r.topic === normalized.topic &&
+            r.subject === normalized.subject &&
+            r.grade === normalized.grade &&
+            r.competence === normalized.competence &&
+            r.level === normalized.level &&
+            (r.tool || '') === normalized.tool &&
+            (r.description || '') === normalized.description
         );
 
         if (exact) {
@@ -3200,13 +3322,14 @@ function performImport(data) {
             return;
         }
 
-const similarMatch = resources.find(r =>
-    (r.subject || '').trim().toLowerCase() === normalized.subject.toLowerCase() &&
-    (r.grade || '').trim() === normalized.grade &&
-    (r.competence || '').trim().toLowerCase() === normalized.competence.toLowerCase() &&
-    (r.level || '').trim() === normalized.level &&
-    ((r.tool || '').trim().toLowerCase()) === (normalized.tool.toLowerCase())
-);
+        // Ähnlicher Eintrag (gleiches Fach/Klasse/Kompetenz/Level/Tool)
+        const similarMatch = resources.find(r =>
+            r.subject?.trim().toLowerCase() === normalized.subject.toLowerCase() &&
+            r.grade === normalized.grade &&
+            r.competence?.trim().toLowerCase() === normalized.competence.toLowerCase() &&
+            r.level === normalized.level &&
+            (r.tool || '').trim().toLowerCase() === normalized.tool.toLowerCase()
+        );
 
         if (similarMatch) {
             similar.push({ ...normalized, existing: similarMatch });
@@ -3215,12 +3338,10 @@ const similarMatch = resources.find(r =>
         }
     });
 
-    // Ein einziger Dialog für alle Fälle
-showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
-return;
+    showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
 }
 
-// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKE ===
+// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKE (komplett + korrigiert) ===
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
     const totalNew = newOnes.length;
     const totalSimilar = similarOnes.length;
@@ -3240,12 +3361,11 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
         <div style="background:var(--card);padding:28px;border-radius:16px;max-width:1160px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
             <h3 style="margin:0 0 16px;color:var(--text);font-size:20px;">Import abschließen</h3>
             <p style="margin:0 0 20px;color:var(--text-light);font-size:15px;line-height:1.5;">
-                <strong>${totalNew}</strong> komplett neue ${totalNew === 1 ? 'Ressource' : 'Ressourcen'} • 
-                <strong>${totalSimilar}</strong> ähnliche ${totalSimilar === 1 ? 'Ressource' : 'Ressourcen'} • 
-                <strong>${duplicateCount}</strong> exakte ${duplicateCount === 1 ? 'Duplikat' : 'Duplikate'} ${duplicateCount > 0 ? 'wird übersprungen' : ''}
+                <strong>${totalNew}</strong> komplett neue ${totalNew === 1 ? 'Ressource' : 'Ressourcen'} •
+                <strong>${totalSimilar}</strong> ähnliche ${totalSimilar === 1 ? 'Ressource' : 'Ressourcen'} •
+                <strong>${duplicateCount}</strong> exakte ${duplicateCount === 1 ? 'Duplikat' : 'Duplikate'} ${duplicateCount > 0 ? 'werden übersprungen' : ''}
             </p>
-
-            <div style="max-height:540px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;">
+                <div style="max-height:540px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;">
                 <table style="width:100%;border-collapse:collapse;font-size:14px;">
                     <thead style="background:#6b46c1;color:white;position:sticky;top:0;z-index:10;">
                         <tr>
@@ -3262,8 +3382,7 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
                             <th style="padding:12px;font-size:13px;">Fach • Klasse • Kompetenz • Tool</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- 1) Komplett neue Einträge -->
+                        <tbody>
                         ${newOnes.map((n, i) => `
                             <tr style="background:#f8fff8;">
                                 <td style="padding:10px;text-align:center;">
@@ -3276,9 +3395,7 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
                                     ${escapeHtml(n.subject)} • ${n.grade} • ${escapeHtml(n.competence)} • ${n.tool || '–'}
                                 </td>
                             </tr>
-                        `).join('')}
-
-                        <!-- 2) Ähnliche Einträge -->
+                            `).join('')}
                         ${similarOnes.map((s, i) => `
                             <tr style="border-top:2px solid #ddd;">
                                 <td style="padding:10px;text-align:center;">
@@ -3289,11 +3406,11 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
                                 </td>
                                 <td style="padding:10px;font-weight:600;color:#27ae60;">${escapeHtml(s.topic)}</td>
                                 <td style="padding:10px;line-height:1.5;">
-                                    ${s.description !== s.existing.description 
+                                    ${s.description !== s.existing.description
                                         ? `<strong style="color:#e67e22;">Beschreibung geändert</strong><br>
                                            <small style="color:#27ae60;">${escapeHtml((s.description||'–').substring(0,100))}${s.description?.length>100?'…':''}</small><br>
                                            <small style="color:#e74c3c;">${escapeHtml((s.existing.description||'–').substring(0,100))}${s.existing.description?.length>100?'…':''}</small>`
-                                        : s.tool !== s.existing.tool 
+                                        : s.tool !== s.existing.tool
                                             ? `<strong style="color:#e67e22;">Tool geändert</strong>: ${escapeHtml(s.tool||'–')} → ${escapeHtml(s.existing.tool||'–')}`
                                             : '<span style="color:#999;">Beschreibung unverändert</span>'
                                     }
@@ -3307,8 +3424,7 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
                     </tbody>
                 </table>
             </div>
-
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
                 <button id="cancelImport" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;">Abbrechen</button>
                 <button id="confirmImport" style="padding:12px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;font-size:16px;">
                     ${totalNew + totalSimilar} importieren
@@ -3319,6 +3435,7 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
 
     document.body.appendChild(modal);
 
+    // ────── Checkbox-Logik ──────
     const importAll = modal.querySelector('#importAll');
     const replaceAll = modal.querySelector('#replaceAll');
     const importChecks = modal.querySelectorAll('.import-check');
@@ -3326,49 +3443,55 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     const confirmBtn = modal.querySelector('#confirmImport');
 
     const updateButtonText = () => {
-    const importingNew = newOnes.filter((n, i) => 
-        modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
-    ).length;
+        const importingNew = newOnes.filter((_, i) => 
+            modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
+        ).length;
 
-    const importingSimilarAsNew = similarOnes.filter((s, i) => {
-        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-        const replaceChk = replaceChecks[i];
-        return importChk?.checked && !replaceChk?.checked;
-    }).length;
+        const importingSimilarAsNew = similarOnes.filter((_, i) => {
+            const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            const rep = replaceChecks[i];
+            return imp?.checked && !rep?.checked;
+        }).length;
 
-    const overwriting = similarOnes.filter((s, i) => {
-        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-        const replaceChk = replaceChecks[i];
-        return importChk?.checked && replaceChk?.checked;
-    }).length;
+        const overwriting = similarOnes.filter((_, i) => {
+            const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            const rep = replaceChecks[i];
+            return imp?.checked && rep?.checked;
+        }).length;
 
-    const totalAdded = importingNew + importingSimilarAsNew;
+        const totalAdded = importingNew + importingSimilarAsNew;
 
-    if (totalAdded === 0 && overwriting === 0) {
-        confirmBtn.textContent = 'Nichts importieren';
-    } else if (overwriting === 0) {
-        confirmBtn.textContent = `${totalAdded} hinzufügen`;
-    } else if (totalAdded === 0) {
-        confirmBtn.textContent = `${overwriting} überschreiben`;
-    } else {
-        confirmBtn.textContent = `${totalAdded} hinzufügen • ${overwriting} überschreiben`;
-    }
-};
+        if (totalAdded === 0 && overwriting === 0) {
+            confirmBtn.textContent = 'Nichts importieren';
+        } else if (overwriting === 0) {
+            confirmBtn.textContent = `${totalAdded} hinzufügen`;
+        } else if (totalAdded === 0) {
+            confirmBtn.textContent = `${overwriting} überschreiben`;
+        } else {
+            confirmBtn.textContent = `${totalAdded} hinzufügen • ${overwriting} überschreiben`;
+        }
+    };
 
+    // Event-Listener
     importChecks.forEach(chk => {
         chk.onchange = () => {
-            const idx = chk.dataset.index;
+            const idx = parseInt(chk.dataset.index);
             const isSimilar = chk.classList.contains('similar-check');
             const replaceChk = isSimilar ? replaceChecks[idx] : null;
+
             if (replaceChk) replaceChk.disabled = !chk.checked;
             if (!chk.checked && replaceChk) replaceChk.checked = false;
+
             importAll.checked = [...importChecks].every(c => c.checked);
             importAll.indeterminate = [...importChecks].some(c => c.checked) && !importAll.checked;
+
             updateButtonText();
         };
     });
 
-    replaceChecks.forEach(chk => chk.onchange = updateButtonText);
+    replaceChecks.forEach(chk => {
+        chk.onchange = updateButtonText;
+    });
 
     importAll.onchange = () => {
         const checked = importAll.checked;
@@ -3381,180 +3504,216 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     };
 
     replaceAll.onchange = () => {
-        if (replaceAll.disabled) return;
-        const checked = replaceAll.checked;
+    const checked = replaceAll.checked;
         replaceChecks.forEach((chk, i) => {
-            if (importChecks[i].checked) chk.checked = checked;
+            if (importChecks[i] && importChecks[i].checked) {
+                chk.checked = checked;
+            }
         });
         updateButtonText();
     };
 
-    // Initial
-    updateButtonText();
+updateButtonText();
 
     modal.querySelector('#cancelImport').onclick = () => modal.remove();
 
-modal.querySelector('#confirmImport').onclick = () => {
-    // 1. Backup vor allen Änderungen!
-    const backupBeforeImport = JSON.parse(JSON.stringify(resources));
+    // ==================== CONFIRM BLOCK ====================
+    modal.querySelector('#confirmImport').onclick = () => {
+        const backupBeforeImport = JSON.parse(JSON.stringify(resources));
+        let newAdded = 0;
+        let overwritten = 0;
 
-    // 2. Änderungen durchführen
-    newOnes.forEach((n, i) => {
-        if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
-            resources.push({ ...n, favorite: false });
+        // Neue Einträge
+        newOnes.forEach((n, i) => {
+            if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
+                resources.push({ ...n, favorite: false });
+                newAdded++;
+            }
+        });
+
+        // Ähnliche Einträge
+        similarOnes.forEach((s, i) => {
+            const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            const replaceChk = replaceChecks[i];
+            if (!importChk?.checked) return;
+
+            if (replaceChk?.checked) {
+                const idx = resources.findIndex(r =>
+                    r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
+                    r.grade === s.grade &&
+                    r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
+                    r.level === s.level &&
+                    (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
+                );
+                if (idx !== -1) {
+                    resources[idx] = { ...s, favorite: resources[idx].favorite || false, lastModified: new Date().toLocaleDateString('de-DE') };
+                    overwritten++;
+                }
+            } else {
+                resources.push({ ...s, favorite: false });
+                newAdded++;
+            }
+        });
+
+        localStorage.setItem('resources', JSON.stringify(resources));
+
+        // Undo-Eintrag
+        if (newAdded > 0 || overwritten > 0) {
+            const undoEntry = {
+                action: 'import',
+                timestamp: Date.now(),
+                resourcesBackup: backupBeforeImport,
+                message: newAdded > 0 && overwritten > 0
+                    ? `${newAdded} hinzugefügt, ${overwritten} überschrieben`
+                    : newAdded > 0 ? `${newAdded} hinzugefügt` : `${overwritten} überschrieben`
+            };
+            undoStack.unshift(undoEntry);
+            if (undoStack.length > 15) undoStack.pop();
+            localStorage.setItem('undoStack', JSON.stringify(undoStack));
         }
-    });
 
-    similarOnes.forEach((s, i) => {
-        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-        const replaceChk = replaceChecks[i];
-        if (!importChk?.checked) return;
+        // UI aktualisieren
+        populateDropdowns();
+        applyFilters();
+        updateStats();
+        updateToolFilter();
 
-        if (replaceChk?.checked) {
-            const idx = resources.findIndex(r =>
-                r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
-                r.grade === s.grade &&
-                r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
-                r.level === s.level &&
-                (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
-            );
-            if (idx !== -1) {
-                resources[idx] = { ...resources[idx], ...s, lastModified: new Date().toLocaleDateString('de-DE') };
+        // Erfolgsmeldung
+        let title = 'Import erfolgreich!';
+        let subtitle = '';
+        const migration = window.lastMigrationInfo || '';
+        window.lastMigrationInfo = '';
+
+        const totalChanged = newAdded + overwritten;
+
+        if (totalChanged > 0) {
+            subtitle = `<strong style="color:#27ae60;">${newAdded} hinzugefügt</strong>`;
+            if (overwritten > 0) subtitle += ` • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
+
+            if (migration) {
+                subtitle += `
+                    <br><br>
+                    <span style="display:inline-flex; align-items:center; gap:8px; background:#ecfdf5; padding:8px 14px; border-radius:10px; font-size:14px; color:#10b981;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M8 7h12M8 12h12M8 17h12"/>
+                            <path d="M4 7h.01M4 12h.01M4 17h.01"/>
+                        </svg>
+                        <strong>Niveaustufen migriert</strong><br>
+                        <small style="opacity:0.9;">${migration}</small>
+                    </span>`;
             }
         } else {
-            resources.push({ ...s, favorite: false });
+            title = 'Import abgeschlossen';
+            subtitle = 'Keine neuen Änderungen';
         }
-    });
 
-    // 3. GENAU ZÄHLEN: Was wurde wirklich gemacht?
-    const newAdded = newOnes.filter((n, i) => 
-        modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
-    ).length;
+        if (duplicateCount > 0) {
+            subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
+        }
 
-    const similarAddedAsNew = similarOnes.filter((s, i) => {
-        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-        const replaceChk = replaceChecks[i];
-        return importChk?.checked && !replaceChk?.checked;
-    }).length;
-
-    const overwritten = similarOnes.filter((s, i) => {
-        const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-        const replaceChk = replaceChecks[i];
-        return importChk?.checked && replaceChk?.checked;
-    }).length;
-
-    const totalNew = newAdded + similarAddedAsNew;
-
-    // 4. Sofort speichern
-    localStorage.setItem('resources', JSON.stringify(resources));
-
-    // 5. Undo-Eintrag mit korrektem Backup
-    const undoEntry = {
-        action: 'import',
-        timestamp: Date.now(),
-        resourcesBackup: backupBeforeImport,
-        message: totalNew > 0 && overwritten > 0 
-            ? `${totalNew} hinzugefügt, ${overwritten} überschrieben`
-            : totalNew > 0 ? `${totalNew} hinzugefügt` 
-            : `${overwritten} überschrieben`
+        showFancyAlert(title, 'success', subtitle, () => showUndoToast('Import rückgängig machen'));
+        modal.remove();
     };
-    undoStack.unshift(undoEntry);
-    if (undoStack.length > 15) undoStack.pop();
-    localStorage.setItem('undoStack', JSON.stringify(undoStack));
-
-    // 6. UI aktualisieren
-    populateDropdowns();
-    applyFilters();
-    updateStats();
-    updateToolFilter();
-
-    // 7. PERFEKTE ERFOLGSMELDUNG
-    let title = 'Fertig!';
-    let subtitle = '';
-
-    if (totalNew > 0 && overwritten > 0) {
-        subtitle = `<strong style="color:#27ae60;">${totalNew} neue Einträge</strong> hinzugefügt • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
-    } else if (totalNew > 0) {
-        title = `${totalNew} Ressource${totalNew !== 1 ? 'n' : ''} importiert!`;
-        subtitle = 'Erfolgreich hinzugefügt';
-    } else if (overwritten > 0) {
-        title = `${overwritten} Ressource${overwritten !== 1 ? 'n' : ''} aktualisiert!`;
-        subtitle = 'Bestehende Einträge wurden überschrieben';
-    } else {
-        title = 'Keine Änderungen';
-        subtitle = 'Alles wurde übersprungen';
-    }
-
-    if (duplicateCount > 0) {
-        subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
-    }
-
-    showFancyAlert(
-        title,
-        'success',
-        subtitle,
-        () => showUndoToast('Import rückgängig machen')
-    );
-
-    modal.remove();
-};
 }
+    // ==================== CONFIRM BLOCK ====================
+    modal.querySelector('#confirmImport').onclick = () => {
+        const backupBeforeImport = JSON.parse(JSON.stringify(resources));
+        let newAdded = 0;
+        let overwritten = 0;
 
-function saveAndRefresh(imported = 0, skipped = 0) {
-    populate_dropdowns();
-    applyFilters();
-    updateStats();
-    updateToolFilter();
+        // Neue Einträge
+        newOnes.forEach((n, i) => {
+            if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
+                resources.push({ ...n, favorite: false });
+                newAdded++;
+            }
+        });
 
-    // === EXAKTE ZÄHLUNG: Was wurde wirklich gemacht? ===
-const newAdded = newOnes.filter((n, i) => 
-    modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
-).length;
+        // Ähnliche Einträge
+        similarOnes.forEach((s, i) => {
+            const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            const replaceChk = modal.querySelectorAll('.replace-check')[i];
+            if (!importChk?.checked) return;
 
-const similarAddedAsNew = similarOnes.filter((s, i) => {
-    const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-    const replaceChk = replaceChecks[i];
-    return importChk?.checked && !replaceChk?.checked;
-}).length;
+            if (replaceChk?.checked) {
+                const idx = resources.findIndex(r =>
+                    r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
+                    r.grade === s.grade &&
+                    r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
+                    r.level === s.level &&
+                    (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
+                );
+                if (idx !== -1) {
+                    resources[idx] = { ...s, favorite: r.favorite, lastModified: new Date().toLocaleDateString('de-DE') };
+                    overwritten++;
+                }
+            } else {
+                resources.push({ ...s, favorite: false });
+                newAdded++;
+            }
+        });
 
-const overwritten = similarOnes.filter((s, i) => {
-    const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-    const replaceChk = replaceChecks[i];
-    return importChk?.checked && replaceChk?.checked;
-}).length;
+        localStorage.setItem('resources', JSON.stringify(resources));
 
-const totalNew = newAdded + similarAddedAsNew;
+        // Undo-Eintrag
+        if (newAdded > 0 || overwritten > 0) {
+            const undoEntry = {
+                action: 'import',
+                timestamp: Date.now(),
+                resourcesBackup: backupBeforeImport,
+                message: newAdded > 0 && overwritten > 0
+                    ? `${newAdded} hinzugefügt, ${overwritten} überschrieben`
+                    : newAdded > 0 ? `${newAdded} hinzugefügt` : `${overwritten} überschrieben`
+            };
+            undoStack.unshift(undoEntry);
+            if (undoStack.length > 15) undoStack.pop();
+            localStorage.setItem('undoStack', JSON.stringify(undoStack));
+        }
 
-// === KLARER, EHRLICHER TEXT ===
-let title = 'Fertig!';
-let subtitle = '';
+        // UI aktualisieren
+        populateDropdowns();
+        applyFilters();
+        updateStats();
+        updateToolFilter();
 
-if (totalNew > 0 && overwritten > 0) {
-    subtitle = `<strong style="color:#27ae60;">${totalNew} neue Einträge</strong> hinzugefügt • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
-} else if (totalNew > 0) {
-    title = `${totalNew} Ressource${totalNew !== 1 ? 'n' : ''} importiert!`;
-    subtitle = 'Erfolgreich hinzugefügt';
-} else if (overwritten > 0) {
-    title = `${overwritten} Ressource${overwritten !== 1 ? 'n' : ''} aktualisiert!`;
-    subtitle = 'Bestehende Einträge wurden überschrieben';
-} else {
-    title = 'Keine Änderungen';
-    subtitle = 'Alles war bereits vorhanden oder wurde deaktiviert';
-}
+        // ────── ERFOLGSMELDUNG mit schönem Migrations-Hinweis ──────
+        let title = 'Import erfolgreich!';
+        let subtitle = '';
 
-// Duplikate hinzufügen (wenn vorhanden)
-if (duplicateCount > 0) {
-    subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikat${duplicateCount !== 1 ? 'e' : ''} ignoriert</small>`;
-}
+        const migration = window.lastMigrationInfo || '';
+        window.lastMigrationInfo = '';
 
-// === ENDGÜLTIGER ERFOLGS-POPUP ===
-showFancyAlert(
-    title,
-    'success',
-    subtitle,
-    () => showUndoToast('Import rückgängig machen')
-);
-}
+        const totalChanged = newAdded + overwritten;
+
+        if (totalChanged > 0) {
+            subtitle = `<strong style="color:#27ae60;">${newAdded} hinzugefügt</strong>`;
+            if (overwritten > 0) subtitle += ` • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
+
+            if (migration) {
+                subtitle += `
+                    <br><br>
+                    <span style="display:inline-flex; align-items:center; gap:8px; background:#ecfdf5; padding:8px 14px; border-radius:10px; font-size:14px; color:#10b981;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M8 7h12M8 12h12M8 17h12"/>
+                            <path d="M4 7h.01M4 12h.01M4 17h.01"/>
+                        </svg>
+                        <strong>Niveaustufen migriert</strong><br>
+                        <small style="opacity:0.9;">${migration}</small>
+                    </span>`;
+            }
+        } else {
+            title = 'Import abgeschlossen';
+            subtitle = 'Keine neuen Änderungen';
+        }
+
+        if (duplicateCount > 0) {
+            subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
+        }
+
+        showFancyAlert(title, 'success', subtitle, () => showUndoToast('Import rückgängig machen'));
+        modal.remove();
+    };
+
 
 // ============================================================
 // UNDO-SYSTEM – zentraler Toast + Rückgängig-Funktion
