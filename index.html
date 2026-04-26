@@ -958,6 +958,20 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
             🛡️ Ressourcen wiederherstellen (Notfall)
         </button>
     </div>
+<!-- Storage Monitor – rein informativ -->
+<div style="margin: 16px 0; padding: 16px 14px; background:#f8f9fa; border-radius:12px; border:1px solid #ddd;" 
+     id="storageIndicator">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong style="font-size:13.5px;">💾 Speicherbelegung</strong>
+        <span id="storageUsage" style="font-weight:600; font-size:13px;">— MB</span>
+    </div>
+    <div class="stat-bar" style="margin:0;">
+        <div class="bar-container" style="height:12px; background:#e0e0e0; border-radius:6px; overflow:hidden;">
+            <div id="storageBar" class="bar" style="height:100%; width:0%; transition:width 0.7s ease;"></div>
+        </div>
+    </div>
+    <small id="storagePercent" style="display:block; text-align:right; margin-top:5px; font-size:12.5px; font-weight:500; color:#27ae60;"></small>
+</div>
 
 </div>
 
@@ -1043,8 +1057,7 @@ function changeLevelMode(newMode) {
         localStorage.setItem('resources_level_backup', backup);
 
         resources = migrateResourceLevels(resources, oldMode, newMode);
-        localStorage.setItem('resources', JSON.stringify(resources));
-
+        saveResources();
         currentLevelMode = newMode;
         localStorage.setItem('levelMode', newMode);
 
@@ -1160,18 +1173,26 @@ function renderAllMatrices() {
 function loadData() {
     return new Promise(resolve => {
         const idle = window.requestIdleCallback || (cb => setTimeout(cb, 50));
+        
         idle(() => {
             try {
                 const r = localStorage.getItem('resources');
                 const u = localStorage.getItem('undoStack');
+                
                 window.resources = r ? JSON.parse(r) : [];
                 window.undoStack = u ? JSON.parse(u) : [];
+                
             } catch (e) {
                 console.warn('Daten konnten nicht geladen werden', e);
                 window.resources = [];
                 window.undoStack = [];
             }
+            
             window.dataReady = true;
+            
+            checkStorageUsage(false);
+            updateStorageIndicator();   
+            
             resolve();
         });
     });
@@ -1221,7 +1242,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.45';
+const VERSION = '1.1.46';
 
 const REPO_PATH = (() => {
     if (location.hostname === 'localhost' ||
@@ -1615,6 +1636,8 @@ function applyFilters() {
     updateStats();
     updateFilterHighlight();
     updateFilterStatus();
+
+    updateStorageIndicator();
 }
 
 // ==================== AUTOCOMPLETE FÜR THEMA-SUCHE ====================
@@ -1729,7 +1752,7 @@ function handleResourceMessage(event) {
         const { index, data } = event.data;
         if (index >= 0 && index < resources.length) {
             resources[index] = data;
-            localStorage.setItem('resources', JSON.stringify(resources));
+            saveResources();
             applyFilters();
 
             const anim = document.getElementById('editAnimation');
@@ -1771,7 +1794,7 @@ if (event.data.type === 'ADD_RESOURCE') {
 
   const backupBeforeAdd = undoFullBackup || JSON.parse(JSON.stringify(resources));
   resources.push(data);
-  localStorage.setItem('resources', JSON.stringify(resources));
+  saveResources();
   applyFilters();
   updateToolFilter();
   populateDropdowns();
@@ -1797,7 +1820,7 @@ if (event.data.type === 'UPDATE_RESOURCE') {
     const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
 
     resources[index] = data;
-    localStorage.setItem('resources', JSON.stringify(resources));
+    saveResources();
     applyFilters();
 
     const undoEntry = {
@@ -2135,7 +2158,7 @@ window.restoreFromSafetyBackup = function(index) {
     }
 
     resources = JSON.parse(JSON.stringify(backups[index].resources));
-    localStorage.setItem('resources', JSON.stringify(resources));
+    saveResources();
 
     applyFilters();
     updateStats();
@@ -3545,7 +3568,7 @@ updateButtonText();
             }
         });
 
-        localStorage.setItem('resources', JSON.stringify(resources));
+        saveResources();
 
         // Undo-Eintrag
         if (newAdded > 0 || overwritten > 0) {
@@ -3605,105 +3628,6 @@ updateButtonText();
         modal.remove();
     };
 }
-    // ==================== CONFIRM BLOCK ====================
-    modal.querySelector('#confirmImport').onclick = () => {
-        const backupBeforeImport = JSON.parse(JSON.stringify(resources));
-        let newAdded = 0;
-        let overwritten = 0;
-
-        // Neue Einträge
-        newOnes.forEach((n, i) => {
-            if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
-                resources.push({ ...n, favorite: false });
-                newAdded++;
-            }
-        });
-
-        // Ähnliche Einträge
-        similarOnes.forEach((s, i) => {
-            const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-            const replaceChk = modal.querySelectorAll('.replace-check')[i];
-            if (!importChk?.checked) return;
-
-            if (replaceChk?.checked) {
-                const idx = resources.findIndex(r =>
-                    r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
-                    r.grade === s.grade &&
-                    r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
-                    r.level === s.level &&
-                    (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
-                );
-                if (idx !== -1) {
-                    resources[idx] = { ...s, favorite: r.favorite, lastModified: new Date().toLocaleDateString('de-DE') };
-                    overwritten++;
-                }
-            } else {
-                resources.push({ ...s, favorite: false });
-                newAdded++;
-            }
-        });
-
-        localStorage.setItem('resources', JSON.stringify(resources));
-
-        // Undo-Eintrag
-        if (newAdded > 0 || overwritten > 0) {
-            const undoEntry = {
-                action: 'import',
-                timestamp: Date.now(),
-                resourcesBackup: backupBeforeImport,
-                message: newAdded > 0 && overwritten > 0
-                    ? `${newAdded} hinzugefügt, ${overwritten} überschrieben`
-                    : newAdded > 0 ? `${newAdded} hinzugefügt` : `${overwritten} überschrieben`
-            };
-            undoStack.unshift(undoEntry);
-            if (undoStack.length > 15) undoStack.pop();
-            localStorage.setItem('undoStack', JSON.stringify(undoStack));
-        }
-
-        // UI aktualisieren
-        populateDropdowns();
-        applyFilters();
-        updateStats();
-        updateToolFilter();
-
-        // ────── ERFOLGSMELDUNG mit schönem Migrations-Hinweis ──────
-        let title = 'Import erfolgreich!';
-        let subtitle = '';
-
-        const migration = window.lastMigrationInfo || '';
-        window.lastMigrationInfo = '';
-
-        const totalChanged = newAdded + overwritten;
-
-        if (totalChanged > 0) {
-            subtitle = `<strong style="color:#27ae60;">${newAdded} hinzugefügt</strong>`;
-            if (overwritten > 0) subtitle += ` • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
-
-            if (migration) {
-                subtitle += `
-                    <br><br>
-                    <span style="display:inline-flex; align-items:center; gap:8px; background:#ecfdf5; padding:8px 14px; border-radius:10px; font-size:14px; color:#10b981;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M8 7h12M8 12h12M8 17h12"/>
-                            <path d="M4 7h.01M4 12h.01M4 17h.01"/>
-                        </svg>
-                        <strong>Niveaustufen migriert</strong><br>
-                        <small style="opacity:0.9;">${migration}</small>
-                    </span>`;
-            }
-        } else {
-            title = 'Import abgeschlossen';
-            subtitle = 'Keine neuen Änderungen';
-        }
-
-        if (duplicateCount > 0) {
-            subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
-        }
-
-        showFancyAlert(title, 'success', subtitle, () => showUndoToast('Import rückgängig machen'));
-        modal.remove();
-    };
-
 
 // ============================================================
 // UNDO-SYSTEM – zentraler Toast + Rückgängig-Funktion
@@ -3755,12 +3679,10 @@ function undoLastAction() {
         return;
     }
 
-    const last = undoStack.shift();           // letzten Eintrag entfernen
-    resources = last.resourcesBackup;         // alten Zustand wiederherstellen
+    const last = undoStack.shift();
+    resources = last.resourcesBackup;
 
-    // Alles wieder speichern
-    localStorage.setItem('resources', JSON.stringify(resources));
-    localStorage.setItem('undoStack', JSON.stringify(undoStack));
+    saveResources();                    // ← hier
 
     // UI aktualisieren
     populateDropdowns();
@@ -3768,10 +3690,8 @@ function undoLastAction() {
     updateStats();
     updateToolFilter();
 
-    // Erfolgsmeldung
     showFancyAlert('Rückgängig gemacht!', 'success');
 
-    // Toast entfernen
     const toast = document.getElementById('undoToast');
     if (toast) toast.remove();
 }
@@ -3834,6 +3754,115 @@ function showFancyAlert(title, type = 'info', subtitle = '', onClose = null) {
     });
 
     modal.querySelector('#fancyDialog').focus();
+}
+
+// ======================
+// STORAGE MONITOR
+// ======================
+
+function getLocalStorageUsage() {
+    let totalBytes = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalBytes += (key.length + localStorage[key].length) * 2;
+        }
+    }
+    return {
+        bytes: totalBytes,
+        mb: (totalBytes / 1024 / 1024).toFixed(2),
+        items: Object.keys(localStorage).length
+    };
+}
+
+async function checkStorageUsage(showWarning = true) {
+    const fallback = getLocalStorageUsage();
+
+    if (!navigator.storage?.estimate) {
+        // Fallback für ältere Browser
+        const percent = Math.min(Math.round((fallback.bytes / (50 * 1024 * 1024)) * 100), 100);
+        return { ...fallback, percent, quotaMB: "50" };
+    }
+
+    try {
+        const estimate = await navigator.storage.estimate();
+        const usageMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+        const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(1);
+        let percent = Math.round((estimate.usage / estimate.quota) * 100);
+
+        // Sicherheits-Cap bei extrem hohen Quotas
+        if (percent < 1 && parseFloat(usageMB) > 1) {
+            percent = Math.max(2, Math.round((parseFloat(usageMB) / 100) * 100)); // Mindestens 2%
+        }
+
+        if (showWarning && percent > 80) {
+            showStorageWarning({ mb: usageMB, percent, quotaMB });
+        }
+
+        return { 
+            mb: usageMB, 
+            percent: percent,
+            quotaMB: quotaMB 
+        };
+    } catch (e) {
+        console.warn("Storage estimate fehlgeschlagen", e);
+        const percent = Math.min(Math.round((fallback.bytes / (50 * 1024 * 1024)) * 100), 100);
+        return { ...fallback, percent, quotaMB: "50" };
+    }
+}
+
+async function updateStorageIndicator() {
+    const data = await checkStorageUsage(false);
+    const usageEl = document.getElementById('storageUsage');
+    const percentEl = document.getElementById('storagePercent');
+    const barEl = document.getElementById('storageBar');
+
+    if (!usageEl || !barEl) return;
+
+    usageEl.textContent = `${data.mb} MB`;
+
+    const percent = Math.max(0, Math.min(100, data.percent || 0));
+    barEl.style.width = `${percent}%`;
+
+    // Immer grün starten, nur bei hoher Auslastung umfärben
+    if (percent > 80) {
+        barEl.style.background = '#e74c3c';
+    } else if (percent > 65) {
+        barEl.style.background = '#f39c12';
+    } else {
+        barEl.style.background = '#27ae60';   // grün (dein Wunsch)
+    }
+
+    if (percentEl) {
+        percentEl.textContent = `${percent}%`;
+        percentEl.style.color = percent > 80 ? '#e74c3c' : 
+                               (percent > 65 ? '#f39c12' : '#27ae60');
+    }
+}
+
+function showStorageWarning(data) {
+    const msg = `
+        <strong>⚠️ Speicherplatz wird knapp!</strong><br><br>
+        Verbraucht: <strong>${data.mb} MB</strong> (${data.percent}%)<br>
+        ${data.quotaMB ? `Limit: ca. ${data.quotaMB} MB` : ''}
+        <br><br>
+        Tipp: Backup erstellen und alte Ressourcen löschen.
+    `;
+    showFancyAlert('Speicher-Monitor', 'warning', msg, () => autoBackup());
+}
+
+function saveResources(silent = false) {
+    try {
+        localStorage.setItem('resources', JSON.stringify(resources));
+        
+        if (!silent) {
+            updateStorageIndicator();
+        }
+    } catch (e) {
+        console.error("Speicherfehler", e);
+        if (e.name === 'QuotaExceededError') {
+            showStorageWarning({ mb: "sehr hoch", percent: 100 });
+        }
+    }
 }
 
 function escapeHtml(text) {
@@ -3904,51 +3933,45 @@ function displayResources(list) {
 function toggleFavorite(i) {
     if (i >= 0 && i < resources.length) {
         resources[i].favorite = !resources[i].favorite;
-        localStorage.setItem('resources', JSON.stringify(resources));
+        saveResources();
         applyFilters();
     }
 }
 
 async function deleteResource(i) {
-  if (i < 0 || i >= resources.length) return;
+    if (i < 0 || i >= resources.length) return;
 
-  const dialog = document.getElementById('confirmDeleteDialog');
+    const dialog = document.getElementById('confirmDeleteDialog');
+    dialog.showModal();
 
-  dialog.showModal();
+    setTimeout(() => {
+        const rect = dialog.getBoundingClientRect();
+        const top = (window.innerHeight - rect.height) / 2 + window.scrollY;
+        const left = (window.innerWidth - rect.width) / 2 + window.scrollX;
 
-  setTimeout(() => {
-    const rect = dialog.getBoundingClientRect();
-    const top  = (window.innerHeight - rect.height) / 2 + window.scrollY;
-    const left = (window.innerWidth  - rect.width)  / 2 + window.scrollX;
+        dialog.style.position = 'absolute';
+        dialog.style.top = `${top}px`;
+        dialog.style.left = `${left}px`;
+        dialog.style.margin = '0';
+    }, 10);
 
-    dialog.style.position = 'absolute';
-    dialog.style.top  = `${top}px`;
-    dialog.style.left = `${left}px`;
-    dialog.style.margin = '0';
-    dialog.style.transform = 'none';
-
-    // Optional: sanfter Zoom-Effekt
-    dialog.style.opacity = '0';
-    dialog.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-    requestAnimationFrame(() => {
-      dialog.style.opacity = '1';
-      dialog.style.transform = 'scale(1)';
+    const result = await new Promise(resolve => {
+        dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
     });
-  }, 10);   // 10 ms reicht – nur damit showModal() erst fertig ist
 
-  const result = await new Promise(resolve => {
-    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
-  });
+    if (result === 'delete') {
+        resources.splice(i, 1);
+        
+        saveResources();                    // ← zentrale Funktion
+        
+        applyFilters();
 
-  if (result === 'delete') {
-    resources.splice(i, 1);
-    localStorage.setItem('resources', JSON.stringify(resources));
-    applyFilters();
-
-    const anim = document.getElementById('deleteAnimation');
-    anim.classList.add('delete-active');
-    setTimeout(() => anim.classList.remove('delete-active'), 1200);
-  }
+        const anim = document.getElementById('deleteAnimation');
+        if (anim) {
+            anim.classList.add('delete-active');
+            setTimeout(() => anim.classList.remove('delete-active'), 1200);
+        }
+    }
 }
 
     // === BEARBEITEN ===
