@@ -12,7 +12,7 @@
 // ================================================
 
 // service-worker.js
-const VERSION = '1.1.46';                     // Nur hier erhöhen bei Änderungen!
+const VERSION = '1.1.47';                     // Nur hier erhöhen bei Änderungen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 // WICHTIG: Dynamischer Pfad mit garantiertem trailing Slash
