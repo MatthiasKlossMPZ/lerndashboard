@@ -133,46 +133,20 @@
         color: var(--text) !important;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0; padding: 20px;
-        background: var(--bg); color: var(--text);
-    }
-    .main { width: 100%; }
+
 .centered-button-wrapper {
     display: flex;
     justify-content: center;
     margin: 6px 0 12px !important;  
     width: 100%;
 }
-.resources-container {
-    flex: 1 1 600px;           /* Mindestbreite 600px, wächst */
-    min-width: 0;              /* Verhindert Overflow */
-    order: 1;
-}
 
-.sidebar {
-    width: 360px;
-    min-width: 360px;
-    flex: 0 0 360px;
-    background: var(--card);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.09);
-    position: sticky;
-    top: 20px;
-    align-self: flex-start;
-    order: 2;
-    margin-left: auto;
-    height: fit-content;
-}
     .sidebar h3 { margin: 0 0 16px; color: var(--primary); font-size: 16px; text-align: center; }
     .stat-bar { margin: 12px 0; }
     .stat-bar label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--text-light); }
     .bar-container { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
     .bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.4s ease; }
     .bar-value { font-weight: bold; color: var(--primary); }
-    .filter-container { background: linear-gradient(135deg, #eef5ff, #e0edff); padding: 14px; border-radius: 12px; border: 1px solid #cce0ff; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); width: 100%; }
     .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
     .filter-group { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
     .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
@@ -344,12 +318,7 @@
 #schoolButton[data-set="true"]:hover {
     box-shadow: 0 12px 28px rgba(46, 204, 113, 0.4) !important;
 }
-.content-wrapper {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    width: 100%;
-}
+
 /* ==================== MOBILE OPTIMIERUNGEN – FINAL ==================== */
 @media (max-width: 768px) {
     body { 
@@ -387,35 +356,6 @@
         padding: 10px;
     }
 
-    /* --- SIDEBAR: KEIN STICKY MEHR, VOLLBREITE --- */
-    .sidebar {
-        width: 100% !important;
-        position: static !important;   /* WICHTIG: sticky deaktivieren */
-        top: auto !important;
-        padding: 14px;
-        order: 2; /* Sidebar NACH Ressourcen */
-        margin-top: 10px;
-        z-index: 1; /* Sicherstellen, dass nichts überlagert */
-    }
-    .resources-container {
-        order: 1;
-        min-width: 0;
-    }
-/* === MOBILE: Sidebar unter Ressourcen === */
-@media (min-width: 993px) {
-    .content-wrapper {
-        flex-direction: row;
-        gap: 24px;
-    }
-    .sidebar {
-        position: sticky;
-        top: 20px;
-        align-self: flex-start;
-    }
-    .resources-container {
-        flex: 1;
-    }
-}
     /* --- SCHULNAME-BUTTON (MOBILE) --- */
 #schoolButton {
     font-size: 12.5px;
@@ -1386,7 +1326,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.48';
+const VERSION = '1.1.49';
 
 const REPO_PATH = (() => {
     if (location.hostname === 'localhost' ||
@@ -4364,27 +4304,8 @@ if (document.readyState === 'loading') {
 }
 
 * { box-sizing: border-box; }
-body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 20px;
-    line-height: 1.5;
-}
 
-/* ==================== LOGO & HEADER ==================== */
 .logo-header { margin-bottom: 24px; }
-
-/* ==================== FILTER & STATS ==================== */
-.filter-container {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-    margin-bottom: 24px;
-    border: 1px solid rgba(107,70,193,0.1);
-}
 
 .stats {
     display: grid;
@@ -4456,20 +4377,6 @@ body {
     color: var(--text-light);
 }
 
-/* ==================== SIDEBAR (dauerhaft) ==================== */
-.sidebar {
-    width: 360px;
-    min-width: 360px;
-    flex: 0 0 360px;
-    background: var(--card);
-    border-radius: 18px;
-    padding: 24px;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 20px;
-    align-self: flex-start;
-    height: fit-content;
-}
 
 /* ==================== EXPORT BUTTONS ==================== */
 .export-buttons .btn {
@@ -4487,14 +4394,7 @@ body {
 
 /* ==================== MOBILE ==================== */
 @media (max-width: 992px) {
-    .content-wrapper {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100% !important;
-        position: static;
-        margin-top: 24px;
-    }
+
     .resource-item {
         padding: 20px;
     }
@@ -4513,6 +4413,110 @@ body {
     .main { position: absolute; left: 0; top: 0; width: 100%; padding: 12mm 10mm !important; }
     .logo-header, .filter-container, .export-buttons, .sidebar, .new-resource-btn,
     #deleteAnimation, #editAnimation, #addAnimation, .version-info { display: none !important; }
+}
+
+/* ==================== BODY ==================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px 20px 120px 20px;        /* normaler Abstand links + rechts */
+    background: var(--bg); 
+    color: var(--text);
+    box-sizing: border-box;
+}
+
+/* ==================== GAP-FIX – FLUCHT + ABSTAND ==================== */
+body {
+    padding: 20px 20px 120px 20px !important;
+    margin: 0 !important;
+}
+
+.main,
+.filter-container,
+.stats,
+.export-buttons,
+.centered-button-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ==================== MARGIN-ANSATZ STATT STICKY-TOP ==================== */
+.content-wrapper {
+    display: flex !important;
+    gap: 24px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
+}
+
+.resources-container {
+    flex: 1 1 600px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.sidebar {
+    flex: 0 0 360px !important;
+    width: 360px !important;
+    min-width: 360px !important;
+    background: var(--card) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.09) !important;
+    
+    margin-top: 10px !important;     /* ← hier den Abstand nach unten einstellen */
+    align-self: flex-start !important;
+    height: fit-content !important;
+}
+
+/* Abstand zwischen Stats und Content */
+.stats {
+    margin-bottom: 24px !important;
+}
+
+/* Mobile */
+@media (max-width: 992px) {
+    body {
+        padding: 10px 10px 80px 10px !important;
+    }
+    .content-wrapper {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+    .resources-container {
+        margin-right: 0 !important;
+    }
+    .sidebar {
+        width: 100% !important;
+        position: static !important;
+    }
+}
+
+/* ==================== FILTER + STATS – SAUBER & EINHEITLICH ==================== */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 0 0 28px 0 !important;   /* Abstand zu den Filtern */
+}
+
+.filter-container {
+    background: var(--card) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-bottom: 8px !important;
+    box-shadow: var(--shadow) !important;
+    border: 1px solid rgba(107,70,193,0.1) !important;
+    width: 100% !important;
+}
+
+/* Optional: schöner Hover-Effekt */
+.filter-container:hover {
+    box-shadow: 0 8px 25px rgba(107,70,193,0.12) !important;
 }
 
 </style>
