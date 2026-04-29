@@ -61,7 +61,6 @@
     flex-shrink: 0;
 }
 
-/* Rechtes PNG-Logo */
 .logo-right img {
     height: 116px !important;    
     width: auto;
@@ -1142,7 +1141,6 @@ function toggleCompactMode() {
     const checkbox = document.getElementById('compactToggle');
     if (checkbox) checkbox.checked = compactMode;
     
-    // Einstellung speichern
     localStorage.setItem('compactMode', compactMode);
     
     applyFilters();
@@ -1165,7 +1163,6 @@ function getLevelNumber(levelStr) {
     return match ? parseInt(match[0]) : 0;
 }
 
-// Migration beim manuellen Wechsel
 function migrateResourceLevels(resources, oldMode, newMode) {
     if (!resources?.length || oldMode === newMode) return resources;
 
@@ -1218,7 +1215,7 @@ function changeLevelMode(newMode) {
 }
 
 // ======================
-// ERSTER START: Niveaustufen-Auswahl (korrigiert)
+// ERSTER START: Niveaustufen-Auswahl
 // ======================
 function showInitialLevelModeModal() {
     if (localStorage.getItem('levelMode')) return;
@@ -1254,7 +1251,6 @@ function showInitialLevelModeModal() {
     document.body.appendChild(modal);
     modal.showModal();
 
-    // Globale Funktion einmalig definieren
     window.selectInitialLevel = function(mode) {
         currentLevelMode = mode;
         localStorage.setItem('levelMode', mode);
@@ -1348,7 +1344,6 @@ function loadData() {
 function startApp() {
     if (!window.dataReady) return;
 
-    // Event Listener für alle Filter
     ['filterSubject', 'filterGrade', 'filterTool', 'filterCompetence', 'filterLevel', 'filterFavorite'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', applyFilters);
@@ -1357,21 +1352,17 @@ function startApp() {
     const searchEl = document.getElementById('searchTopic');
     if (searchEl) searchEl.addEventListener('input', applyFilters);
 
-    // === NIVEAUSTUFEN INITIALISIERUNG ===
     populateLevelFilter();
     updateLevelModeButtons();
 
-    // Weitere Initialisierungen
     populateDropdowns();
     applyFilters();
 
-    // Toggle auf letzten gespeicherten Zustand setzen
     const checkbox = document.getElementById('compactToggle');
     if (checkbox) {
         checkbox.checked = compactMode;
     }
 
-    // Matrix PDF Button
     document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
 
     console.log('LernDashboard vollständig gestartet – butterweich auf iPad!');
@@ -1410,7 +1401,6 @@ const REPO_PATH = (() => {
 let resources = JSON.parse(localStorage.getItem('resources') || '[]');
 let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]');
 
-window.lastMigrationInfo = ''; // Nur einmal!
 window.dataReady = false;
 
 let allowReload = false;
@@ -1465,15 +1455,6 @@ function updateSchoolButton() {
         btn.dataset.set = 'false';
     }
 }
-
-// Beim Laden
-document.addEventListener('DOMContentLoaded', updateSchoolButton);
-    
-function setSchoolName() {
-    const current = localStorage.getItem('schoolName') || '';
-
-}
-
 
 // === SCHULNAME MODAL (MODERNES DESIGN) ===
 function setSchoolName() {
@@ -1539,17 +1520,14 @@ function setSchoolName() {
 
     document.body.appendChild(modal);
 
-    // Animation einblenden
     requestAnimationFrame(() => {
         modal.querySelector('div').style.transform = 'scale(1)';
         modal.querySelector('div').style.opacity = '1';
     });
 
-    // Fokus
     const input = modal.querySelector('#schoolNameInput');
     setTimeout(() => input.focus(), 100);
 
-    // Buttons
     modal.querySelector('#cancelSchoolBtn').onclick = () => {
         modal.style.opacity = '0';
         setTimeout(() => modal.remove(), 300);
@@ -1565,7 +1543,6 @@ function setSchoolName() {
         updateSchoolButton();
         document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
 
-        // Shine-Effekt beim Speichern
         const shine = modal.querySelector('#saveSchoolBtn span');
         shine.style.left = '100%';
         setTimeout(() => {
@@ -1574,7 +1551,6 @@ function setSchoolName() {
         }, 400);
     };
 
-    // ESC-Taste
     const closeOnEsc = (e) => {
         if (e.key === 'Escape') {
             modal.querySelector('#cancelSchoolBtn').click();
@@ -1584,7 +1560,6 @@ function setSchoolName() {
     document.addEventListener('keydown', closeOnEsc);
 }
 
-// === ANIMATIONEN ===
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1599,13 +1574,10 @@ function setFilterAndApply(filterId, value) {
     const select = document.getElementById(filterId);
     if (!select) return;
 
-    // 1. Wert setzen (auch wenn leer → Reset)
     select.value = value || '';
 
-    // 2. Filter-Container des betroffenen Selects finden und markieren
     const filterContainer = select.closest('.filter-container');
     if (filterContainer) {
-        // Alle anderen aktiv entfernen? Optional: nur diesen aktivieren
         document.querySelectorAll('.filter-container').forEach(fc => fc.classList.remove('active'));
         if (value) {
             filterContainer.classList.add('active');
@@ -1782,14 +1754,12 @@ searchInput.addEventListener('input', () => {
   suggestionsDiv.style.display = 'block';
 });
 
-// Klick außerhalb → Vorschläge schließen
 document.addEventListener('click', (e) => {
   if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
     suggestionsDiv.style.display = 'none';
   }
 });
 
-// Enter oder Tab → ersten Vorschlag übernehmen
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === 'Tab') {
     const first = suggestionsDiv.querySelector('div');
@@ -1815,7 +1785,6 @@ function resetFilters() {
     applyFilters();
 }
 
-// === VERSION SOFORT UND NACH UPDATE ANZEIGEN ===
 function updateVersionDisplay() {
     const el = document.getElementById('versionInfo');
     if (el) {
@@ -1823,12 +1792,11 @@ function updateVersionDisplay() {
     }
 }
 
-// Beim ersten Laden
 window.addEventListener('load', updateVersionDisplay);
 
 navigator.serviceWorker.addEventListener('controllerchange', () => {
     console.log('SW gewechselt → Version sofort aktualisieren');
-    updateVersionDisplay();        // ← Das fehlte!
+    updateVersionDisplay();
     if (allowReload) {
         window.location.reload();
     }
@@ -1838,12 +1806,10 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 function handleResourceMessage(event) {
     if (!event.data) return;
 
-    // Kompatibilität für ganz alte Versionen
     if (event.data.action === 'addResource' && event.data.resource) {
         event.data = { type: 'ADD_RESOURCE', data: event.data.resource };
     }
 
-    // === UPDATE RESSOURCE ===
     if (event.data.type === 'UPDATE_RESOURCE') {
         const { index, data } = event.data;
         if (index >= 0 && index < resources.length) {
@@ -1868,7 +1834,6 @@ function handleResourceMessage(event) {
     }, 250); 
     }
 
-// === EINZIGER ORT FÜR ADD_RESOURCE (verhindert Duplikate!) ===
 if (event.data.type === 'ADD_RESOURCE') {
   const { data, undoFullBackup, undoMessage } = event.data;
 
@@ -1907,12 +1872,10 @@ if (event.data.type === 'ADD_RESOURCE') {
   showUndoToast(undoEntry.message);
 }
 
-// === UPDATE_RESOURCE (überschreiben) ===
 if (event.data.type === 'UPDATE_RESOURCE') {
   const { index, data, undoFullBackup, undoBackup, undoMessage } = event.data;
   if (index >= 0 && index < resources.length) {
 
-    // Vollständiges Backup vor der Änderung
     const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
 
     resources[index] = data;
@@ -1942,7 +1905,6 @@ try {
     console.warn('BroadcastChannel nicht unterstützt');
 }
 
-// === NEUE, ROBUSTE VERSION ===
 function showPWAInstallBanner() {
   const lastShown = localStorage.getItem('pwaBannerLastShown');
   const now = Date.now();
@@ -1984,14 +1946,12 @@ function showPWAInstallBanner() {
   `;
   document.body.appendChild(banner);
 
-  // Installieren
   const installBtn = banner.querySelector('#installPwaBtn');
   installBtn.onclick = async () => {
     if (!installPromptEvent) return;
 
     banner.style.animation = 'slideDown 0.5s ease forwards';
     
-    // Prompt anzeigen
     installPromptEvent.prompt();
     
     const { outcome } = await installPromptEvent.userChoice;
@@ -1999,24 +1959,20 @@ function showPWAInstallBanner() {
     if (outcome === 'accepted') {
       showFancyAlert('LernDashboard wurde installiert!', 'success');
     } else {
-      // Falls abgelehnt → Banner einfach schließen
       console.log('Installation abgelehnt');
     }
     
-    // Aufräumen
     installPromptEvent = null;
     localStorage.setItem('pwaBannerLastShown', Date.now().toString());
     setTimeout(() => banner.remove(), 500);
   };
 
-  // Schließen-Button
   banner.querySelector('#closePwaBanner').onclick = () => {
     banner.style.animation = 'slideDown 0.5s ease forwards';
     setTimeout(() => banner.remove(), 500);
     localStorage.setItem('pwaBannerLastShown', Date.now().toString());
   };
 
-  // Auto-Close nach 12 Sekunden
   setTimeout(() => {
     if (banner && banner.parentElement) {
       banner.style.animation = 'slideDown 0.5s ease forwards';
@@ -2026,7 +1982,7 @@ function showPWAInstallBanner() {
   }, 12000);
 }
 
-// === PWA-INSTALLATIONS-BANNER: Animationen ===
+// === PWA-INSTALLATIONS-BANNER ===
 const pwaBannerStyle = document.createElement('style');
 pwaBannerStyle.textContent = `
     @keyframes slideUp {
@@ -2040,8 +1996,6 @@ pwaBannerStyle.textContent = `
 `;
 document.head.appendChild(pwaBannerStyle);
 
-
-// === NUR NACH KICK RELOAD ===
 navigator.serviceWorker.addEventListener('controllerchange', () => {
   if (allowReload) {
     window.location.reload();
@@ -2082,10 +2036,8 @@ function showUpdateBanner() {
   document.body.prepend(banner);
 
   document.getElementById('updateNowBtn').onclick = () => {
-  // 1. Banner schön ausblenden
   banner.style.animation = 'slideInDown 0.4s ease reverse forwards';
 
-  // 2. Kurze Bestätigung anzeigen
   const confirmBanner = document.createElement('div');
   confirmBanner.style.cssText = `
     position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
@@ -2102,13 +2054,11 @@ function showUpdateBanner() {
   `;
   document.body.prepend(confirmBanner);
 
-  // 3. SW aktivieren + Seite neu laden
   setTimeout(() => {
     if (newServiceWorker) {
       allowReload = true;
       newServiceWorker.postMessage({ type: 'SKIP_WAITING' });
     }
-    // Optional: kurze Pause für Schönheit, dann Reload
     setTimeout(() => location.reload(), 800);
   }, 400);
 };
@@ -2129,7 +2079,7 @@ function createSafetyBackup(actionName) {
     let safetyBackups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
     safetyBackups.unshift(backup);
     
-    if (safetyBackups.length > 8) safetyBackups.pop();   // nur letzte 8 behalten
+    if (safetyBackups.length > 8) safetyBackups.pop();
     
     localStorage.setItem('safetyBackups', JSON.stringify(safetyBackups));
 }
@@ -2223,32 +2173,27 @@ if ('serviceWorker' in navigator) {
           };
         }
 
-        // 1. Wartender Worker?
         if (reg.waiting) {
           newServiceWorker = reg.waiting;
           showUpdateBanner();
           return;
         }
 
-        // 2. Laufende Installation?
         if (reg.installing) {
           trackInstalling(reg.installing);
         }
 
-        // 3. Zukünftige Updates
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (newWorker) trackInstalling(newWorker);
         });
 
-        // 4. Update suchen
         reg.update();
       })
       .catch(err => console.error('SW Fehler:', err));
   });
 }
 
-// === NUR NACH KICK RELOAD ===
 navigator.serviceWorker.addEventListener('controllerchange', () => {
   if (allowReload) {
     window.location.reload();
@@ -2431,7 +2376,6 @@ function exportPDF() {
     }
 }
 
-// === HELPER: Sauberes Datum für Dateinamen ===
 function getDateString() {
     return new Date().toISOString().slice(0, 10); 
 }
@@ -2457,7 +2401,6 @@ function exportMatrixCSV() {
     const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
     const fileTitle = `Matrix_${getDateString()}`;
 
-    // === DYNAMISCH ===
     const competences = [
         "Suchen, Verarbeiten und Aufbewahren",
         "Kommunizieren und Kooperieren",
@@ -2469,7 +2412,6 @@ function exportMatrixCSV() {
 
     const levels = getLevelOptions();  
 
-    // Matrix aufbauen
     const matrix = {};
     competences.forEach(c => {
         matrix[c] = {};
@@ -2491,7 +2433,6 @@ function exportMatrixCSV() {
         matrix[comp][level].add(entry);
     });
 
-    // CSV erzeugen
     let csv = '\uFEFF';
     csv += `"${documentTitle}"\n\n`;
     csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
@@ -2553,7 +2494,6 @@ async function exportMatrixPDF() {
         const documentTitle = filterParts.length > 0 ? filterParts.join(' | ') : 'Kompetenzmatrix';
         const fileTitle = `Matrix_${getDateString()}`;
 
-        // === DYNAMISCH ===
         const competences = [
             "Suchen, Verarbeiten und Aufbewahren",
             "Kommunizieren und Kooperieren",
@@ -2570,7 +2510,6 @@ async function exportMatrixPDF() {
             [76, 175, 80], [139, 195, 74], [255, 193, 7], [255, 152, 0], [244, 67, 54]
         ].slice(0, levels.length);
 
-        // Matrix aufbauen
         const matrix = {};
         competences.forEach(c => {
             matrix[c] = {};
@@ -2591,7 +2530,6 @@ async function exportMatrixPDF() {
             matrix[c][l].push(`${topic}\nKlasse ${g}${tool ? ` – ${tool}` : ''}`);
         });
 
-        // Hilfsfunktionen (leicht angepasst)
         const drawLine = (x1, y1, x2, y2) => {
             doc.setDrawColor(180);
             doc.setLineWidth(0.25);
@@ -2634,11 +2572,9 @@ async function exportMatrixPDF() {
             doc.text(lines, x + 4, startY);
         };
 
-        // Header zeichnen
         let headerBottom = drawHeader(currentY);
         currentY = headerBottom;
 
-        // Zeilen
         const COMP_FS = 9.5, LEVEL_FS = 8.0;
         const LH_COMP = COMP_FS * 1.2 * 0.3528;
         const LH_LEVEL = LEVEL_FS * 1.2 * 0.3528;
@@ -2674,7 +2610,6 @@ async function exportMatrixPDF() {
             const rowY = currentY;
             let x = leftMargin;
 
-            // Kompetenz-Spalte
             doc.setFillColor(248, 249, 255);
             doc.rect(x, rowY, compColWidth, rowH, 'F');
             doc.setTextColor(0);
@@ -2683,7 +2618,6 @@ async function exportMatrixPDF() {
             drawLine(x + compColWidth, rowY, x + compColWidth, rowY + rowH);
             x += compColWidth;
 
-            // Level-Spalten
             levels.forEach((lvl, j) => {
                 const raw = matrix[comp][lvl].length ? matrix[comp][lvl].join('\n\n') : '—';
                 const lines = doc.splitTextToSize(raw, levelColWidth - 8);
@@ -2702,7 +2636,6 @@ async function exportMatrixPDF() {
             currentY += rowH;
         });
 
-        // Abschlusslinien + Seitenzahlen
         drawLine(leftMargin, headerBottom - 3, leftMargin, currentY);
         drawLine(pageWidth - rightMargin, headerBottom - 3, pageWidth - rightMargin, currentY);
 
@@ -2773,7 +2706,6 @@ function exportMatrixExcel() {
     const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
     const exportDate = `Export: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 
-    // Matrix aufbauen
     const matrix = {};
     competences.forEach(c => {
         matrix[c] = {};
@@ -2790,14 +2722,12 @@ function exportMatrixExcel() {
         matrix[comp][level].push(entry + desc);
     });
 
-    // Workbook
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Kompetenzmatrix');
 
     const numLevels = levels.length;
     const totalColumns = numLevels + 1;
 
-    // === KOPFZEILE ===
     const headerTopRow = sheet.addRow(Array(totalColumns).fill(''));
     headerTopRow.height = 55;
 
@@ -2817,9 +2747,8 @@ function exportMatrixExcel() {
     dateCell.font = { size: 11, color: { argb: 'FF666666' } };
     dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-    sheet.addRow([]); // Leerzeile
+    sheet.addRow([]);
 
-    // === TABELLENHEADER ===
     const headerRow = sheet.addRow(['Kompetenzbereich', ...levels]);
     headerRow.eachCell((cell, colNumber) => {
         let fillColor = colNumber === 1 ? headerColor : levelColors[levels[colNumber - 2]] || headerColor;
@@ -2867,7 +2796,6 @@ function exportMatrixExcel() {
             }
         });
 
-        // Zeilenhöhe dynamisch
         let maxLines = 1;
         row.eachCell({ includeEmpty: true }, (cell) => {
             if (cell.value) {
@@ -2878,13 +2806,11 @@ function exportMatrixExcel() {
         row.height = Math.max(70, maxLines * 22);
     });
 
-    // === SPALTENBREITEN ===
     sheet.columns = [
         { width: 36 },
         ...levels.map(() => ({ width: 44 }))
     ];
 
-    // === EXPORT ===
     workbook.xlsx.writeBuffer().then(buffer => {
         const excelBlob = new Blob([buffer], { type: 'application/octet-stream' });
         saveAs(excelBlob, `${fileTitle}.xlsx`);
@@ -2939,7 +2865,6 @@ function autoBackup() {
 
     document.body.appendChild(modal);
 
-    // Animation starten
     requestAnimationFrame(() => {
         modal.querySelector('div').style.transform = 'scale(1)';
         modal.querySelector('div').style.opacity = '1';
@@ -2956,7 +2881,6 @@ function autoBackup() {
         circle.style.strokeDashoffset = '0';
     }, 120);
 
-    // === EIGENTLICHER BACKUP (JSON mit Metadaten) ===
     setTimeout(() => {
         const backupData = {
             version: "1.2",
@@ -2977,7 +2901,6 @@ function autoBackup() {
 
         URL.revokeObjectURL(url);
 
-        // Erfolgsanzeige
         title.textContent = 'Backup erfolgreich!';
         title.style.color = '#27ae60';
         subtitle.textContent = 'JSON-Datei wurde heruntergeladen';
@@ -3010,7 +2933,6 @@ function printOptimized() {
         return;
     }
 
-    // --- Statistik berechnen ---
     const subjectCount = allResources.reduce((a, r) => {
         const s = r.subject || 'Unbekannt';
         a[s] = (a[s] || 0) + 1;
@@ -3020,7 +2942,6 @@ function printOptimized() {
     const uniqueTools = new Set(allResources.map(r => r.tool).filter(Boolean)).size;
     const favorites = allResources.filter(r => r.favorite).length;
 
-    // --- HTML generieren ---
     let printHtml = `
         <div class="print-content" style="
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -3106,7 +3027,6 @@ function printOptimized() {
         `;
     });
 
-    // --- Statistik ---
     printHtml += `
         <div class="print-stats" style="
             margin-top: 12mm;
@@ -3186,7 +3106,6 @@ function parseCSVLine(line) {
     result.push(current);
     return result;
 }
-// Intelligente Migration beim Import
 function migrateImportedResources(importedResources, sourceLevels, targetLevels) {
     if (sourceLevels === targetLevels || !importedResources?.length) return importedResources;
 
@@ -3255,8 +3174,6 @@ function handleJSONImport(jsonString) {
             importedResources = migrateImportedResources(importedResources, sourceLevels, targetLevels);
             migrationInfo = `Niveaustufen angepasst (${sourceLevels} → ${targetLevels} Stufen)`;
         }
-
-        window.lastMigrationInfo = migrationInfo;
 
         prepareImportData(importedResources);
 
@@ -3346,7 +3263,6 @@ function prepareImportData(importedResources) {
             description: String(entry.description || entry['Beschreibung'] || '').trim()
         };
 
-        // === SEHR ROBUSTER EXAKTER DUPLIKAT-CHECK ===
         const isExactDuplicate = resources.some(r => {
             const rTopic = String(r.topic || '').trim();
             const rSubject = String(r.subject || '').trim();
@@ -3359,7 +3275,7 @@ function prepareImportData(importedResources) {
                    rSubject === n.subject &&
                    rGrade === n.grade &&
                    rCompetence === n.competence &&
-                   rTool === n.tool &&                    // jetzt mit String-Normalisierung
+                   rTool === n.tool &&
                    rDescription === n.description;
         });
 
@@ -3368,7 +3284,6 @@ function prepareImportData(importedResources) {
             return;
         }
 
-        // === ÄHNLICHER EINTRAG ===
         const similarMatch = resources.find(r => {
             const rSubject = String(r.subject || '').trim();
             const rGrade = String(r.grade || '').trim();
@@ -3400,57 +3315,7 @@ function prepareImportData(importedResources) {
     showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
 }
 
-// ==================== JSON & CSV HANDLER ====================
-function handleJSONImport(jsonString) {
-    try {
-        const backup = JSON.parse(jsonString);
-        let imported = backup.resources || backup.data || backup || [];
-        if (!Array.isArray(imported) || imported.length === 0) {
-            throw new Error("Keine Ressourcen gefunden");
-        }
-        prepareImportData(imported);
-    } catch (err) {
-        console.error(err);
-        showFancyAlert('JSON ungültig', 'error', 'Die Datei konnte nicht gelesen werden.');
-    }
-}
 
-function handleCSVImport(csvString) {
-    const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
-    if (lines.length < 2) {
-        showFancyAlert('CSV-Datei ist leer!', 'warning');
-        return;
-    }
-
-    const headers = parseCSVLine(lines[0]);
-    const imported = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        const row = {};
-
-        headers.forEach((h, idx) => {
-            const key = h.toLowerCase().trim();
-            const val = (values[idx] || '').trim();
-            if (key.includes('thema') || key === 'topic') row.topic = val;
-            else if (key.includes('fach') || key.includes('unterricht')) row.subject = val;
-            else if (key.includes('klasse') || key.includes('stufe')) row.grade = val;
-            else if (key.includes('kompetenz')) row.competence = val;
-            else if (key.includes('niveau') || key.includes('level')) row.level = val;
-            else if (key.includes('tool') || key.includes('hilfsmittel')) row.tool = val;
-            else if (key.includes('beschreib')) row.description = val;
-        });
-
-        if (row.topic || row.subject) imported.push(row);
-    }
-
-    if (imported.length === 0) {
-        showFancyAlert('Keine gültigen Einträge gefunden.', 'warning');
-        return;
-    }
-
-    prepareImportData(imported);
-}
 
 // ==================== VOLLSTÄNDIGER IMPORT-DIALOG ====================
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
@@ -3607,14 +3472,12 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
 
     updateButtonText();
 
-    // Buttons
     modal.querySelector('#cancelImport').onclick = () => modal.remove();
 
     modal.querySelector('#confirmImport').onclick = () => {
         const backupBefore = JSON.parse(JSON.stringify(resources));
         let added = 0, overwritten = 0;
 
-        // Neue Einträge
         newOnes.forEach((n, i) => {
             if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
                 resources.push({...n, favorite: false, lastModified: new Date().toLocaleDateString('de-DE')});
@@ -3622,7 +3485,6 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
             }
         });
 
-        // Ähnliche Einträge
         similarOnes.forEach((s, i) => {
             const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
             const rep = modal.querySelector(`.replace-check[data-index="${i}"]`);
@@ -3682,7 +3544,6 @@ function showUndoToast(message) {
 
     document.body.appendChild(toast);
 
-    // Auto-verbergen nach 8 Sekunden
     setTimeout(() => {
         if (toast && toast.parentNode) {
             toast.style.animation = 'slideUp 0.4s ease reverse';
@@ -3765,7 +3626,6 @@ function showFancyAlert(title, type = 'info', subtitle = '', onClose = null) {
         }
     });
 
-    // Klick außerhalb
     modal.addEventListener('click', e => {
         if (e.target === modal) okBtn.click();
     });
@@ -3795,7 +3655,7 @@ async function checkStorageUsage(showWarning = true) {
     const fallback = getLocalStorageUsage();
 
     if (!navigator.storage?.estimate) {
-        // Fallback für ältere Browser
+
         const percent = Math.min(Math.round((fallback.bytes / (50 * 1024 * 1024)) * 100), 100);
         return { ...fallback, percent, quotaMB: "50" };
     }
@@ -3806,7 +3666,6 @@ async function checkStorageUsage(showWarning = true) {
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(1);
         let percent = Math.round((estimate.usage / estimate.quota) * 100);
 
-        // Sicherheits-Cap bei extrem hohen Quotas
         if (percent < 1 && parseFloat(usageMB) > 1) {
             percent = Math.max(2, Math.round((parseFloat(usageMB) / 100) * 100)); // Mindestens 2%
         }
@@ -3840,13 +3699,12 @@ async function updateStorageIndicator() {
     const percent = Math.max(0, Math.min(100, data.percent || 0));
     barEl.style.width = `${percent}%`;
 
-    // Immer grün starten, nur bei hoher Auslastung umfärben
     if (percent > 80) {
         barEl.style.background = '#e74c3c';
     } else if (percent > 65) {
         barEl.style.background = '#f39c12';
     } else {
-        barEl.style.background = '#27ae60';   // grün (dein Wunsch)
+        barEl.style.background = '#27ae60';
     }
 
     if (percentEl) {
@@ -3880,12 +3738,6 @@ function saveResources(silent = false) {
             showStorageWarning({ mb: "sehr hoch", percent: 100 });
         }
     }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 window.addEventListener('load', () => {
@@ -3947,8 +3799,6 @@ function displayResources(list) {
             </div>
         `;
 
-        // === SEHR EINFACHER & ROBUSTER HANDLER ===
-        // === VERBESSERTER EXPAND/COLLAPSE HANDLER – funktioniert in beiden Modi ===
 d.addEventListener('click', function(e) {
     if (e.target.closest('.action-icon')) return;
 
@@ -4054,7 +3904,7 @@ function editResource(i) {
         allTools: allTools
     };
 
-    // === Verbesserte, reduzierte Sende-Logik ===
+
     const sendMessage = () => {
         try {
             popup.postMessage(message, location.origin);
@@ -4063,10 +3913,9 @@ function editResource(i) {
         }
     };
 
-    // Sofort + kurze Verzögerungen + Load-Event
-    sendMessage();                    // 1. Versuch sofort
-    setTimeout(sendMessage, 120);     // 2. Versuch
-    setTimeout(sendMessage, 350);     // 3. Versuch
+    sendMessage();
+    setTimeout(sendMessage, 120);
+    setTimeout(sendMessage, 350);
 
     popup.addEventListener('load', sendMessage, { once: true });
 }
@@ -4135,7 +3984,6 @@ function openManual() {
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
     
-    // Zustand speichern
     if (document.body.classList.contains('dark')) {
         localStorage.setItem('darkMode', 'on');
     } else {
@@ -4143,7 +3991,6 @@ function toggleDarkMode() {
     }
 }
 
-// Beim Laden wiederherstellen
 document.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('darkMode') === 'on') {
         document.body.classList.add('dark');
@@ -4379,7 +4226,6 @@ if (document.readyState === 'loading') {
     transform: rotate(180deg);
 }
 
-/* Action-Icons rechts */
 .resource-item.compact .action-icons {
     display: flex;
     align-items: center;
@@ -4544,7 +4390,6 @@ body {
     box-shadow: 0 8px 25px rgba(107,70,193,0.12) !important;
 }
 
-/* ==================== SCHÖNER TOGGLE SWITCH ==================== */
 .toggle-switch {
     position: relative;
     display: inline-block;
