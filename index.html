@@ -86,7 +86,7 @@
     }
     
     .logo-left svg {
-        height: 110px !important;      /* etwas größer auf Mobile */
+        height: 110px !important;
     }
     
     .logo-right img {
@@ -199,14 +199,12 @@
         margin-left: 12px;
         align-self: flex-end;
     }
-    .export-buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
     .file-input { display: none; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
     .stat-card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); font-weight: 600; }
     .stat-card:hover {transform: translateY(-3px);}
     .stat-card span {font-size: 26px;font-weight: 700;}
     .resource-item { margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
-    .resource-item:hover {transform: translateY(-6px);box-shadow: 0 15px 35px rgba(107, 70, 193, 0.18);}
     .resource-content strong {
     font-size: 18px;
     line-height: 1.35;
@@ -270,7 +268,6 @@
 }
     .version-info:hover { opacity: 1; }
 
-/* === SCHUL-BUTTON: IDENTISCH ZUM NEUE-RESSOURCE-BUTTON (OHNE ICON) === */
 .school-btn {
     background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
     margin: 16px auto 8px !important;
@@ -319,11 +316,10 @@
     box-shadow: 0 12px 28px rgba(46, 204, 113, 0.4) !important;
 }
 
-/* ==================== MOBILE OPTIMIERUNGEN – FINAL ==================== */
 @media (max-width: 768px) {
     body { 
         padding: 10px; 
-        overflow-x: hidden; /* Verhindert horizontales Scrollen */
+        overflow-x: hidden;
     }
 
     .title-main { font-size: 19px; }
@@ -372,14 +368,6 @@
     box-shadow: 0 4px 10px rgba(197, 143, 224, 0.35);
 }
 
-/* Hover für alle */
-
-    .export-buttons {
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: stretch;
-    }
-
 /* --- NEUE RESSOURCE BUTTON (MOBILE) --- */
 .new-resource-btn {
     max-width: 100%;
@@ -414,8 +402,6 @@
     background: var(--card);
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     padding: 22px;
-    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 16px;
 }
     .action-icons { gap: 5px; }
     .action-icon { width: 30px; height: 30px; }
@@ -490,14 +476,11 @@
     left: 100%;
 }
 
-
-/* Sehr kleine Bildschirme */
 @media (max-width: 380px) {
     .stats { grid-template-columns: 1fr; }
-    .export-buttons { flex-direction: column; }
     .btn { flex: 1 1 auto; }
 }
-/* Filter aktiv: blasses Rot + Akzent OHNE Verschiebung */
+
 .filter-container.active {
     background: linear-gradient(135deg, #fff5f5, #ffeaea) !important;
     box-shadow: 0 2px 8px rgba(255, 0, 0, 0.08) !important;
@@ -512,7 +495,7 @@
     left: 0; top: 0; bottom: 0;
     width: 4px;
     background: rgba(255, 0, 0, 0.4);
-    pointer-events: none; /* damit Klicks durchgehen */
+    pointer-events: none;
 }
 
 @keyframes slideIn {
@@ -523,86 +506,143 @@
 @keyframes drawCircle {
   to { stroke-dashoffset: 0; }
 }
+
 /* ==================== LÖSCH-CONFIRM-DIALOG ==================== */
 dialog#confirmDeleteDialog {
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.35);
-  padding: 28px;
-  max-width: 420px;
-  width: 90vw;
-  background: var(--card);
-  animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    padding: 32px 28px;
+    max-width: 420px;
+    width: 90vw;
+    background: var(--card);
+    animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
 
-  /* Zentrieren */
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;                    
+    z-index: 30000 !important;
 }
 
 dialog#confirmDeleteDialog::backdrop {
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+}
+
+@media (max-width: 768px) {
+    dialog#confirmDeleteDialog {
+        width: 94vw !important;
+        padding: 28px 20px !important;
+        max-width: none !important;
+    }
 }
 
 dialog#confirmDeleteDialog p {
-  margin: 0 0 24px;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--text);
+    margin: 0 0 28px;
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: var(--text);
 }
 
 dialog#confirmDeleteDialog .buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 10px;
+    display: flex;
+    gap: 14px;
+    justify-content: flex-end;
+    margin-top: 12px;
 }
 
 dialog#confirmDeleteDialog button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: 90px;
-  transition: all 0.2s;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 100px;
+    transition: all 0.2s;
 }
 
 dialog#confirmDeleteDialog button[value="cancel"] {
-  background: #95a5a6;
-  color: white;
+    background: #95a5a6;
+    color: white;
 }
 
 dialog#confirmDeleteDialog button[value="delete"] {
-  background: var(--danger);
-  color: white;
+    background: var(--danger);
+    color: white;
 }
 
 dialog#confirmDeleteDialog button[value="delete"]:hover {
-  background: #c0392b;
-  transform: translateY(-2px);
+    background: #c0392b;
+    transform: translateY(-2px);
 }
 
 @keyframes modalPop {
-  from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+    from { 
+        transform: translate(-50%, -50%) scale(0.75); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+    }
 }
 
 .filter-container {
     overflow: visible !important; 
 }
 
-/* Grundstil aller Buttons */
-
-/* ==================== EXPORT BEREICH – KORRIGIERT ==================== */
+/* ==================== EXPORT BEREICH ==================== */
 .export-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 32px;
     align-items: flex-start;
     margin: 24px 0 32px 0;
+}
+
+/* ==================== EXPORT-GRUPPEN ==================== */
+.export-group {
+    flex: 1;
+    min-width: 280px;
+}
+
+.export-group-title {
+    margin: 0 0 12px 0;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--primary);
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--primary-light);
+}
+
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* ==================== MOBILE OPTIMIERUNGEN – EXPORT ==================== */
+@media (max-width: 768px) {
+    .export-buttons {
+        gap: 16px;
+        margin: 20px 0 28px 0;
+    }
+    
+    .export-group {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 380px) {
+    .export-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .btn, .export-buttons label.btn {
+        flex: 1 1 auto;
+    }
 }
 
 .export-group {
@@ -637,7 +677,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     min-width: 118px;
     text-align: center;
     white-space: nowrap;
-    height: 48px;           /* einheitliche Höhe */
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -649,7 +689,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     box-shadow: 0 10px 25px rgba(107,70,193,0.25);
 }
 
-/* ==================== SPEZIELLE BUTTON-FARBEN ==================== */
 .btn.print { 
     background: #34495e; 
     color: white;
@@ -723,10 +762,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     font-size: 0; margin: 0; padding: 0; appearance: none;
 }
 
-/* ============================================================= */
-/* ROTER RAHMEN – DIE LETZTE, 100 % SICHERE VERSION (2025)     */
-/* ============================================================= */
-
 .filtered-export.active {
     outline: 2px solid #e74c3c !important;
     outline-offset: 3px !important;
@@ -743,7 +778,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     50%      { box-shadow: 0 0 0 5px #e74c3c, 0 0 30px rgba(231,76,60,0.9); }
 }
 
-/* Hover bleibt voll sichtbar */
 .export-buttons .btn:hover,
 .export-buttons label.btn:hover {
     z-index: 20 !important;
@@ -751,7 +785,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     box-shadow: 0 10px 25px rgba(107,70,193,0.35) !important;
 }
 
-/* ==================== SPEICHER-INDIKATOR + ABSTAND ==================== */
 #storageIndicator {
     margin-bottom: 80px !important;   
 }
@@ -991,13 +1024,32 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 
 </div>
 
-<!-- ZENTRIERTE NEUE-RESSOURCE-BUTTON -->
-<div class="centered-button-wrapper">
-    <button class="new-resource-btn" onclick="openNewResourceWindow()"> Neue Ressource
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 6px;">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-    </button>
+<!-- TOGGLE LINKS + ZENTRIERTER BUTTON + SYMMETRISCHER PLATZHALTER RECHTS -->
+<div style="display: flex; align-items: center; margin: 20px 0 12px 0; padding: 0 8px;">
+
+    <!-- Toggle links -->
+    <label style="cursor: pointer; flex-shrink: 0;">
+        <div class="toggle-switch">
+            <input type="checkbox" id="compactToggle" onchange="toggleCompactMode()" checked>
+            <span class="slider"></span>
+        </div>
+    </label>
+
+    <!-- Zentrierungs-Platzhalter -->
+    <div style="flex: 1; display: flex; justify-content: center;">
+        <div class="centered-button-wrapper" style="margin: 0;">
+            <button class="new-resource-btn" onclick="openNewResourceWindow()">
+                Neue Ressource
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 6px;">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Unsichtbarer Platzhalter rechts -->
+    <div style="width: 68px; flex-shrink: 0;"></div>
+
 </div>
         <!-- RESSOURCEN + SIDEBAR -->
         <div class="content-wrapper">
@@ -1038,7 +1090,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
             🛡️ Ressourcen wiederherstellen (Notfall)
         </button>
     </div>
-<!-- Storage Monitor – rein informativ -->
+<!-- Storage Monitor -->
 <div style="margin: 16px 0; padding: 16px 14px; background:#f8f9fa; border-radius:12px; border:1px solid #ddd;" 
      id="storageIndicator">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1055,8 +1107,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
 
 </div>
 
-    <div id="statsFach"></div>
-</div>
             </div>
         </div>
 <!-- Floating Help Button – unten rechts -->
@@ -1073,17 +1123,30 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     </svg>
 
 <script defer>
-// ===========================
-// ASYNCHRONES DATENLADEN + APP-START
-// ===========================
+
 window.resources = [];
 window.undoStack = [];
 window.dataReady = false;
 
 // ======================
-// NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen) – KORRIGIERTE VERSION
+// NIVEAUSTUFEN-MANAGEMENT (3 oder 5 Stufen)
 // ======================
 let currentLevelMode = localStorage.getItem('levelMode') || '5';
+
+// ==================== KOMPAKT-MODUS – Letzte Einstellung merken ====================
+let compactMode = localStorage.getItem('compactMode') !== 'false'; // true = kompakt (Standard)
+
+function toggleCompactMode() {
+    compactMode = !compactMode;
+    
+    const checkbox = document.getElementById('compactToggle');
+    if (checkbox) checkbox.checked = compactMode;
+    
+    // Einstellung speichern
+    localStorage.setItem('compactMode', compactMode);
+    
+    applyFilters();
+}
 
 function getLevelMode() {
     const saved = localStorage.getItem('levelMode');
@@ -1302,6 +1365,12 @@ function startApp() {
     populateDropdowns();
     applyFilters();
 
+    // Toggle auf letzten gespeicherten Zustand setzen
+    const checkbox = document.getElementById('compactToggle');
+    if (checkbox) {
+        checkbox.checked = compactMode;
+    }
+
     // Matrix PDF Button
     document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
 
@@ -1326,7 +1395,7 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.49';
+const VERSION = '1.1.50';
 
 const REPO_PATH = (() => {
     if (location.hostname === 'localhost' ||
@@ -1341,13 +1410,9 @@ const REPO_PATH = (() => {
 let resources = JSON.parse(localStorage.getItem('resources') || '[]');
 let undoStack = JSON.parse(localStorage.getItem('undoStack') || '[]');
 
-let tools = new Set(resources.map(r => r.tool?.trim().toLowerCase()).filter(Boolean));
-
 window.lastMigrationInfo = ''; // Nur einmal!
 window.dataReady = false;
 
-let dropdownsInitialized = false;
-let targetVersion = null;
 let allowReload = false;
 let newServiceWorker = null;
 
@@ -1403,63 +1468,10 @@ function updateSchoolButton() {
 
 // Beim Laden
 document.addEventListener('DOMContentLoaded', updateSchoolButton);
-    // === FIRST START: Niveaustufen wählen ===
-    if (!localStorage.getItem('levelMode')) {
-      const modal = document.createElement('dialog');
-      modal.style.cssText = `
-        max-width: 520px; 
-        border: none; 
-        border-radius: 20px; 
-        padding: 0; 
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        background: var(--card);
-      `;
-      modal.innerHTML = `
-        <div style="padding:40px 30px 20px; text-align:center;">
-          <h2 style="margin:0 0 20px; color:var(--primary);">Willkommen im LernDashboard Digital!</h2>
-          <p style="font-size:17px; margin-bottom:28px; line-height:1.5;">
-            Mit wie vielen Niveaustufen möchtest du arbeiten?
-          </p>
-          
-          <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
-            <button onclick="selectInitialLevelMode('5'); this.closest('dialog').close()" 
-                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
-                           background:linear-gradient(135deg,#6b46c1,#7e5be0); color:white; min-width:190px; cursor:pointer;">
-              5 Niveaustufen<br>
-              <small style="font-size:14px; opacity:0.9;">(detailliert)</small>
-            </button>
-            <button onclick="selectInitialLevelMode('3'); this.closest('dialog').close()" 
-                    style="padding:22px 40px; font-size:18px; font-weight:700; border:none; border-radius:16px; 
-                           background:linear-gradient(135deg,#00bfff,#00d2d3); color:white; min-width:190px; cursor:pointer;">
-              3 Niveaustufen<br>
-              <small style="font-size:14px; opacity:0.9;">(übersichtlich)</small>
-            </button>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      modal.showModal();
-
-      window.selectInitialLevelMode = function(mode) {
-        currentLevelMode = mode;
-        localStorage.setItem('levelMode', mode);
-        console.log('Initial levelMode gesetzt:', mode);
-      };
-    }
-// Nach Änderung im Modal
+    
 function setSchoolName() {
     const current = localStorage.getItem('schoolName') || '';
 
-    // Am Ende des "Speichern"-Buttons:
-    modal.querySelector('#saveSchoolBtn').onclick = () => {
-        const name = input.value.trim();
-        if (name) {
-            localStorage.setItem('schoolName', name);
-        } else {
-            localStorage.removeItem('schoolName');
-        }
-        updateSchoolButton();  
-        document.getElementById('printSchoolNameText').textContent = getSchoolName() || 'Deine Schule';
-    };
 }
 
 
@@ -2028,76 +2040,6 @@ pwaBannerStyle.textContent = `
 `;
 document.head.appendChild(pwaBannerStyle);
 
-// === PWA-INSTALLATIONS-BANNER ===
-function showPWAInstallBanner() {
-
-    const lastShown = localStorage.getItem('pwaBannerLastShown');
-    const now = Date.now();
-    if (lastShown && (now - parseInt(lastShown)) < 86400000) return;
-
-    const banner = document.createElement('div');
-    banner.id = 'pwaInstallBanner';
-    banner.style.cssText = `
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        background: white; color: #333; padding: 16px 28px; border-radius: 18px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.35); z-index: 99999;
-        display: flex; align-items: center; gap: 16px; max-width: 90%;
-        font-family: system-ui, sans-serif; animation: slideUp 0.6s ease;
-        border: 4px solid #6b46c1;
-    `;
-    banner.innerHTML = `
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="#6b46c1">
-            <path d="M17 18H7V6h10v1h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v1z"/>
-            <path d="M14 9h5l-7 7-7-7h5V3h4v6z"/>
-        </svg>
-        <div style="flex:1;">
-            <strong style="font-size:17px;display:block;margin-bottom:4px;">
-                LernDashboard als App installieren?
-            </strong>
-            <span style="font-size:14px;color:#555;">
-                Direkt vom Homescreen starten – schneller & offline nutzbar!
-            </span>
-        </div>
-        <button id="installPwaBtn" style="
-            background:#6b46c1;color:white;border:none;padding:12px 24px;
-            border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;
-        ">Installieren</button>
-        <button id="closePwaBanner" style="
-            background:none;border:none;font-size:28px;cursor:pointer;color:#999;
-            margin-left:8px;
-        ">×</button>
-    `;
-
-    document.body.appendChild(banner);
-
-    // Installieren
-    document.getElementById('installPwaBtn').onclick = async () => {
-        banner.remove();
-        if (!installPromptEvent) return;
-        installPromptEvent.prompt();
-        const { outcome } = await installPromptEvent.userChoice;
-        installPromptEvent = null;
-        if (outcome === 'accepted') {
-            showFancyAlert('LernDashboard wurde installiert!', 'success');
-        }
-    };
-
-    // Schließen
-    document.getElementById('closePwaBanner').onclick = () => {
-        banner.style.animation = 'slideDown 0.5s ease forwards';
-        setTimeout(() => banner.remove(), 500);
-        localStorage.setItem('pwaBannerLastShown', Date.now().toString());
-    };
-
-    // Auto-Close nach 10 Sekunden
-    setTimeout(() => {
-        if (banner && banner.parentElement) {
-            banner.style.animation = 'slideDown 0.5s ease forwards';
-            setTimeout(() => banner.remove(), 500);
-            localStorage.setItem('pwaBannerLastShown', Date.now().toString());
-        }
-    }, 10000);
-}
 
 // === NUR NACH KICK RELOAD ===
 navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -2313,18 +2255,13 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
   }
 });
 
-// ===================================================================
-// PWA-INSTALLATION – FINAL, EINZIGER, PERFEKTER LISTENER
-// ===================================================================
-let installPromptEvent = null;  // Globale Variable (ersetzt deferredPrompt)
+
+let installPromptEvent = null;  
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   installPromptEvent = e;
 
-  // Banner nur anzeigen, wenn:
-  // - Service Worker bereits aktiv ist (normale Nutzung) ODER
-  // - Es der allererste Besuch ist (noch kein localStorage-Eintrag)
   const swActive = !!navigator.serviceWorker?.controller;
   const firstVisit = !localStorage.getItem('pwaBannerLastShown');
 
@@ -2332,19 +2269,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
     showPWAInstallBanner();
   }
 });
-
-// === INIT ===
-['filterSubject','filterGrade','filterTool','filterCompetence','filterLevel','filterFavorite'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', applyFilters);
-});
-const searchEl = document.getElementById('searchTopic');
-if (searchEl) searchEl.addEventListener('input', applyFilters);
-
-populateDropdowns();
-applyFilters();
-applyFilters();
-document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
 
 function exportTemplate() {
     const template = [
@@ -2383,7 +2307,7 @@ function exportCSV() {
     link.href = URL.createObjectURL(csvBlob);
     link.download = `LernDashboard_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
-    // Nach dem Download des CSV
+
     showFancyAlert('CSV Export erfolgreich!', 'success');}
 
 function exportPDF() {
@@ -2911,7 +2835,6 @@ function exportMatrixExcel() {
     });
     headerRow.height = 45;
 
-    // === ZEILEN mit leichter Umrandung ===
     competences.forEach(comp => {
         const rowValues = [comp, ...levels.map(l => matrix[comp][l].join('\n\n') || '–')];
         const row = sheet.addRow(rowValues);
@@ -2928,7 +2851,6 @@ function exportMatrixExcel() {
             right: { style: 'thin', color: { argb: 'FF999999' } }
         };
 
-        // Level-Zellen mit leichter Umrandung
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             if (colNumber > 1) {
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: contentColor } };
@@ -2936,7 +2858,6 @@ function exportMatrixExcel() {
                 if (cell.value && cell.value !== '–') cell.value = '\n' + cell.value + '\n';
                 if (cell.value === '–') cell.font = { color: { argb: 'FF999999' }, italic: true };
 
-                // Leichte Umrandung für alle Ressourcen-Zellen
                 cell.border = {
                     top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
                     left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
@@ -2973,7 +2894,7 @@ function exportMatrixExcel() {
         showFancyAlert('Export fehlgeschlagen!', 'error');
     });
 }
-// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD - jetzt JSON Ausgabe ===
+// === BACKUP MIT MODAL + AUTOMATISCHER DOWNLOAD - JSON Ausgabe ===
 function autoBackup() {
     createSafetyBackup('Manuelles Backup');
 
@@ -3040,7 +2961,7 @@ function autoBackup() {
         const backupData = {
             version: "1.2",
             exportDate: new Date().toISOString(),
-            numLevels: parseInt(getLevelMode()),     // ← WICHTIG für spätere Migration
+            numLevels: parseInt(getLevelMode()),
             levelMode: getLevelMode(),
             resources: allResources
         };
@@ -3070,7 +2991,6 @@ function autoBackup() {
     }, 450);
 }
 
-// Hilfsfunktion: HTML escapen (sicherer für Inhalte)
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -3231,16 +3151,13 @@ function printOptimized() {
 
     printHtml += `</ul></div></div>`;
 
-    // --- In .main einfügen ---
     const mainContainer = document.querySelector('.main');
     const originalMain = mainContainer.innerHTML;
 
     mainContainer.innerHTML = printHtml;
 
-    // --- Drucken ---
     window.print();
 
-    // --- Zurücksetzen ---
     setTimeout(() => {
         mainContainer.innerHTML = originalMain;
     }, 500);
@@ -3320,7 +3237,6 @@ function importFile(event) {
 }
 
 // ───────────────────── JSON Import (neue Backups) ─────────────────────
-// ───────────────────── JSON Import (neue Backups) ─────────────────────
 function handleJSONImport(jsonString) {
     try {
         const backup = JSON.parse(jsonString);
@@ -3335,13 +3251,11 @@ function handleJSONImport(jsonString) {
 
         let migrationInfo = '';
 
-        // Migration in beide Richtungen
         if (sourceLevels !== targetLevels) {
             importedResources = migrateImportedResources(importedResources, sourceLevels, targetLevels);
             migrationInfo = `Niveaustufen angepasst (${sourceLevels} → ${targetLevels} Stufen)`;
         }
 
-        // WICHTIG: Info für die Erfolgsmeldung speichern
         window.lastMigrationInfo = migrationInfo;
 
         prepareImportData(importedResources);
@@ -3352,7 +3266,7 @@ function handleJSONImport(jsonString) {
     }
 }
 
-// ───────────────────── CSV Import (altes Format) ─────────────────────
+// ───────────────────── CSV Import ─────────────────────
 function handleCSVImport(csvString) {
     const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
     if (lines.length < 2) return showFancyAlert('CSV-Datei ist leer!', 'warning');
@@ -3385,154 +3299,240 @@ function handleCSVImport(csvString) {
     prepareImportData(importedResources);
 }
 
-// ───────────────────── Gemeinsame Weiterverarbeitung ─────────────────────
+// ====================== IMPORT BLOCK – FINAL (mit Fuzzy Matching + vollständiger Dialog) ======================
+
+function levenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + cost
+            );
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function similarity(a, b) {
+    if (!a || !b) return 0;
+    const len = Math.max(a.length, b.length);
+    if (len === 0) return 1;
+    return (len - levenshteinDistance(a.toLowerCase().trim(), b.toLowerCase().trim())) / len;
+}
+
+// ==================== HAUPT-IMPORT-FUNKTION ====================
 function prepareImportData(importedResources) {
     createSafetyBackup('Vor Import');
+
     const toImport = [];
-    const duplicates = [];
     const similar = [];
+    const duplicates = [];
 
     importedResources.forEach(entry => {
-        const normalized = {
-            topic: (entry.topic || entry.Thema || '(Ohne Thema)').trim(),
-            subject: (entry.subject || entry['Unterrichtsfach'] || '').trim(),
-            grade: (entry.grade || entry['Klassenstufe'] || '').trim(),
-            competence: (entry.competence || entry['Kompetenzbereich'] || '').trim(),
-            level: (entry.level || entry['Niveaustufe'] || '').trim(),
-            tool: (entry.tool || entry['Digitales_Hilfsmittel'] || '').trim(),
-            description: (entry.description || entry['Beschreibung'] || '').trim()
+        const n = {
+            topic: String(entry.topic || entry.Thema || '(Ohne Thema)').trim(),
+            subject: String(entry.subject || entry['Unterrichtsfach'] || '').trim(),
+            grade: String(entry.grade || entry['Klassenstufe'] || '').trim(),
+            competence: String(entry.competence || entry['Kompetenzbereich'] || '').trim(),
+            level: String(entry.level || '').trim(),
+            tool: String(entry.tool || entry['Digitales_Hilfsmittel'] || '').trim(),
+            description: String(entry.description || entry['Beschreibung'] || '').trim()
         };
 
-        // Exakter Duplikat-Check
-        const exact = resources.some(r =>
-            r.topic === normalized.topic &&
-            r.subject === normalized.subject &&
-            r.grade === normalized.grade &&
-            r.competence === normalized.competence &&
-            r.level === normalized.level &&
-            (r.tool || '') === normalized.tool &&
-            (r.description || '') === normalized.description
-        );
+        // === SEHR ROBUSTER EXAKTER DUPLIKAT-CHECK ===
+        const isExactDuplicate = resources.some(r => {
+            const rTopic = String(r.topic || '').trim();
+            const rSubject = String(r.subject || '').trim();
+            const rGrade = String(r.grade || '').trim();
+            const rCompetence = String(r.competence || '').trim();
+            const rTool = String(r.tool || '').trim();
+            const rDescription = String(r.description || '').trim();
 
-        if (exact) {
-            duplicates.push(normalized);
+            return rTopic === n.topic &&
+                   rSubject === n.subject &&
+                   rGrade === n.grade &&
+                   rCompetence === n.competence &&
+                   rTool === n.tool &&                    // jetzt mit String-Normalisierung
+                   rDescription === n.description;
+        });
+
+        if (isExactDuplicate) {
+            duplicates.push(n);
             return;
         }
 
-        // Ähnlicher Eintrag (gleiches Fach/Klasse/Kompetenz/Level/Tool)
-        const similarMatch = resources.find(r =>
-            r.subject?.trim().toLowerCase() === normalized.subject.toLowerCase() &&
-            r.grade === normalized.grade &&
-            r.competence?.trim().toLowerCase() === normalized.competence.toLowerCase() &&
-            r.level === normalized.level &&
-            (r.tool || '').trim().toLowerCase() === normalized.tool.toLowerCase()
-        );
+        // === ÄHNLICHER EINTRAG ===
+        const similarMatch = resources.find(r => {
+            const rSubject = String(r.subject || '').trim();
+            const rGrade = String(r.grade || '').trim();
+            const rTool = String(r.tool || '').trim();
+
+            const sameSubject = rSubject === n.subject;
+            const sameGrade = rGrade === n.grade;
+            const toolSim = similarity(rTool, n.tool);
+            const sameTool = toolSim >= 0.75;
+
+            const hasDifference = 
+                String(r.topic || '').trim() !== n.topic || 
+                String(r.description || '').trim() !== n.description;
+
+            return sameSubject && sameGrade && sameTool && hasDifference;
+        });
 
         if (similarMatch) {
-            similar.push({ ...normalized, existing: similarMatch });
+            similar.push({
+                ...n,
+                existing: similarMatch,
+                similarityScore: similarity(String(similarMatch.topic || ''), n.topic)
+            });
         } else {
-            toImport.push(normalized);
+            toImport.push(n);
         }
     });
 
     showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
 }
 
-// === NEUE EINHEITLICHE IMPORT-ENTSCHEIDUNGSMASKE (komplett + korrigiert) ===
+// ==================== JSON & CSV HANDLER ====================
+function handleJSONImport(jsonString) {
+    try {
+        const backup = JSON.parse(jsonString);
+        let imported = backup.resources || backup.data || backup || [];
+        if (!Array.isArray(imported) || imported.length === 0) {
+            throw new Error("Keine Ressourcen gefunden");
+        }
+        prepareImportData(imported);
+    } catch (err) {
+        console.error(err);
+        showFancyAlert('JSON ungültig', 'error', 'Die Datei konnte nicht gelesen werden.');
+    }
+}
+
+function handleCSVImport(csvString) {
+    const lines = csvString.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 2) {
+        showFancyAlert('CSV-Datei ist leer!', 'warning');
+        return;
+    }
+
+    const headers = parseCSVLine(lines[0]);
+    const imported = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row = {};
+
+        headers.forEach((h, idx) => {
+            const key = h.toLowerCase().trim();
+            const val = (values[idx] || '').trim();
+            if (key.includes('thema') || key === 'topic') row.topic = val;
+            else if (key.includes('fach') || key.includes('unterricht')) row.subject = val;
+            else if (key.includes('klasse') || key.includes('stufe')) row.grade = val;
+            else if (key.includes('kompetenz')) row.competence = val;
+            else if (key.includes('niveau') || key.includes('level')) row.level = val;
+            else if (key.includes('tool') || key.includes('hilfsmittel')) row.tool = val;
+            else if (key.includes('beschreib')) row.description = val;
+        });
+
+        if (row.topic || row.subject) imported.push(row);
+    }
+
+    if (imported.length === 0) {
+        showFancyAlert('Keine gültigen Einträge gefunden.', 'warning');
+        return;
+    }
+
+    prepareImportData(imported);
+}
+
+// ==================== VOLLSTÄNDIGER IMPORT-DIALOG ====================
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
     const totalNew = newOnes.length;
     const totalSimilar = similarOnes.length;
-    const totalToShow = totalNew + totalSimilar;
 
-    if (totalToShow === 0) {
-        showFancyAlert('Keine neuen oder ähnlichen Einträge gefunden.', 'info');
+    if (totalNew === 0 && totalSimilar === 0) {
+        const msg = duplicateCount > 0 
+            ? `${duplicateCount} exakte Duplikate wurden ignoriert.` 
+            : 'Keine neuen oder ähnlichen Einträge gefunden.';
+        showFancyAlert('Import abgeschlossen', 'info', msg);
         return;
     }
 
     const modal = document.createElement('div');
-    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;
-        background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
-        display:flex;justify-content:center;align-items:center;z-index:20000;padding:20px;`;
+    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:20000;padding:20px;box-sizing:border-box;`;
 
     modal.innerHTML = `
-        <div style="background:var(--card);padding:28px;border-radius:16px;max-width:1160px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-            <h3 style="margin:0 0 16px;color:var(--text);font-size:20px;">Import abschließen</h3>
-            <p style="margin:0 0 20px;color:var(--text-light);font-size:15px;line-height:1.5;">
-                <strong>${totalNew}</strong> komplett neue ${totalNew === 1 ? 'Ressource' : 'Ressourcen'} •
-                <strong>${totalSimilar}</strong> ähnliche ${totalSimilar === 1 ? 'Ressource' : 'Ressourcen'} •
-                <strong>${duplicateCount}</strong> exakte ${duplicateCount === 1 ? 'Duplikat' : 'Duplikate'} ${duplicateCount > 0 ? 'werden übersprungen' : ''}
+        <div style="background:var(--card);padding:28px;border-radius:16px;max-width:1150px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.45);">
+            <h3 style="margin:0 0 12px;color:var(--text);font-size:21px;">Import abschließen</h3>
+            <p style="margin:0 0 20px;color:var(--text-light);font-size:15.5px;">
+                <strong>${totalNew}</strong> neue Einträge • 
+                <strong>${totalSimilar}</strong> ähnliche Einträge • 
+                ${duplicateCount ? `<span style="color:#e74c3c;">${duplicateCount} Duplikate ignoriert</span>` : ''}
             </p>
-                <div style="max-height:540px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;">
-                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+
+            <div style="max-height:520px;overflow-y:auto;border:1px solid #ddd;border-radius:10px;background:#fafafa;">
+                <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
                     <thead style="background:#6b46c1;color:white;position:sticky;top:0;z-index:10;">
                         <tr>
                             <th style="padding:12px;width:80px;text-align:center;">
                                 Importieren?<br>
-                                <input type="checkbox" id="importAll" checked style="width:18px;height:18px;margin-top:4px;">
+                                <input type="checkbox" id="importAll" checked style="width:18px;height:18px;">
                             </th>
-                            <th style="padding:12px;width:100px;text-align:center;">
+                            <th style="padding:12px;width:90px;text-align:center;">
                                 Überschreiben?<br>
-                                <input type="checkbox" id="replaceAll" style="width:18px;height:18px;margin-top:4px;">
+                                <input type="checkbox" id="replaceAll" style="width:18px;height:18px;">
                             </th>
                             <th style="padding:12px;">Thema</th>
-                            <th style="padding:12px;width:38%;">Unterschied / Hinweis</th>
-                            <th style="padding:12px;font-size:13px;">Fach • Klasse • Kompetenz • Tool</th>
+                            <th style="padding:12px;">Hinweis</th>
+                            <th style="padding:12px;">Fach • Klasse • Tool</th>
                         </tr>
                     </thead>
-                        <tbody>
+                    <tbody>
                         ${newOnes.map((n, i) => `
-                            <tr style="background:#f8fff8;">
-                                <td style="padding:10px;text-align:center;">
-                                    <input type="checkbox" class="import-check new-check" data-index="${i}" checked>
-                                </td>
-                                <td style="padding:10px;text-align:center;color:#aaa;">–</td>
+                            <tr style="background:#f0fdf4;">
+                                <td style="text-align:center;padding:10px;"><input type="checkbox" class="import-check new-check" data-index="${i}" checked></td>
+                                <td style="text-align:center;color:#aaa;">—</td>
                                 <td style="padding:10px;font-weight:600;color:#27ae60;">${escapeHtml(n.topic)}</td>
-                                <td style="padding:10px;color:#27ae60;font-style:italic;">wird neu hinzugefügt</td>
-                                <td style="padding:10px;font-size:13px;color:#555;">
-                                    ${escapeHtml(n.subject)} • ${n.grade} • ${escapeHtml(n.competence)} • ${n.tool || '–'}
-                                </td>
+                                <td style="padding:10px;color:#27ae60;">komplett neu</td>
+                                <td style="padding:10px;font-size:13.5px;color:#555;">${escapeHtml(n.subject)} • ${n.grade} • ${escapeHtml(n.tool || '—')}</td>
                             </tr>
-                            `).join('')}
+                        `).join('')}
                         ${similarOnes.map((s, i) => `
                             <tr style="border-top:2px solid #ddd;">
-                                <td style="padding:10px;text-align:center;">
-                                    <input type="checkbox" class="import-check similar-check" data-index="${i}" checked>
+                                <td style="text-align:center;padding:10px;"><input type="checkbox" class="import-check similar-check" data-index="${i}" checked></td>
+                                <td style="text-align:center;padding:10px;"><input type="checkbox" class="replace-check" data-index="${i}"></td>
+                                <td style="padding:10px;font-weight:600;color:#e67e22;">${escapeHtml(s.topic)}</td>
+                                <td style="padding:10px;line-height:1.45;">
+                                    <strong style="color:#e67e22;">Ähnlich erkannt</strong><br>
+                                    <small>Ähnlichkeit: ${(s.similarityScore*100).toFixed(0)}%</small>
                                 </td>
-                                <td style="padding:10px;text-align:center;">
-                                    <input type="checkbox" class="replace-check" data-index="${i}">
-                                </td>
-                                <td style="padding:10px;font-weight:600;color:#27ae60;">${escapeHtml(s.topic)}</td>
-                                <td style="padding:10px;line-height:1.5;">
-                                    ${s.description !== s.existing.description
-                                        ? `<strong style="color:#e67e22;">Beschreibung geändert</strong><br>
-                                           <small style="color:#27ae60;">${escapeHtml((s.description||'–').substring(0,100))}${s.description?.length>100?'…':''}</small><br>
-                                           <small style="color:#e74c3c;">${escapeHtml((s.existing.description||'–').substring(0,100))}${s.existing.description?.length>100?'…':''}</small>`
-                                        : s.tool !== s.existing.tool
-                                            ? `<strong style="color:#e67e22;">Tool geändert</strong>: ${escapeHtml(s.tool||'–')} → ${escapeHtml(s.existing.tool||'–')}`
-                                            : '<span style="color:#999;">Beschreibung unverändert</span>'
-                                    }
-                                </td>
-                                <td style="padding:10px;font-size:13px;color:#555;">
-                                    ${escapeHtml(s.subject)} • ${s.grade} • ${escapeHtml(s.competence)} • ${s.tool || '–'}<br>
-                                    <small style="color:#e74c3c;">bestehend: ${escapeHtml(s.existing.topic)}</small>
+                                <td style="padding:10px;font-size:13.5px;color:#555;">
+                                    ${escapeHtml(s.subject)} • ${s.grade} • ${escapeHtml(s.tool || '—')}<br>
+                                    <small style="color:#e74c3c;">Vorhanden: ${escapeHtml(s.existing.topic)}</small>
                                 </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             </div>
-                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
-                <button id="cancelImport" style="padding:10px 20px;border:1px solid #ccc;border-radius:10px;background:#f0f0f0;">Abbrechen</button>
-                <button id="confirmImport" style="padding:12px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;font-size:16px;">
-                    ${totalNew + totalSimilar} importieren
-                </button>
+
+            <div style="display:flex;gap:14px;justify-content:flex-end;margin-top:24px;">
+                <button id="cancelImport" style="padding:11px 24px;background:#95a5a6;color:white;border:none;border-radius:10px;cursor:pointer;font-weight:600;">Abbrechen</button>
+                <button id="confirmImport" style="padding:11px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;">Import durchführen</button>
             </div>
         </div>
     `;
 
     document.body.appendChild(modal);
 
-    // ────── Checkbox-Logik ──────
+    // ==================== CHECKBOX LOGIK ====================
     const importAll = modal.querySelector('#importAll');
     const replaceAll = modal.querySelector('#replaceAll');
     const importChecks = modal.querySelectorAll('.import-check');
@@ -3540,185 +3540,119 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     const confirmBtn = modal.querySelector('#confirmImport');
 
     const updateButtonText = () => {
-        const importingNew = newOnes.filter((_, i) => 
-            modal.querySelector(`.new-check[data-index="${i}"]`)?.checked
-        ).length;
+        let newCount = 0, replaceCount = 0;
 
-        const importingSimilarAsNew = similarOnes.filter((_, i) => {
+        newOnes.forEach((_, i) => {
+            if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) newCount++;
+        });
+
+        similarOnes.forEach((_, i) => {
             const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
-            const rep = replaceChecks[i];
-            return imp?.checked && !rep?.checked;
-        }).length;
+            const rep = modal.querySelector(`.replace-check[data-index="${i}"]`);
+            if (imp?.checked) {
+                if (rep?.checked) replaceCount++;
+                else newCount++;
+            }
+        });
 
-        const overwriting = similarOnes.filter((_, i) => {
-            const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
-            const rep = replaceChecks[i];
-            return imp?.checked && rep?.checked;
-        }).length;
-
-        const totalAdded = importingNew + importingSimilarAsNew;
-
-        if (totalAdded === 0 && overwriting === 0) {
-            confirmBtn.textContent = 'Nichts importieren';
-        } else if (overwriting === 0) {
-            confirmBtn.textContent = `${totalAdded} hinzufügen`;
-        } else if (totalAdded === 0) {
-            confirmBtn.textContent = `${overwriting} überschreiben`;
+        if (newCount + replaceCount === 0) {
+            confirmBtn.textContent = "Nichts importieren";
+        } else if (replaceCount === 0) {
+            confirmBtn.textContent = `${newCount} hinzufügen`;
+        } else if (newCount === 0) {
+            confirmBtn.textContent = `${replaceCount} überschreiben`;
         } else {
-            confirmBtn.textContent = `${totalAdded} hinzufügen • ${overwriting} überschreiben`;
+            confirmBtn.textContent = `${newCount} hinzufügen • ${replaceCount} überschreiben`;
         }
     };
 
-    // Event-Listener
+    // Event Listener
     importChecks.forEach(chk => {
         chk.onchange = () => {
             const idx = parseInt(chk.dataset.index);
             const isSimilar = chk.classList.contains('similar-check');
-            const replaceChk = isSimilar ? replaceChecks[idx] : null;
-
-            if (replaceChk) replaceChk.disabled = !chk.checked;
-            if (!chk.checked && replaceChk) replaceChk.checked = false;
-
-            importAll.checked = [...importChecks].every(c => c.checked);
-            importAll.indeterminate = [...importChecks].some(c => c.checked) && !importAll.checked;
-
+            if (isSimilar) {
+                const rep = modal.querySelector(`.replace-check[data-index="${idx}"]`);
+                if (rep) rep.disabled = !chk.checked;
+                if (!chk.checked && rep) rep.checked = false;
+            }
+            importAll.checked = Array.from(importChecks).every(c => c.checked);
+            importAll.indeterminate = Array.from(importChecks).some(c => c.checked) && !importAll.checked;
             updateButtonText();
         };
     });
 
-    replaceChecks.forEach(chk => {
-        chk.onchange = updateButtonText;
-    });
+    replaceChecks.forEach(chk => chk.onchange = updateButtonText);
 
     importAll.onchange = () => {
         const checked = importAll.checked;
         importChecks.forEach((chk, i) => {
             chk.checked = checked;
-            if (!checked && replaceChecks[i]) replaceChecks[i].checked = false;
-            if (replaceChecks[i]) replaceChecks[i].disabled = !checked;
+            if (!checked) {
+                const rep = modal.querySelector(`.replace-check[data-index="${i}"]`);
+                if (rep) rep.checked = false;
+            }
         });
         updateButtonText();
     };
 
     replaceAll.onchange = () => {
-    const checked = replaceAll.checked;
+        const checked = replaceAll.checked;
         replaceChecks.forEach((chk, i) => {
-            if (importChecks[i] && importChecks[i].checked) {
-                chk.checked = checked;
-            }
+            const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            if (imp && imp.checked) chk.checked = checked;
         });
         updateButtonText();
     };
 
-updateButtonText();
+    updateButtonText();
 
+    // Buttons
     modal.querySelector('#cancelImport').onclick = () => modal.remove();
 
-    // ==================== CONFIRM BLOCK ====================
     modal.querySelector('#confirmImport').onclick = () => {
-        const backupBeforeImport = JSON.parse(JSON.stringify(resources));
-        let newAdded = 0;
-        let overwritten = 0;
+        const backupBefore = JSON.parse(JSON.stringify(resources));
+        let added = 0, overwritten = 0;
 
         // Neue Einträge
         newOnes.forEach((n, i) => {
             if (modal.querySelector(`.new-check[data-index="${i}"]`)?.checked) {
-                resources.push({ ...n, favorite: false });
-                newAdded++;
+                resources.push({...n, favorite: false, lastModified: new Date().toLocaleDateString('de-DE')});
+                added++;
             }
         });
 
         // Ähnliche Einträge
         similarOnes.forEach((s, i) => {
-            const importChk = modal.querySelector(`.similar-check[data-index="${i}"]`);
-            const replaceChk = replaceChecks[i];
-            if (!importChk?.checked) return;
+            const imp = modal.querySelector(`.similar-check[data-index="${i}"]`);
+            const rep = modal.querySelector(`.replace-check[data-index="${i}"]`);
+            if (!imp?.checked) return;
 
-            if (replaceChk?.checked) {
-                const idx = resources.findIndex(r =>
-                    r.subject?.trim().toLowerCase() === s.subject?.trim().toLowerCase() &&
-                    r.grade === s.grade &&
-                    r.competence?.trim().toLowerCase() === s.competence?.trim().toLowerCase() &&
-                    r.level === s.level &&
-                    (r.tool || '').trim().toLowerCase() === (s.tool || '').trim().toLowerCase()
-                );
+            if (rep?.checked) {
+                const idx = resources.findIndex(r => r === s.existing);
                 if (idx !== -1) {
-                    resources[idx] = { ...s, favorite: resources[idx].favorite || false, lastModified: new Date().toLocaleDateString('de-DE') };
+                    resources[idx] = {...s, favorite: resources[idx].favorite || false, lastModified: new Date().toLocaleDateString('de-DE')};
                     overwritten++;
                 }
             } else {
-                resources.push({ ...s, favorite: false });
-                newAdded++;
+                resources.push({...s, favorite: false, lastModified: new Date().toLocaleDateString('de-DE')});
+                added++;
             }
         });
 
         saveResources();
-
-        // Undo-Eintrag
-        if (newAdded > 0 || overwritten > 0) {
-            const undoEntry = {
-                action: 'import',
-                timestamp: Date.now(),
-                resourcesBackup: backupBeforeImport,
-                message: newAdded > 0 && overwritten > 0
-                    ? `${newAdded} hinzugefügt, ${overwritten} überschrieben`
-                    : newAdded > 0 ? `${newAdded} hinzugefügt` : `${overwritten} überschrieben`
-            };
-            undoStack.unshift(undoEntry);
-            if (undoStack.length > 15) undoStack.pop();
-            localStorage.setItem('undoStack', JSON.stringify(undoStack));
-        }
-
-        // UI aktualisieren
-        populateDropdowns();
         applyFilters();
-        updateStats();
+        populateDropdowns();
         updateToolFilter();
 
-        // Erfolgsmeldung
-        let title = 'Import erfolgreich!';
-        let subtitle = '';
-        const migration = window.lastMigrationInfo || '';
-        window.lastMigrationInfo = '';
+        showFancyAlert('Import erfolgreich!', 'success', 
+            `${added} hinzugefügt${overwritten ? ` • ${overwritten} überschrieben` : ''}`);
 
-        const totalChanged = newAdded + overwritten;
-
-        if (totalChanged > 0) {
-            subtitle = `<strong style="color:#27ae60;">${newAdded} hinzugefügt</strong>`;
-            if (overwritten > 0) subtitle += ` • <strong style="color:#e67e22;">${overwritten} überschrieben</strong>`;
-
-            if (migration) {
-                subtitle += `
-                    <br><br>
-                    <span style="display:inline-flex; align-items:center; gap:8px; background:#ecfdf5; padding:8px 14px; border-radius:10px; font-size:14px; color:#10b981;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M8 7h12M8 12h12M8 17h12"/>
-                            <path d="M4 7h.01M4 12h.01M4 17h.01"/>
-                        </svg>
-                        <strong>Niveaustufen migriert</strong><br>
-                        <small style="opacity:0.9;">${migration}</small>
-                    </span>`;
-            }
-        } else {
-            title = 'Import abgeschlossen';
-            subtitle = 'Keine neuen Änderungen';
-        }
-
-        if (duplicateCount > 0) {
-            subtitle += `<br><small style="color:#e74c3c;">${duplicateCount} exakte Duplikate ignoriert</small>`;
-        }
-
-        showFancyAlert(title, 'success', subtitle, () => showUndoToast('Import rückgängig machen'));
         modal.remove();
     };
 }
-
-// ============================================================
-// UNDO-SYSTEM – zentraler Toast + Rückgängig-Funktion
-// ============================================================
-
 function showUndoToast(message) {
-    // Alten Toast entfernen (falls noch da)
+
     const old = document.getElementById('undoToast');
     if (old) old.remove();
 
@@ -3766,9 +3700,8 @@ function undoLastAction() {
     const last = undoStack.shift();
     resources = last.resourcesBackup;
 
-    saveResources();                    // ← hier
+    saveResources();
 
-    // UI aktualisieren
     populateDropdowns();
     applyFilters();
     updateStats();
@@ -3783,7 +3716,7 @@ function undoLastAction() {
 
 
 function showFancyAlert(title, type = 'info', subtitle = '', onClose = null) {
-    // Alte entfernen
+
     document.querySelectorAll('[data-fancy-alert]').forEach(m => m.remove());
 
     const modal = document.createElement('div');
@@ -3955,11 +3888,10 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// === INSTALLATIONS-FENSTER AUSLÖSEN ===
 window.addEventListener('load', () => {
-    // Warte kurz, bis SW aktiv ist
+
     setTimeout(() => {
-        // LÖSE EINEN FETCH AUS (z. B. Bild laden)
+
         fetch(`${REPO_PATH}/icon-192.png?t=${Date.now()}`)
             .then(() => console.log('Fetch ausgelöst → PWA-Install bereit'))
             .catch(() => {});
@@ -3970,48 +3902,82 @@ function displayResources(list) {
     const c = document.getElementById('resourcesList');
     if (!c) return;
     c.innerHTML = '';
+
     list.forEach((r, i) => {
-        // SICHERER INDEX: Vergleich aller Felder
-        const realIndex = resources.findIndex(res => 
-            res.topic === r.topic && 
-            res.subject === r.subject && 
-            res.grade === r.grade && 
+        const realIndex = resources.findIndex(res =>
+            res.topic === r.topic &&
+            res.subject === r.subject &&
+            res.grade === r.grade &&
             res.competence === r.competence &&
             (res.tool || '') === (r.tool || '') &&
             (res.description || '') === (r.description || '')
         );
 
+        const isCompact = compactMode === true;
+
         const d = document.createElement('div');
-        d.className = 'resource-item';
-        d.dataset.index = realIndex >= 0 ? realIndex : i; // Fallback
+        d.className = `resource-item ${isCompact ? 'compact' : 'expanded'}`;
+        d.dataset.index = realIndex >= 0 ? realIndex : i;
 
         d.innerHTML = `
             <div class="resource-content">
-                <strong>${r.topic}</strong>
-                <span class="tag subject-tag" onclick="setFilterAndApply('filterSubject', '${escapeJs(r.subject)}')">${r.subject}</span>
-                <span class="tag grade-tag" onclick="setFilterAndApply('filterGrade', '${escapeJs(r.grade)}')">${r.grade}</span>
-                <span class="tag competence-tag" onclick="setFilterAndApply('filterCompetence', '${escapeJs(r.competence)}')">${r.competence}</span>
-                <span class="tag level-tag" onclick="setFilterAndApply('filterLevel', '${escapeJs(r.level || '')}')">${r.level || '—'}</span>
-               ${r.tool ? `<span class="tag tool-tag" onclick="setFilterAndApply('filterTool', '${escapeJs(r.tool.toLowerCase())}')">${escapeJs(r.tool)}</span>` : ''}
-                ${r.description ? `<div class="description">${r.description}</div>` : ''}
+                <strong>${escapeHtml(r.topic || '(Kein Thema)')}</strong>
+                <span class="tag subject-tag">${escapeHtml(r.subject)}</span>
+                <span class="tag grade-tag">${escapeHtml(r.grade)}</span>
+                <span class="tag competence-tag">${escapeHtml(r.competence)}</span>
+                <span class="tag level-tag">${escapeHtml(r.level || '—')}</span>
+                ${r.tool ? `<span class="tag tool-tag">${escapeHtml(r.tool)}</span>` : ''}
+                ${r.description ? `<div class="description">${escapeHtml(r.description)}</div>` : ''}
                 ${r.lastModified ? `<div style="font-size:11px; color:#888; margin-top:6px;">Zuletzt: ${r.lastModified}</div>` : ''}
             </div>
             <div class="action-icons">
+                <div class="toggle-icon">▼</div>
                 <div class="action-icon favorite-icon ${r.favorite ? 'active' : ''}"
-                     onclick="toggleFavorite(${realIndex})">
+                     onclick="event.stopImmediatePropagation(); toggleFavorite(${realIndex})">
                     <svg><use xlink:href="#star-icon"/></svg>
                 </div>
                 <div class="action-icon edit-icon"
-                     onclick="editResource(${realIndex})">
+                     onclick="event.stopImmediatePropagation(); editResource(${realIndex})">
                     <svg><use xlink:href="#edit-icon"/></svg>
                 </div>
                 <div class="action-icon delete-icon"
-                     onclick="deleteResource(${realIndex})">
+                     onclick="event.stopImmediatePropagation(); deleteResource(${realIndex})">
                     <svg><use xlink:href="#delete-icon"/></svg>
                 </div>
-            </div>`;
+            </div>
+        `;
+
+        // === SEHR EINFACHER & ROBUSTER HANDLER ===
+        // === VERBESSERTER EXPAND/COLLAPSE HANDLER – funktioniert in beiden Modi ===
+d.addEventListener('click', function(e) {
+    if (e.target.closest('.action-icon')) return;
+
+    if (this.classList.contains('expanded')) {
+        // EINKLAPPEN
+        this.classList.remove('expanded');
+        this.classList.add('compact');        // kompakt-Layout sicherstellen
+    } else {
+        // AUSKLAPPEN
+        this.classList.remove('compact');
+        this.classList.add('expanded');
+    }
+});
+
         c.appendChild(d);
     });
+}
+
+// Sicherstellen, dass compactMode existiert
+if (typeof compactMode === 'undefined') compactMode = true;
+
+// ==================== TOGGLE FUNKTION ====================
+function toggleCompactMode() {
+    compactMode = !compactMode;
+    
+    const checkbox = document.getElementById('compactToggle');
+    if (checkbox) checkbox.checked = compactMode;
+    
+    applyFilters();
 }
 
 function toggleFavorite(i) {
@@ -4033,7 +3999,7 @@ async function deleteResource(i) {
     });
 
     if (result === 'delete') {
-        // === UNDO BACKUP VOR DEM LÖSCHEN ===
+
         const backupBeforeDelete = JSON.parse(JSON.stringify(resources));
         
         const deletedResource = resources[i];
@@ -4065,17 +4031,13 @@ async function deleteResource(i) {
     }
 }
 
-    // === BEARBEITEN ===
 function editResource(i) {
     if (i < 0 || i >= resources.length) return;
 
     const r = resources[i];
-
-    // Frische Autocomplete-Daten
     const allTopics = [...new Set(resources.map(x => x.topic).filter(Boolean))].sort();
     const allTools  = [...new Set(resources.map(x => x.tool).filter(Boolean))].sort();
 
-    // Popup mit einheitlicher Größe
     const popup = window.open('edit-resource.html', 'editResource',
         'width=740,height=820,resizable=yes,scrollbars=yes,menubar=no,location=no');
 
@@ -4092,41 +4054,21 @@ function editResource(i) {
         allTools: allTools
     };
 
-    // === Zuverlässiges Senden (verbessert) ===
-    let attempts = 0;
-    const maxAttempts = 35;
-
-    const trySend = () => {
-        attempts++;
+    // === Verbesserte, reduzierte Sende-Logik ===
+    const sendMessage = () => {
         try {
             popup.postMessage(message, location.origin);
         } catch (e) {
-            console.warn(`postMessage Versuch ${attempts} fehlgeschlagen`);
+            console.warn('postMessage fehlgeschlagen');
         }
     };
 
-    // Sofort + mehrere Versuche
-    trySend();
-    setTimeout(trySend, 80);
-    setTimeout(trySend, 250);
+    // Sofort + kurze Verzögerungen + Load-Event
+    sendMessage();                    // 1. Versuch sofort
+    setTimeout(sendMessage, 120);     // 2. Versuch
+    setTimeout(sendMessage, 350);     // 3. Versuch
 
-    // Beim vollständigen Laden
-    popup.addEventListener('load', () => {
-        trySend();
-        setTimeout(trySend, 180);
-    }, { once: true });
-
-    // Fallback-Intervall (besonders für Safari)
-    const interval = setInterval(() => {
-        if (attempts >= maxAttempts) {
-            clearInterval(interval);
-            return;
-        }
-        trySend();
-    }, 140);
-
-    // Intervall nach spätestens 4 Sekunden stoppen
-    setTimeout(() => clearInterval(interval), 4200);
+    popup.addEventListener('load', sendMessage, { once: true });
 }
 
 function openNewResourceWindow() {
@@ -4138,9 +4080,15 @@ function openNewResourceWindow() {
         return;
     }
 
-    const send = () => popup.postMessage({ type: 'NEW_RESOURCE' }, location.origin);
+    const send = () => {
+        try {
+            popup.postMessage({ type: 'NEW_RESOURCE' }, location.origin);
+        } catch (e) {}
+    };
+
     send();
     popup.addEventListener('load', send, { once: true });
+    setTimeout(send, 180);
 }
 
 // === NACHRICHTEN VON EDIT/NEW WINDOW ===
@@ -4174,7 +4122,7 @@ window.addEventListener('message', event => {
 
 function openManual() {
     const dialog = document.createElement('dialog');
-    dialog.id = 'manualDialog';  // Für Styling
+    dialog.id = 'manualDialog';
     dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow); background: var(--card); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);';
     dialog.innerHTML = `
         <iframe src="docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height: calc(100% - 40px); border:none;"></iframe>
@@ -4222,7 +4170,6 @@ function initLevelMode() {
     }
 }
 
-// Start
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
@@ -4231,10 +4178,8 @@ if (document.readyState === 'loading') {
 
 </script>
 
-     <!-- Version-Info -->
     <div class="version-info" id="versionInfo">Lade Version...</div>
 
-    <!-- === LÖSCH-ANIMATION === -->
     <div id="deleteAnimation" style="
         position:fixed;top:0;left:0;width:100%;height:100%;
         background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
@@ -4266,7 +4211,7 @@ if (document.readyState === 'loading') {
 
 
 <style>
-/* ==================== BASIS & ANIMATIONEN ==================== */
+
 @keyframes slideUp {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -4283,7 +4228,6 @@ if (document.readyState === 'loading') {
     opacity: 1 !important; 
 }
 
-/* ==================== MODERNES DESIGN ==================== */
 :root {
     --primary: #6b46c1;
     --primary-light: #7e5be0;
@@ -4333,7 +4277,6 @@ if (document.readyState === 'loading') {
     color: var(--primary);
 }
 
-/* ==================== RESSOURCEN KARTEN (MODERN) ==================== */
 .resource-item {
     background: var(--card);
     border-radius: 18px;
@@ -4342,11 +4285,6 @@ if (document.readyState === 'loading') {
     box-shadow: var(--shadow);
     transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
-}
-
-.resource-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(107, 70, 193, 0.18);
 }
 
 .resource-content strong {
@@ -4377,6 +4315,100 @@ if (document.readyState === 'loading') {
     color: var(--text-light);
 }
 
+/* ==================== KOMPAKTER / EXPANDED MODUS – OPTIMIERTE VERSION ==================== */
+.resource-item.compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.resource-item.compact:not(.expanded) .resource-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.resource-item.compact:not(.expanded) .description,
+.resource-item.compact:not(.expanded) .last-modified-info {
+    display: none !important;
+}
+
+/* Fallback für globalen Expanded-Modus */
+.resource-item:not(.expanded) {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.resource-item:not(.expanded) .resource-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.resource-item:not(.expanded) .description,
+.resource-item:not(.expanded) .last-modified-info {
+    display: none !important;
+}
+
+/* Pfeil (Toggle) */
+.resource-item .toggle-icon {
+    font-size: 26px;
+    color: #666;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 12px;
+    transition: transform 0.3s ease;
+    z-index: 10;                
+}
+
+.resource-item.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Action-Icons rechts */
+.resource-item.compact .action-icons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ==================== VOLLANSICHT ==================== */
+.resource-item.expanded {
+    display: block;
+    padding: 24px;
+    cursor: default;
+}
+
+.resource-item.expanded .resource-content {
+    display: block;
+}
+
+.resource-item.expanded .description {
+    display: block !important;
+    margin-top: 14px;
+}
+
+.resource-item.expanded .action-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
 
 /* ==================== EXPORT BUTTONS ==================== */
 .export-buttons .btn {
@@ -4392,7 +4424,6 @@ if (document.readyState === 'loading') {
     box-shadow: 0 10px 25px rgba(107,70,193,0.25);
 }
 
-/* ==================== MOBILE ==================== */
 @media (max-width: 992px) {
 
     .resource-item {
@@ -4415,17 +4446,15 @@ if (document.readyState === 'loading') {
     #deleteAnimation, #editAnimation, #addAnimation, .version-info { display: none !important; }
 }
 
-/* ==================== BODY ==================== */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 20px 20px 120px 20px;        /* normaler Abstand links + rechts */
+    padding: 20px 20px 120px 20px;
     background: var(--bg); 
     color: var(--text);
     box-sizing: border-box;
 }
 
-/* ==================== GAP-FIX – FLUCHT + ABSTAND ==================== */
 body {
     padding: 20px 20px 120px 20px !important;
     margin: 0 !important;
@@ -4441,7 +4470,6 @@ body {
     padding: 0 !important;
 }
 
-/* ==================== MARGIN-ANSATZ STATT STICKY-TOP ==================== */
 .content-wrapper {
     display: flex !important;
     gap: 24px !important;
@@ -4468,17 +4496,15 @@ body {
     padding: 20px !important;
     box-shadow: 0 8px 25px rgba(0,0,0,0.09) !important;
     
-    margin-top: 10px !important;     /* ← hier den Abstand nach unten einstellen */
+    margin-top: 10px !important;
     align-self: flex-start !important;
     height: fit-content !important;
 }
 
-/* Abstand zwischen Stats und Content */
 .stats {
     margin-bottom: 24px !important;
 }
 
-/* Mobile */
 @media (max-width: 992px) {
     body {
         padding: 10px 10px 80px 10px !important;
@@ -4496,7 +4522,7 @@ body {
     }
 }
 
-/* ==================== FILTER + STATS – SAUBER & EINHEITLICH ==================== */
+/* ==================== FILTER + STATS ==================== */
 .stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -4514,13 +4540,58 @@ body {
     width: 100% !important;
 }
 
-/* Optional: schöner Hover-Effekt */
 .filter-container:hover {
     box-shadow: 0 8px 25px rgba(107,70,193,0.12) !important;
 }
 
+/* ==================== SCHÖNER TOGGLE SWITCH ==================== */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
 </style>
-<!-- === BEARBEITUNGS-BESTÄTIGUNG (ANIMATION – OHNE TON) === -->
+
 <div id="editAnimation" style="
     position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
@@ -4549,7 +4620,7 @@ body {
         </p>
     </div>
 </div>
-        <!-- === HINZUFÜGEN-BESTÄTIGUNG (ANIMATION) === -->
+
 <div id="addAnimation" style="
     position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
@@ -4578,10 +4649,10 @@ body {
         </p>
     </div>
 </div>
-<!-- LÖSCH-BESTÄTIGUNGSDIALOG -->
+
 <dialog id="confirmDeleteDialog">
   <form method="dialog">
-    <p>Möchtest du diese Ressource <strong>wirklich löschen</strong>?<br>Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+    <p>Möchtest du diese Ressource <strong>wirklich löschen</strong>?</p>
     <div class="buttons">
       <button value="cancel">Abbrechen</button>
       <button value="delete" autofocus>Löschen</button>

@@ -157,11 +157,15 @@ function setupAutocomplete(inputId, dropdownId, getList) {
     if (!input || !dropdown) return;
 
     function positionDropdown() {
-        const rect = input.getBoundingClientRect();
-        dropdown.style.top = `${rect.bottom + window.scrollY + 4}px`;
-        dropdown.style.left = `${rect.left + window.scrollX}px`;
-        dropdown.style.width = `${rect.width}px`;
-    }
+    const rect = input.getBoundingClientRect();
+    
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    dropdown.style.left = `${rect.left + window.scrollX}px`;
+    dropdown.style.width = `${rect.width}px`;
+    dropdown.style.zIndex = '2147483640';    
+    dropdown.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+}
 
     input.addEventListener('input', () => {
         const val = input.value.toLowerCase().trim();
@@ -242,6 +246,7 @@ window.addEventListener('message', event => {
     if (msg.type === 'EDIT_RESOURCE') {
         currentEditIndex = msg.index;
         document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
+        
         const r = msg.data || {};
         document.getElementById('topic').value = r.topic || '';
         document.getElementById('subject').value = r.subject || '';
@@ -249,16 +254,26 @@ window.addEventListener('message', event => {
         document.getElementById('competence').value = r.competence || '';
         document.getElementById('tool').value = r.tool || '';
         document.getElementById('description').value = r.description || '';
+
         populateLevelSelect();
         document.getElementById('level').value = r.level || '';
+
     } else if (msg.type === 'NEW_RESOURCE') {
         currentEditIndex = -1;
         document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
-        document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea').forEach(el => el.value = '');
+        
+        document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea')
+            .forEach(el => el.value = '');
         populateLevelSelect();
     }
 
-    setTimeout(() => document.getElementById('topic').blur(), 80);
+    setTimeout(() => {
+        const topicInput = document.getElementById('topic');
+        if (topicInput) {
+            topicInput.focus();
+            topicInput.select();
+        }
+    }, 150);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
