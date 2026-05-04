@@ -24,7 +24,6 @@
 <!-- Lokale Bibliotheken (für Offline-Betrieb) -->
 <script src="libs/jspdf.umd.min.js"></script>
 <script src="libs/jspdf.plugin.autotable.min.js"></script>
-<script src="libs/jszip.min.js"></script>
 <script src="libs/exceljs.min.js"></script>
 <script src="libs/FileSaver.min.js"></script>
 
@@ -239,19 +238,11 @@
     border-left: 4px solid var(--primary);
 }    .action-icons { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
     .action-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-    .action-icon:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .action-icon:hover { transform: scale(55); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
     .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
     .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
     .favorite-icon { background: #fff8e1; color: #f39c12; } .favorite-icon.active { background: #f39c12; color: white; }
-    #editForm { display: none; margin-top: 25px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-    .form-group textarea { min-height: 90px; resize: vertical; }
-    #editForm button { margin-right: 10px; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    #editForm button[type="submit"] { background: var(--primary); color: white; }
-    #editForm button[type="button"] { background: #95a5a6; color: white; }
 
     .version-info {
     position: fixed;
@@ -642,26 +633,6 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     .btn, .export-buttons label.btn {
         flex: 1 1 auto;
     }
-}
-
-.export-group {
-    flex: 1;
-    min-width: 280px;
-}
-
-.export-group-title {
-    margin: 0 0 12px 0;
-    font-size: 15.5px;
-    font-weight: 700;
-    color: var(--primary);
-    padding-bottom: 8px;
-    border-bottom: 3px solid var(--primary-light);
-}
-
-.btn-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
 /* ==================== BUTTONS ALLGEMEIN ==================== */
@@ -1135,17 +1106,6 @@ let currentLevelMode = localStorage.getItem('levelMode') || '5';
 // ==================== KOMPAKT-MODUS – Letzte Einstellung merken ====================
 let compactMode = localStorage.getItem('compactMode') !== 'false'; // true = kompakt (Standard)
 
-function toggleCompactMode() {
-    compactMode = !compactMode;
-    
-    const checkbox = document.getElementById('compactToggle');
-    if (checkbox) checkbox.checked = compactMode;
-    
-    localStorage.setItem('compactMode', compactMode);
-    
-    applyFilters();
-}
-
 function getLevelMode() {
     const saved = localStorage.getItem('levelMode');
     if (saved) currentLevelMode = saved;
@@ -1366,6 +1326,8 @@ function startApp() {
     document.getElementById('matrixPdfBtn')?.addEventListener('click', exportMatrixPDF);
 
     console.log('LernDashboard vollständig gestartet – butterweich auf iPad!');
+
+    updateVersionDisplay();
 }
 
 // === GLOBALE FILTER-VARIABLEN (einmalig!) ===
@@ -1386,7 +1348,8 @@ function updateCurrentFilters() {
 }
 
 // === GLOBALE VARIABLEN (EINZIGER ORT!) ===
-const VERSION = '1.1.50';
+const VERSION = '1.1.51';
+const MANUAL_VERSION = '2026-05-04-v1';
 
 const REPO_PATH = (() => {
     if (location.hostname === 'localhost' ||
@@ -1417,16 +1380,6 @@ const competences = [
   'Problemlösen und Handeln',
   'Analysieren und Reflektieren'
 ];
-// === BEDIENUNGSANLEITUNG ===
-function openManual() {
-    const dialog = document.createElement('dialog');
-    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow);';
-    dialog.innerHTML = `
-        <iframe src="https://matthiasklossmpz.github.io/lerndashboard/docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height:100%; border:none;"></iframe>
-        <button onclick="this.parentNode.close()" style="position:absolute; top:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer;">Schließen</button>`;
-    document.body.appendChild(dialog);
-    dialog.showModal();
-}
 
 // === ALLE FUNKTIONEN ===
 function escapeJs(str) {
@@ -1569,29 +1522,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-function setFilterAndApply(filterId, value) {
-    const select = document.getElementById(filterId);
-    if (!select) return;
-
-    select.value = value || '';
-
-    const filterContainer = select.closest('.filter-container');
-    if (filterContainer) {
-        document.querySelectorAll('.filter-container').forEach(fc => fc.classList.remove('active'));
-        if (value) {
-            filterContainer.classList.add('active');
-        } else {
-            filterContainer.classList.remove('active');
-        }
-    }
-
-    applyFilters();
-
-    if (filterContainer) {
-        filterContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-}
 
 function updateToolFilter() {
     const s = document.getElementById('filterTool');
@@ -1792,109 +1722,78 @@ function updateVersionDisplay() {
     }
 }
 
-window.addEventListener('load', updateVersionDisplay);
-
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('SW gewechselt → Version sofort aktualisieren');
-    updateVersionDisplay();
-    if (allowReload) {
-        window.location.reload();
-    }
-});
-
 // === NACHRICHTEN-EMPFANG (postMessage + BroadcastChannel) ===
 function handleResourceMessage(event) {
     if (!event.data) return;
 
-    if (event.data.action === 'addResource' && event.data.resource) {
-        event.data = { type: 'ADD_RESOURCE', data: event.data.resource };
-    }
-
     if (event.data.type === 'UPDATE_RESOURCE') {
-        const { index, data } = event.data;
+        const { index, data, undoFullBackup, undoMessage } = event.data;
+        
         if (index >= 0 && index < resources.length) {
+            const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
+            
             resources[index] = data;
             saveResources();
             applyFilters();
 
-            const anim = document.getElementById('editAnimation');
-            if (anim) {
-                anim.classList.add('edit-active');
-                setTimeout(() => anim.classList.remove('edit-active'), 1200);
-            }
+            // Moderne Erfolgsmeldung statt alter Animation
+            showFancyAlert('Gespeichert!', 'success', 'Die Ressource wurde aktualisiert.');
+
+            // Undo-Eintrag
+            const undoEntry = {
+                action: 'override',
+                timestamp: Date.now(),
+                resourcesBackup: backupBeforeUpdate,
+                message: undoMessage || 'Änderung rückgängig machen'
+            };
+            undoStack.unshift(undoEntry);
+            if (undoStack.length > 15) undoStack.pop();
+            localStorage.setItem('undoStack', JSON.stringify(undoStack));
         }
     }
+
     if (event.data.type === 'SHOW_EDIT_SUCCESS') {
-    setTimeout(() => {
-        const anim = document.getElementById('editAnimation');
-        if (anim) {
-            anim.classList.add('edit-active');
-            setTimeout(() => anim.classList.remove('edit-active'), 1200);
-        }
-    }, 250); 
+        showFancyAlert('Gespeichert!', 'success', 'Die Ressource wurde aktualisiert.');
     }
 
-if (event.data.type === 'ADD_RESOURCE') {
-  const { data, undoFullBackup, undoMessage } = event.data;
+    if (event.data.type === 'ADD_RESOURCE') {
+        const { data, undoFullBackup, undoMessage } = event.data;
 
-  const alreadyExists = resources.some(r =>
-    r.topic === data.topic &&
-    r.subject === data.subject &&
-    r.grade === data.grade &&
-    r.competence === data.competence &&
-    r.level === data.level &&
-    (r.tool || '').trim() === (data.tool || '').trim() &&
-    (r.description || '') === (data.description || '')
-  );
+        // ... (Rest der ADD-Logik bleibt gleich)
+        const alreadyExists = resources.some(r => 
+            r.topic === data.topic &&
+            r.subject === data.subject &&
+            r.grade === data.grade &&
+            r.competence === data.competence &&
+            (r.tool || '').trim() === (data.tool || '').trim() &&
+            (r.description || '') === (data.description || '')
+        );
 
-  if (alreadyExists) {
-    console.log('Ressource bereits vorhanden – wird nicht doppelt angelegt');
-    applyFilters();
-    return;
-  }
+        if (alreadyExists) {
+            console.log('Ressource bereits vorhanden – wird nicht doppelt angelegt');
+            applyFilters();
+            return;
+        }
 
-  const backupBeforeAdd = undoFullBackup || JSON.parse(JSON.stringify(resources));
-  resources.push(data);
-  saveResources();
-  applyFilters();
-  updateToolFilter();
-  populateDropdowns();
+        const backupBeforeAdd = undoFullBackup || JSON.parse(JSON.stringify(resources));
+        resources.push(data);
+        saveResources();
+        applyFilters();
+        updateToolFilter();
+        populateDropdowns();
 
-  const undoEntry = {
-    action: 'add',
-    timestamp: Date.now(),
-    resourcesBackup: backupBeforeAdd,
-    message: undoMessage || 'Neue Ressource entfernen'
-  };
-  undoStack.unshift(undoEntry);
-  if (undoStack.length > 15) undoStack.pop();
-  localStorage.setItem('undoStack', JSON.stringify(undoStack));
-  showUndoToast(undoEntry.message);
-}
+        const undoEntry = {
+            action: 'add',
+            timestamp: Date.now(),
+            resourcesBackup: backupBeforeAdd,
+            message: undoMessage || 'Neue Ressource entfernen'
+        };
+        undoStack.unshift(undoEntry);
+        if (undoStack.length > 15) undoStack.pop();
+        localStorage.setItem('undoStack', JSON.stringify(undoStack));
 
-if (event.data.type === 'UPDATE_RESOURCE') {
-  const { index, data, undoFullBackup, undoBackup, undoMessage } = event.data;
-  if (index >= 0 && index < resources.length) {
-
-    const backupBeforeUpdate = undoFullBackup || JSON.parse(JSON.stringify(resources));
-
-    resources[index] = data;
-    saveResources();
-    applyFilters();
-
-    const undoEntry = {
-      action: 'override',
-      timestamp: Date.now(),
-      resourcesBackup: backupBeforeUpdate,
-      message: undoMessage || 'Überschreibung rückgängig machen'
-    };
-    undoStack.unshift(undoEntry);
-    if (undoStack.length > 15) undoStack.pop();
-    localStorage.setItem('undoStack', JSON.stringify(undoStack));
-
-    showUndoToast(undoEntry.message);
-  }
-}
+        showFancyAlert('Hinzugefügt!', 'success', 'Neue Ressource wurde gespeichert.');
+    }
 }
 
 window.addEventListener('message', handleResourceMessage);
@@ -1995,12 +1894,6 @@ pwaBannerStyle.textContent = `
     }
 `;
 document.head.appendChild(pwaBannerStyle);
-
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-  if (allowReload) {
-    window.location.reload();
-  }
-});
 
 // === UPDATE-BANNER: Neue Version verfügbar ===
 let updateBannerShown = false;
@@ -2372,7 +2265,8 @@ function exportPDF() {
         showFancyAlert('PDF Export erfolgreich!', 'success');
     } catch (err) {
         console.error('PDF-Export fehlgeschlagen:', err);
-        showAlert('Fehler beim PDF-Export. Bitte Seite neu laden.');
+        showFancyAlert('Fehler beim PDF-Export', 'error', 
+            'Bitte Seite neu laden und erneut versuchen.');
     }
 }
 
@@ -2650,9 +2544,10 @@ async function exportMatrixPDF() {
         doc.save(`${fileTitle}.pdf`);
         showFancyAlert('PDF erfolgreich erstellt!', 'success');
 
-    } catch (err) {
+} catch (err) {
         console.error('PDF-Erstellung fehlgeschlagen:', err);
-        showAlert('Fehler beim Erstellen der PDF. Bitte Seite neu laden und erneut versuchen.');
+        showFancyAlert('Fehler beim Erstellen der PDF', 'error', 
+            'Bitte Seite neu laden und erneut versuchen.');
     }
 }
 
@@ -2918,10 +2813,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function showAlert(msg) {
-    alert(msg);
 }
 
 function printOptimized() {
@@ -3969,13 +3860,35 @@ window.addEventListener('message', event => {
     }
 });
 
+// === BEDIENUNGSANLEITUNG (mit Versions-Cache-Busting) ===
 function openManual() {
+    const pdfPath = "docs/Bedienungsanleitung_LernDashboard.pdf";
+    const versionedPath = `${pdfPath}?v=${MANUAL_VERSION}`;
+
     const dialog = document.createElement('dialog');
-    dialog.id = 'manualDialog';
-    dialog.style = 'width: 90%; max-width: 800px; height: 80vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow); background: var(--card); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);';
+    dialog.style = 'width: 90%; max-width: 920px; height: 88vh; padding: 0; border-radius: 12px; box-shadow: var(--shadow); background: var(--card); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);';
+    
     dialog.innerHTML = `
-        <iframe src="docs/Bedienungsanleitung_LernDashboard.pdf" style="width:100%; height: calc(100% - 40px); border:none;"></iframe>
-        <button onclick="this.parentNode.close()" style="position:absolute; bottom:10px; right:10px; background:var(--primary); color:white; padding:8px 16px; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Schließen</button>`;
+        <div style="position:relative;width:100%;height:100%;">
+            <iframe src="${versionedPath}" 
+                    style="width:100%; height:100%; border:none;" 
+                    title="Bedienungsanleitung LernDashboard"></iframe>
+            
+            <button onclick="this.closest('dialog').close()" 
+                    style="position:absolute; top:12px; right:12px; background:var(--primary); color:white; 
+                           padding:10px 20px; border:none; border-radius:8px; cursor:pointer; 
+                           font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:100;">
+                ✕ Schließen
+            </button>
+
+            <div style="position:absolute; bottom:12px; left:12px; background:rgba(255,255,255,0.9); 
+                        padding:4px 10px; border-radius:6px; font-size:12.5px; color:#555; 
+                        box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                Version ${MANUAL_VERSION}
+            </div>
+        </div>
+    `;
+
     document.body.appendChild(dialog);
     dialog.showModal();
 }
@@ -4023,6 +3936,9 @@ if (document.readyState === 'loading') {
     initializeApp();
 }
 
+updateVersionDisplay();
+
+
 </script>
 
     <div class="version-info" id="versionInfo">Lade Version...</div>
@@ -4069,8 +3985,10 @@ if (document.readyState === 'loading') {
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
-.delete-active, .edit-active, .add-active { display: flex !important; }
-.delete-active > div, .edit-active > div, .add-active > div { 
+.delete-active { 
+    display: flex !important; 
+}
+.delete-active > div { 
     transform: scale(1) !important; 
     opacity: 1 !important; 
 }
@@ -4289,7 +4207,7 @@ if (document.readyState === 'loading') {
     .main, .main * { visibility: visible !important; }
     .main { position: absolute; left: 0; top: 0; width: 100%; padding: 12mm 10mm !important; }
     .logo-header, .filter-container, .export-buttons, .sidebar, .new-resource-btn,
-    #deleteAnimation, #editAnimation, #addAnimation, .version-info { display: none !important; }
+    #deleteAnimation, .version-info { display: none !important; }
 }
 
 body {
@@ -4436,64 +4354,6 @@ input:checked + .slider:before {
 }
 
 </style>
-
-<div id="editAnimation" style="
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
-    display:none; justify-content:center; align-items:center;
-    z-index:10000;
-">
-    <div style="
-        background:var(--card); padding:40px; border-radius:20px; text-align:center;
-        box-shadow:0 16px 48px rgba(0,0,0,0.25);
-        transform:scale(0.8); opacity:0;
-        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
-    ">
-        <div style="width:90px; height:90px; margin:0 auto 18px;">
-            <svg width="90" height="90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
-                <path d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
-                      stroke-linecap="round" stroke-linejoin="round"
-                      style="stroke-dasharray:100; stroke-dashoffset:100; animation:draw 0.6s ease forwards 0.3s;"/>
-            </svg>
-        </div>
-        <p style="font-size:20px; font-weight:700; color:#27ae60; margin:0 0 6px;">
-            Bearbeitet!
-        </p>
-        <p style="font-size:14px; color:var(--text-light); margin:0;">
-            Die Ressource wurde aktualisiert.
-        </p>
-    </div>
-</div>
-
-<div id="addAnimation" style="
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
-    display:none; justify-content:center; align-items:center;
-    z-index:10000;
-">
-    <div style="
-        background:var(--card); padding:40px; border-radius:20px; text-align:center;
-        box-shadow:0 16px 48px rgba(0,0,0,0.25);
-        transform:scale(0.8); opacity:0;
-        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
-    ">
-        <div style="width:90px; height:90px; margin:0 auto 18px;">
-            <svg width="90" height="90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
-                <path d="M30 50 L45 65 L70 35" fill="none" stroke="#27ae60" stroke-width="6"
-                      stroke-linecap="round" stroke-linejoin="round"
-                      style="stroke-dasharray:100; stroke-dashoffset:100; animation:draw 0.6s ease forwards 0.3s;"/>
-            </svg>
-        </div>
-        <p style="font-size:20px; font-weight:700; color:#27ae60; margin:0 0 6px;">
-            Hinzugefügt!
-        </p>
-        <p style="font-size:14px; color:var(--text-light); margin:0;">
-            Die Ressource ist im Dashboard.
-        </p>
-    </div>
-</div>
 
 <dialog id="confirmDeleteDialog">
   <form method="dialog">

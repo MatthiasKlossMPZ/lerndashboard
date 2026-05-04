@@ -12,7 +12,7 @@
 // ================================================
 
 // service-worker.js
-const VERSION = '1.1.50';                     // Nur hier erhöhen bei Änderungen!
+const VERSION = '1.1.51';                     // Nur hier erhöhen bei Änderungen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 // WICHTIG: Dynamischer Pfad mit garantiertem trailing Slash
@@ -112,7 +112,27 @@ self.addEventListener('activate', event => {
 
 // === FETCH ===
 self.addEventListener('fetch', event => {
-  const requestUrl = new URL(event.request.url);
+const requestUrl = new URL(event.request.url);
+    if (requestUrl.pathname.includes('Bedienungsanleitung_LernDashboard.pdf')) {
+        event.respondWith(
+            fetch(event.request, { 
+                cache: 'no-store',
+                headers: { 
+                    'Cache-Control': 'no-cache, no-store, must-revalidate' 
+                }
+            })
+            .then(freshResponse => {
+                if (freshResponse && freshResponse.ok) {
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, freshResponse.clone());
+                    });
+                }
+                return freshResponse;
+            })
+            .catch(() => caches.match(event.request))
+        );
+        return;
+    }
 
   // Nur echte API-Anfragen immer online versuchen 
   if (requestUrl.pathname.includes('/api/')) {
