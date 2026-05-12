@@ -73,136 +73,117 @@ function setupImportHandler(handleImportFile) {
 export function initUI() {
     console.log('🚀 initUI() gestartet');
 
-    store.load().then(() => {
-        console.log('✅ Store geladen –', store.resources?.length || 0, 'Ressourcen');
+    // ====================== ERSTER START - LEVEL-MODUS ======================
+    if (!store.levelMode || (store.levelMode !== 3 && store.levelMode !== 5)) {
+        console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
+        showInitialLevelModeModal();
+    }
 
-        // ====================== ERSTER START - LEVEL-MODUS ======================
-        if (!store.levelMode || (store.levelMode !== 3 && store.levelMode !== 5)) {
-            console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
-            showInitialLevelModeModal();
-        }
+    // ====================== AUTO-UPDATE CHECK ======================
+    const CURRENT_VERSION = '1.1.53';   // ← Mit version.js synchron halten!
 
-        // ====================== AUTO-UPDATE CHECK ======================
-        const CURRENT_VERSION = '1.1.53';   // ← Immer mit src/ui/version.js synchron halten!
+    function checkForAppUpdate() {
+        const savedVersion = localStorage.getItem('appVersion');
+        if (savedVersion !== CURRENT_VERSION) {
+            console.log(`🔄 Neue Version erkannt: ${savedVersion || 'keine'} → ${CURRENT_VERSION}`);
+            localStorage.setItem('appVersion', CURRENT_VERSION);
 
-        function checkForAppUpdate() {
-            const savedVersion = localStorage.getItem('appVersion');
-            if (savedVersion !== CURRENT_VERSION) {
-                console.log(`🔄 Neue Version erkannt: ${savedVersion || 'keine'} → ${CURRENT_VERSION}`);
-                localStorage.setItem('appVersion', CURRENT_VERSION);
-
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(regs => {
-                        regs.forEach(reg => reg.unregister());
-                    });
-                }
-                if ('caches' in window) {
-                    caches.keys().then(names => {
-                        names.forEach(name => caches.delete(name));
-                    });
-                }
-
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 800);
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.unregister());
+                });
             }
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+
+            setTimeout(() => window.location.reload(true), 800);
         }
+    }
 
-        checkForAppUpdate();
+    checkForAppUpdate();
 
-        // Sichere Aufrufe mit Fallback
-        if (typeof updateTopStats === 'function') updateTopStats();
-        if (typeof updateSubjectStats === 'function') updateSubjectStats();
-        if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
-        initFilters();
-        initLevelMode();
+    // ====================== NORMALER UI-START (dein Original-Code) ======================
+    // Sichere Aufrufe mit Fallback
+    if (typeof updateTopStats === 'function') updateTopStats();
+    if (typeof updateSubjectStats === 'function') updateSubjectStats();
+    if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
 
-        // Export Module
-        import('./export/index.js')
-            .then(({
-                exportTemplate, exportCSV, exportPDF,
-                exportMatrixCSV, exportMatrixPDF, exportMatrixExcel,
-                autoBackup, printOptimized
-            }) => {
-                window.exportTemplate = exportTemplate;
-                window.exportCSV = exportCSV;
-                window.exportPDF = exportPDF;
-                window.exportMatrixCSV = exportMatrixCSV;
-                window.exportMatrixPDF = exportMatrixPDF;
-                window.exportMatrixExcel = exportMatrixExcel;
-                window.autoBackup = autoBackup;
-                window.printOptimized = printOptimized;
-                console.log('✅ Export-Module erfolgreich geladen');
-            })
-            .catch(err => console.error('❌ Export-Module:', err));
+    initFilters();
+    initLevelMode();
 
-        // Import Module
-        import('./ui/import.js')
-            .then(({ handleImportFile }) => {
-                setupImportHandler(handleImportFile);
-                console.log('✅ Import-Modul geladen');
-            })
-            .catch(err => console.error('❌ Import-Modul:', err));
+    // Export / Import Module (wie bei dir)
+    import('./export/index.js')
+        .then(({
+            exportTemplate, exportCSV, exportPDF,
+            exportMatrixCSV, exportMatrixPDF, exportMatrixExcel,
+            autoBackup, printOptimized
+        }) => {
+            window.exportTemplate = exportTemplate;
+            window.exportCSV = exportCSV;
+            window.exportPDF = exportPDF;
+            window.exportMatrixCSV = exportMatrixCSV;
+            window.exportMatrixPDF = exportMatrixPDF;
+            window.exportMatrixExcel = exportMatrixExcel;
+            window.autoBackup = autoBackup;
+            window.printOptimized = printOptimized;
+            console.log('✅ Export-Module erfolgreich geladen');
+        })
+        .catch(err => console.error('❌ Export-Module:', err));
 
-        import('./levelMode.js')
-            .then(() => console.log('✅ levelMode.js geladen'))
-            .catch(() => console.warn('levelMode.js noch nicht gefunden'));
+    import('./ui/import.js')
+        .then(({ handleImportFile }) => {
+            setupImportHandler(handleImportFile);
+            console.log('✅ Import-Modul geladen');
+        })
+        .catch(err => console.error('❌ Import-Modul:', err));
 
-        startUI();
-        initFilters();
-        window.applyQuickFilter = applyQuickFilter;
-        populateFilterOptions();
-        applyFilters();
-        updateTopStats();
-        updateSubjectStats();
-        updateStorageIndicator();
-        initLevelMode();
-        updateVersionDisplay();
+    import('./levelMode.js')
+        .then(() => console.log('✅ levelMode.js geladen'))
+        .catch(() => console.warn('levelMode.js noch nicht gefunden'));
 
-        // Level-Buttons
-        document.getElementById('levelBtn3')?.addEventListener('click', () => changeLevelMode('3'));
-        document.getElementById('levelBtn5')?.addEventListener('click', () => changeLevelMode('5'));
+    // ====================== UI AUFBAU ======================
+    startUI();
+    initFilters();
+    window.applyQuickFilter = applyQuickFilter;
+    populateFilterOptions();
+    applyFilters();
+    updateTopStats(); 
+    updateSubjectStats();
+    updateStorageIndicator();
+    initLevelMode();
+    updateVersionDisplay();
 
-        // Delete Dialog
-        const dialog = document.getElementById('confirmDeleteDialog');
-        if (dialog) {
-            dialog.querySelector('button[value="delete"]')?.addEventListener('click', deleteResourceConfirmed);
-            dialog.querySelector('button[value="cancel"]')?.addEventListener('click', cancelDelete);
-        }
+    // Level-Buttons
+    document.getElementById('levelBtn3')?.addEventListener('click', () => changeLevelMode('3'));
+    document.getElementById('levelBtn5')?.addEventListener('click', () => changeLevelMode('5'));
 
-        // Neue Ressource Button
-        const newBtn = document.querySelector('.new-resource-btn');
-        if (newBtn) newBtn.addEventListener('click', openNewResourceWindow);
+    // Delete Dialog
+    const dialog = document.getElementById('confirmDeleteDialog');
+    if (dialog) {
+        dialog.querySelector('button[value="delete"]')?.addEventListener('click', deleteResourceConfirmed);
+        dialog.querySelector('button[value="cancel"]')?.addEventListener('click', cancelDelete);
+    }
 
-        initNewResourceListener();
-        initEditResourceListener();
+    // Neue Ressource Button
+    const newBtn = document.querySelector('.new-resource-btn');
+    if (newBtn) newBtn.addEventListener('click', openNewResourceWindow);
 
-        // Undo & FancyAlert
-        window.showUndoToast = showUndoToast;
-        window.undoLastAction = undoLastAction;
-        window.showFancyAlert = showFancyAlert;
-        window.applyFilters = applyFilters;
-        window.toggleFavorite = toggleFavorite;
+    initNewResourceListener();
+    initEditResourceListener();
 
-        // Restore Button
-        document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
+    // Undo & FancyAlert
+    window.showUndoToast = showUndoToast;
+    window.undoLastAction = undoLastAction;
+    window.showFancyAlert = showFancyAlert;
+    window.applyFilters = applyFilters;
+    window.toggleFavorite = toggleFavorite;
 
-        // Logo = Dark Mode Toggle
-        const logo = document.querySelector('.logo-left');
-        if (logo) {
-            logo.addEventListener('click', () => {
-                toggleDarkMode();
-                logo.style.transition = 'transform 0.4s';
-                logo.style.transform = 'rotate(15deg)';
-                setTimeout(() => {
-                    logo.style.transform = 'rotate(0deg)';
-                }, 300);
-            });
-        }
-
-        console.log('✅ UI vollständig initialisiert mit', store.resources?.length || 0, 'Ressourcen');
-    });
-}
+    // Restore Button
+    document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
+    
 
 // === EDIT & NEW RESOURCE WINDOW HANDLER ===
 window.editResource = function(index) {
@@ -234,6 +215,7 @@ window.editResource = function(index) {
     }, 300);
 
     console.log(`📝 Edit-Fenster geöffnet für Index ${index}`);
+};
 };
 
 window.openNewResource = function() {
@@ -268,8 +250,13 @@ function initDarkMode() {
 function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('darkMode', isDark);
-    
-    console.log('🌗 Dark Mode:', isDark ? 'AN' : 'AUS');
+    console.log('🌗 Dark Mode toggled →', isDark ? 'AN' : 'AUS');
 }
 
+// WICHTIG: Global verfügbar machen
+window.initDarkMode = initDarkMode;
+window.toggleDarkMode = toggleDarkMode;
+
 initDarkMode();
+
+console.log('🌗 Dark Mode Funktionen global registriert'); 
