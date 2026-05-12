@@ -80,7 +80,7 @@ export function initUI() {
     }
 
     // ====================== AUTO-UPDATE CHECK ======================
-    const CURRENT_VERSION = '1.1.53';   // ← Mit version.js synchron halten!
+    const CURRENT_VERSION = '1.1.54';   // ← Mit version.js synchron halten!
 
     function checkForAppUpdate() {
         const savedVersion = localStorage.getItem('appVersion');
@@ -183,7 +183,7 @@ export function initUI() {
 
     // Restore Button
     document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
-    
+
 
 // === EDIT & NEW RESOURCE WINDOW HANDLER ===
 window.editResource = function(index) {

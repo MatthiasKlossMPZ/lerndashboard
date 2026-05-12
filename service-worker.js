@@ -11,7 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const CACHE_VERSION = '1.1.53';                    // ← Bei jedem Update hochzählen!
+const CACHE_VERSION = '1.1.54';                    // ← Bei jedem Update hochzählen!
 const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
