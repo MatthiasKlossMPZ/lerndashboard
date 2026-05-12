@@ -216,10 +216,11 @@ window.openNewResource = function() {
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+ 
+        navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
-                console.log(`✅ Service Worker registriert (v${CACHE_VERSION || '1.1.56'})`);
-
+                console.log('✅ Service Worker erfolgreich registriert');
+                
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     console.log('🔍 Neue Version wird heruntergeladen...');
@@ -227,17 +228,17 @@ if ('serviceWorker' in navigator) {
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('🚀 Neue Version aktiviert');
-                            
                             if (typeof showUpdateToast === 'function') {
                                 showUpdateToast();
                             }
-                            
                             newWorker.postMessage({ type: 'SKIP_WAITING' });
                         }
                     });
                 });
             })
-            .catch(err => console.error('❌ SW-Registrierung fehlgeschlagen:', err));
+            .catch(err => {
+                console.error('❌ SW-Registrierung fehlgeschlagen:', err);
+            });
     });
 }
 bootApp();
