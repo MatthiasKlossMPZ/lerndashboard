@@ -215,7 +215,7 @@ export function showFancyAlert(title, type = 'info', subtitle = '', onConfirm = 
     }
 }
 
-// ====================== UPDATE-TOAST (Neue Version) ======================
+// ====================== UPDATE TOAST (Neue Version) ======================
 export function showUpdateToast() {
     // Alten Toast ggf. entfernen
     let existing = document.getElementById('updateToast');
@@ -230,7 +230,7 @@ export function showUpdateToast() {
         transform: translateX(-50%);
         background: #27ae60;
         color: white;
-        padding: 14px 24px;
+        padding: 14px 20px;
         border-radius: 14px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.35);
         font-weight: 600;
@@ -239,8 +239,8 @@ export function showUpdateToast() {
         display: flex;
         align-items: center;
         gap: 12px;
-        min-width: 280px;
-        max-width: 90vw;
+        min-width: 300px;
+        max-width: 92vw;
         white-space: nowrap;
         overflow: hidden;
     `;
@@ -248,18 +248,31 @@ export function showUpdateToast() {
     toast.innerHTML = `
         <span style="font-size:20px;">🚀</span>
         <span>App wurde aktualisiert</span>
+        <button onclick="window.location.reload()" 
+                style="margin-left: auto; 
+                       background: rgba(255,255,255,0.25); 
+                       border: none; 
+                       color: white; 
+                       padding: 8px 16px; 
+                       border-radius: 8px;
+                       font-weight: 700;
+                       font-size: 14px;
+                       cursor: pointer;
+                       transition: all 0.2s;">
+            Neu laden
+        </button>
     `;
 
     document.body.appendChild(toast);
 
-    // Automatisch nach 5 Sekunden ausblenden
+    // Automatisch ausblenden nach 8 Sekunden (falls Nutzer nicht klickt)
     setTimeout(() => {
         if (toast && toast.parentNode) {
             toast.style.transition = 'opacity 0.4s ease';
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 400);
         }
-    }, 5000);
+    }, 8000);
 }
 
 // ====================== WINDOW BINDINGS ======================

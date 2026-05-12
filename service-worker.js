@@ -11,7 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const CACHE_VERSION = '1.1.60';                    // ← Bei jedem Update hochzählen!
+const CACHE_VERSION = '1.1.61';                    // ← Bei jedem Update hochzählen!
 const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -76,7 +76,7 @@ self.addEventListener('install', event => {
     );
 });
 
-// ==================== ACTIVATE – Alte Caches löschen ====================
+// ==================== ACTIVATE – Alte Caches löschen + Clients übernehmen ====================
 self.addEventListener('activate', event => {
     console.log(`✅ Service Worker v${CACHE_VERSION} aktiviert`);
 
@@ -90,7 +90,10 @@ self.addEventListener('activate', event => {
                     }
                 })
             );
-        }).then(() => self.clients.claim())
+        }).then(() => {
+            console.log('👥 Clients.claim() – neue Version übernimmt sofort');
+            return self.clients.claim();
+        })
     );
 });
 
@@ -128,7 +131,11 @@ self.addEventListener('fetch', event => {
 // ==================== Update-Benachrichtigung ====================
 self.addEventListener('message', event => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
+        console.log('⏭️ SKIP_WAITING erhalten – aktiviere neuen SW');
+        self.skipWaiting()
+            .then(() => {
+                console.log('✅ skipWaiting erfolgreich');
+            });
     }
 });
 
