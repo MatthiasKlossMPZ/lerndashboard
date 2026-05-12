@@ -11,164 +11,128 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-// service-worker.js
-const VERSION = '1.1.51';                     // Nur hier erhöhen bei Änderungen!
-const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
+// ====================== LernDashboard Service Worker v1.1.52 ======================
+// Modern, zuverlässig offline + Update-Benachrichtigung
 
-// WICHTIG: Dynamischer Pfad mit garantiertem trailing Slash
-const REPO_PATH = (() => {
-  const hostname = self.location.hostname;
-  const pathname = self.location.pathname;
+const CACHE_VERSION = '1.1.52';                    // ← Bei jedem Update hochzählen!
+const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
 
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
-    return self.location.origin + '/';
-  }
-  if (pathname.includes('/lerndashboard-test/')) {
-    return 'https://matthiasklossmpz.github.io/lerndashboard-test/';
-  }
-  if (hostname === 'matthiasklossmpz.github.io') {
-    return 'https://matthiasklossmpz.github.io/lerndashboard/';
-  }
+const PRECACHE_URLS = [
+    '/',
+    '/index.html',
+    '/edit-resource.html',
+    '/new-resource.html',
+    '/manifest.json',
 
-  const parts = pathname.split('/').filter(p => p);
-  const base = parts.length > 0 ? '/' + parts[0] + '/' : '/';
-  return self.location.origin + base;
-})();
+    // Styles
+    '/src/styles/main.css',
 
-console.log('SW aktiv – REPO_PATH:', REPO_PATH);
-console.log('SW Version:', VERSION, '→ Cache:', CACHE_NAME);
+    // Kern-Module
+    '/src/main.js',
+    '/src/state.js',
+    '/src/resources.js',
+    '/src/stats.js',
+    '/src/levelMode.js',
 
-// Dateien, die garantiert offline verfügbar sein sollen
-const urlsToCache = [
-  './',
-  'index.html',
-  'manifest.json',
-  'icon-192.png',
-  'icon-512.png',
-  'icon-maskable-192.png',
-  'icon-maskable-512.png',
-  'libs/jspdf.umd.min.js',
-  'libs/jspdf.plugin.autotable.min.js',
-  'libs/jszip.min.js',
-  'libs/exceljs.min.js',
-  'libs/FileSaver.min.js',
-  'new-resource.html',
-  'edit-resource.html'
-].map(url => new URL(url, REPO_PATH).href);
+    // UI Module
+    '/src/ui/filters.js',
+    '/src/ui/modals.js',
+    '/src/ui/newResource.js',
+    '/src/ui/editResource.js',
+    '/src/ui/import.js',
+    '/src/ui/version.js',
 
-// === skipWaiting bei Nachricht vom Client ===
-self.addEventListener('message', event => {
-  if (event.data?.type === 'SKIP_WAITING') {
-    console.log('SW: skipWaiting ausgelöst');
-    self.skipWaiting();
-  }
-});
+    // Export Module
+    '/src/export/index.js',
 
-// === INSTALL ===
+    // Utils
+    '/src/utils/helpers.js',
+
+    // Bibliotheken
+    '/libs/jspdf.umd.min.js',
+    '/libs/jspdf.plugin.autotable.min.js',
+    '/libs/exceljs.min.js',
+    '/libs/FileSaver.min.js',
+
+    // Assets
+    '/icon-192.png',
+    '/icon-512.png',
+    '/icon-maskable-192.png',
+    '/icon-maskable-512.png',
+    '/schule_in_mv.png'
+];
+
+// ==================== INSTALL – Precache aller wichtigen Dateien ====================
 self.addEventListener('install', event => {
-  console.log('SW Installiere Version', VERSION);
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('SW Cache öffnen und URLs cachen...');
-        return Promise.allSettled(
-          urlsToCache.map(url =>
-            fetch(url, { cache: 'reload' })
-              .then(response => {
-                if (!response.ok) throw new Error(`Status ${response.status}`);
-                return cache.put(url, response);
-              })
-              .catch(err => console.warn('SW Cache-Fehler bei:', url, err))
-          )
-        );
-      })
-      .then(() => {
-        console.log(`SW Version ${VERSION} erfolgreich installiert und gecached`);
-        self.skipWaiting(); // sofort aktivieren, wenn kein alter SW läuft
-      })
-  );
+    console.log(`🚀 Service Worker v${CACHE_VERSION} wird installiert...`);
+
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('📦 Precache wird gestartet...');
+                return cache.addAll(PRECACHE_URLS);
+            })
+            .then(() => {
+                console.log('✅ Precache erfolgreich abgeschlossen');
+                return self.skipWaiting();
+            })
+    );
 });
 
-// === ACTIVATE – alte Caches löschen ===
+// ==================== ACTIVATE – Alte Caches löschen ====================
 self.addEventListener('activate', event => {
-  console.log('SW Aktiviere Version', VERSION);
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key.startsWith('lerndashboard-v') && key !== CACHE_NAME)
-          .map(key => {
-            console.log('SW Lösche alten Cache:', key);
-            return caches.delete(key);
-          })
-      )
-    )
-    .then(() => {
-      console.log('SW Alte Caches bereinigt');
-      return self.clients.claim();
-    })
-  );
+    console.log(`✅ Service Worker v${CACHE_VERSION} aktiviert`);
+
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('🗑️ Lösche alten Cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
 });
 
-// === FETCH ===
+// ==================== FETCH – Intelligente Strategie ====================
 self.addEventListener('fetch', event => {
-const requestUrl = new URL(event.request.url);
-    if (requestUrl.pathname.includes('Bedienungsanleitung_LernDashboard.pdf')) {
+    if (event.request.mode === 'navigate') {
+        // HTML-Seiten: Network First mit Fallback auf index.html
         event.respondWith(
-            fetch(event.request, { 
-                cache: 'no-store',
-                headers: { 
-                    'Cache-Control': 'no-cache, no-store, must-revalidate' 
-                }
-            })
-            .then(freshResponse => {
-                if (freshResponse && freshResponse.ok) {
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, freshResponse.clone());
-                    });
-                }
-                return freshResponse;
-            })
-            .catch(() => caches.match(event.request))
+            fetch(event.request).catch(() => caches.match('/index.html'))
         );
         return;
     }
 
-  // Nur echte API-Anfragen immer online versuchen 
-  if (requestUrl.pathname.includes('/api/')) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-    return;
-  }
-
-  if (requestUrl.origin === new URL(REPO_PATH).origin) {
+    // Alle anderen Ressourcen: Cache First
     event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) {
-          // Stale-while-revalidate: im Hintergrund updaten, falls online
-          if (navigator.onLine) {
-            fetch(event.request).then(fresh => {
-              if (fresh.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, fresh.clone()));
-            }).catch(() => {});
-          }
-          return cached;
-        }
-        // Nicht im Cache → holen und cachen (oder fallback auf index.html bei Navigation)
-        return fetch(event.request).then(response => {
-          if (response.ok) {
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
-          }
-          return response;
-        }).catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('index.html');
-          }
-          return new Response('Offline', { status: 503 });
-        });
-      })
-    );
-    return;
-  }
+        caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) return cachedResponse;
 
-  // Alles andere (externe Ressourcen) einfach durchreichen
-  event.respondWith(fetch(event.request).catch(() => new Response('Offline', { status: 503 })));
+            return fetch(event.request).then(networkResponse => {
+                if (!networkResponse || networkResponse.status !== 200) {
+                    return networkResponse;
+                }
+
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+
+                return networkResponse;
+            });
+        })
+    );
 });
+
+// ==================== Update-Benachrichtigung ====================
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
+console.log(`📦 Service Worker v${CACHE_VERSION} geladen und bereit`);

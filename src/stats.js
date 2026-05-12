@@ -1,0 +1,415 @@
+// src/stats.js
+console.log('🚀 stats.js START');
+
+import { store } from './state.js';
+import { getFilteredResources } from './ui/filters.js';
+import { applyFilters } from './resources.js';
+import { showFancyAlert } from './ui/modals.js';
+
+console.log('✅ stats.js erfolgreich geladen');
+
+// ====================== FÄCHER-STATISTIK ======================
+export function updateSubjectStats() {
+    const container = document.getElementById('statsFach');
+    if (!container) return;
+
+    const total = store.resources.length;
+    const stats = calculateSubjectStats();
+
+    let html = `
+        <div style="text-align:center; margin-bottom:12px; font-weight:600; color:var(--text-light);">
+            Gesamt: <strong style="color:var(--primary); font-size:18px;">${total}</strong> Ressourcen
+        </div>
+        <div class="stats">
+        
+    `;
+
+    Object.entries(stats).forEach(([subject, data]) => {
+        const percentage = total > 0 ? Math.round((data.count / total) * 100) : 0;
+        html += `
+            <div class="stat-card">
+                <strong>${subject}</strong>
+                <span>${data.count}</span>
+                <small>${data.favorites} Favoriten • ${percentage}%</small>
+                <div class="stat-bar">
+                    <div class="bar-container">
+                        <div class="bar" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    if (total === 0) {
+        html += `<p style="text-align:center; padding:30px 10px; color:#888;">Noch keine Ressourcen vorhanden</p>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ====================== OBERE 4 STAT-KACHELN (Gesamt, Favoriten, Tools, Fächer) ======================
+export function updateTopStats() {
+    const filtered = getFilteredResources();
+
+    console.log('📊 updateTopStats() aufgerufen – gefiltert:', filtered.length);
+
+    // Gesamt
+    const totalEl = document.getElementById('statTotal');
+    if (totalEl) totalEl.textContent = filtered.length || 0;
+
+    // Favoriten
+    const favEl = document.getElementById('statFavorites');
+    if (favEl) favEl.textContent = filtered.filter(r => r.favorite).length || 0;
+
+    // Tools
+    const toolsEl = document.getElementById('statTools');
+    if (toolsEl) {
+        const uniqueTools = [...new Set(filtered.map(r => r.tool).filter(Boolean))].length;
+        toolsEl.textContent = uniqueTools || 0;
+    }
+
+    // Fächer
+    const subjectsEl = document.getElementById('statSubjects');
+    if (subjectsEl) {
+        const uniqueSubjects = [...new Set(filtered.map(r => r.subject).filter(Boolean))].length;
+        subjectsEl.textContent = uniqueSubjects || 0;
+    }
+}
+
+function calculateSubjectStats() {
+    const stats = {};
+    store.resources.forEach(resource => {
+        const subject = resource.subject || 'Sonstige';
+        if (!stats[subject]) stats[subject] = { count: 0, favorites: 0 };
+        stats[subject].count++;
+        if (resource.favorite) stats[subject].favorites++;
+    });
+    return Object.fromEntries(
+        Object.entries(stats).sort((a, b) => b[1].count - a[1].count)
+    );
+}
+
+// ====================== SPEICHERANZEIGE ======================
+export function updateStorageIndicator() {
+    const usageEl = document.getElementById('storageUsage');
+    const barEl = document.getElementById('storageBar');
+    const percentEl = document.getElementById('storagePercent');
+    if (!usageEl || !barEl) return;
+
+    try {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += (localStorage[key].length * 2);
+            }
+        }
+        const mb = (total / 1024 / 1024).toFixed(2);
+        const percent = Math.min(Math.round((total / (5 * 1024 * 1024)) * 100), 100);
+
+        usageEl.textContent = `${mb} MB`;
+        barEl.style.width = `${percent}%`;
+
+        if (percentEl) {
+            percentEl.textContent = `${percent}% von ~5 MB`;
+            percentEl.style.color = percent > 80 ? '#e74c3c' : '#27ae60';
+        }
+    } catch (e) {
+        console.warn('Speicheranzeige konnte nicht berechnet werden', e);
+    }
+}
+
+// ====================== LEVEL-MODUS + MIGRATION ======================
+export function initLevelMode() {
+    const saved = localStorage.getItem('levelMode') || '5';
+    store.levelMode = saved;
+
+    if (!localStorage.getItem('levelMode')) {
+        showInitialLevelModeModal();
+    } else {
+        populateLevelFilter();
+        updateLevelModeButtons();
+    }
+}
+
+// === FEHLENDE FUNKTION ===
+function showInitialLevelModeModal() {
+    const message = `
+        <strong>Willkommen zum LernDashboard!</strong><br><br>
+        Welchen Niveaustufen-Modus möchtest du verwenden?<br><br>
+        <strong>5 Stufen</strong> = feinere Abstufung (empfohlen für die meisten)<br>
+        <strong>3 Stufen</strong> = einfacher für schnelle Übersicht
+    `;
+
+    if (typeof showFancyAlert === 'function') {
+        showFancyAlert(
+            'Niveaustufen-Modus wählen',
+            'info',
+            message,
+            () => {
+                // Standard auf 5 Stufen
+                changeLevelMode('5');
+            },
+            () => {
+                changeLevelMode('3'); // Alternative
+            }
+        );
+    } else {
+        // Fallback
+        if (confirm('5 Niveaustufen verwenden? (Abbrechen = 3 Stufen)')) {
+            changeLevelMode('5');
+        } else {
+            changeLevelMode('3');
+        }
+    }
+}
+
+export function changeLevelMode(newMode) {
+    const oldMode = store.levelMode;
+    if (oldMode === newMode) return;
+
+    const direction = oldMode === '5' && newMode === '3'
+        ? "5 → 3 Stufen:<br>• Stufen 1+2 → Stufe 1<br>• Stufe 3 → Stufe 2<br>• Stufen 4+5 → Stufe 3"
+        : "3 → 5 Stufen:<br>• Stufe 1 → Stufe 1<br>• Stufe 2 → Stufe 3<br>• Stufe 3 → Stufe 5";
+
+    const message = `
+        <strong>Niveaustufen-Modus ändern?</strong><br><br>
+        Von <strong>${oldMode}</strong> auf <strong>${newMode}</strong> Stufen<br><br>
+        ${direction}<br><br>
+        <span style="color:#e74c3c;font-weight:600;">Alle Ressourcen werden automatisch angepasst.</span>
+    `;
+
+    if (typeof showFancyAlert === 'function') {
+        showFancyAlert(
+            `Wechsel zu ${newMode} Niveaustufen`,
+            'warning',
+            message,
+            () => executeLevelChange(oldMode, newMode)
+        );
+    } else {
+ 
+        if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction.replace(/<br>/g, '\n')}\n\nAlle Ressourcen werden automatisch angepasst.`)) {
+            executeLevelChange(oldMode, newMode);
+        }
+    }
+}
+
+function executeLevelChange(oldMode, newMode) {
+    // Safety-Backup
+    createSafetyBackup(`Level-Modus-Wechsel: ${oldMode} → ${newMode}`);
+
+    // Migration
+    store.resources = migrateResourceLevels(store.resources, oldMode, newMode);
+    store.levelMode = newMode;
+    localStorage.setItem('levelMode', newMode);
+
+    store.save();
+    populateLevelFilter();
+    updateLevelModeButtons();
+    applyFilters();
+
+    if (typeof showFancyAlert === 'function') {
+        showFancyAlert(
+            '✅ Erfolgreich umgestellt!',
+            'success',
+            `Alle Ressourcen wurden auf ${newMode} Niveaustufen angepasst.`
+        );
+    } else {
+        alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!`);
+    }
+}
+
+function migrateResourceLevels(resources, oldMode, newMode) {
+    if (oldMode === newMode) return resources;
+    return resources.map(r => {
+        if (!r.level) return r;
+        let num = getLevelNumber(r.level);
+        if (!num) return r;
+
+        let newNum = num;
+        if (oldMode === '5' && newMode === '3') {
+            if (num <= 2) newNum = 1;
+            else if (num === 3) newNum = 2;
+            else newNum = 3;
+        } else if (oldMode === '3' && newMode === '5') {
+            if (num === 1) newNum = 1;
+            else if (num === 2) newNum = 3;
+            else if (num === 3) newNum = 5;
+        }
+        r.level = `Niveaustufe ${newNum}`;
+        return r;
+    });
+}
+
+function getLevelNumber(levelStr) {
+    if (!levelStr) return 0;
+    const match = levelStr.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+}
+
+function getLevelOptions() {
+    const count = parseInt(store.levelMode || 5);
+    return Array.from({ length: count }, (_, i) => `Niveaustufe ${i + 1}`);
+}
+
+function updateLevelModeButtons() {
+    const btn3 = document.getElementById('levelBtn3');
+    const btn5 = document.getElementById('levelBtn5');
+    const currentText = document.getElementById('currentLevelText');
+
+    if (btn3) btn3.style.background = store.levelMode === '3' ? '#00bfff' : '#e2e8f0';
+    if (btn5) btn5.style.background = store.levelMode === '5' ? '#6b46c1' : '#e2e8f0';
+    if (currentText) currentText.textContent = `${store.levelMode} Niveaustufen`;
+}
+
+function populateLevelFilter() {
+    console.log('📊 Level-Filter aktualisiert für', store.levelMode, 'Stufen');
+}
+
+// ====================== SAFETY BACKUPS ======================
+const MAX_BACKUPS = 6;
+
+export function createSafetyBackup(actionName = 'Unbekannte Aktion') {
+    const backup = {
+        timestamp: Date.now(),
+        date: new Date().toLocaleString('de-DE'),
+        action: actionName,
+        resourceCount: store.resources.length,
+        resources: JSON.parse(JSON.stringify(store.resources)),
+        levelMode: store.levelMode
+    };
+
+    let backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    backups.unshift(backup);
+    if (backups.length > MAX_BACKUPS) backups.pop();
+
+    localStorage.setItem('safetyBackups', JSON.stringify(backups));
+    console.log(`💾 Safety-Backup erstellt: ${actionName}`);
+}
+
+export function showRestoreDialog() {
+    const backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    
+    if (backups.length === 0) {
+        showFancyAlert('Keine Backups', 'info', 'Es sind noch keine Notfall-Backups vorhanden.');
+        return;
+    }
+
+    const modal = document.createElement('dialog');
+    modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 720px;
+        width: 94%;
+        max-height: 92vh;
+        height: 620px;                 /* feste Mindesthöhe */
+        border: none;
+        border-radius: 20px;
+        padding: 0;
+        box-shadow: 0 30px 90px rgba(0,0,0,0.5);
+        background: white;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    `;
+
+    let html = `
+        <!-- Header -->
+        <div style="padding:28px 24px; text-align:center; background: linear-gradient(135deg, #fff9e6, #fef3c7); flex-shrink:0;">
+            <div style="font-size:48px; margin-bottom:8px;">🛡️</div>
+            <h2 style="margin:0; color:#d97706;">Ressourcen wiederherstellen</h2>
+        </div>
+
+        <!-- Großer Scroll-Bereich -->
+        <div style="flex: 1; overflow-y: auto; padding: 16px; background: #f8f9fa; min-height: 320px;">
+    `;
+
+    backups.forEach((backup, i) => {
+        const date = new Date(backup.timestamp);
+        const dateStr = date.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+        const timeStr = date.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+
+        html += `
+            <div style="background:white; border-radius:14px; padding:18px; margin:10px 0; 
+                        border-left:7px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:17.5px;">${dateStr}, ${timeStr}</strong><br>
+                        <span style="color:#555;">${backup.action || 'Automatisches Backup'}</span><br>
+                        <span style="color:#d97706; font-weight:700;">${backup.resourceCount || backup.resources?.length || 0} Ressourcen</span>
+                    </div>
+                    <button onclick="restoreFromSafetyBackup(${i}); this.closest('dialog').close()" 
+                            style="background:#ef4444; color:white; border:none; border-radius:12px; 
+                                   padding:14px 28px; font-weight:700; cursor:pointer; min-width:150px;">
+                        Wiederherstellen
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:24px; text-align:center; background:#f1f5f9; border-top:1px solid #e2e8f0; flex-shrink:0;">
+            <button onclick="this.closest('dialog').close()" 
+                    style="background:#64748b; color:white; border:none; border-radius:12px; 
+                           padding:14px 48px; font-size:16.5px; cursor:pointer;">
+                Abbrechen
+            </button>
+        </div>
+    `;
+
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+    modal.showModal();
+
+ modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.close();
+    });
+}
+
+export function restoreFromSafetyBackup(index) {
+    const backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+    if (!backups[index]) return;
+
+    if (!confirm(`⚠️ Alle aktuellen Daten werden überschrieben!\n\nBackup vom ${new Date(backups[index].timestamp).toLocaleString('de-DE')} wirklich wiederherstellen?`)) {
+        return;
+    }
+
+    // Daten wiederherstellen
+    store.resources = JSON.parse(JSON.stringify(backups[index].resources));
+    store.levelMode = backups[index].levelMode || '5';
+    localStorage.setItem('levelMode', store.levelMode);
+
+    store.save();
+    applyFilters();
+    updateSubjectStats();
+    updateStorageIndicator();
+
+    const allDialogs = document.querySelectorAll('dialog');
+    allDialogs.forEach(d => {
+        if (d.open) d.close();
+    });
+
+    document.querySelectorAll('#importDecisionDialog, dialog').forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+    });
+
+    showFancyAlert('✅ Erfolgreich wiederhergestellt!', 'success', 
+        `${backups[index].resourceCount || backups[index].resources?.length || 0} Ressourcen geladen.`);
+}
+
+// ====================== WINDOW BINDINGS ======================
+window.changeLevelMode = changeLevelMode;
+window.showRestoreDialog = showRestoreDialog;
+window.restoreFromSafetyBackup = restoreFromSafetyBackup;
+window.updateSubjectStats = updateSubjectStats;
+window.updateStorageIndicator = updateStorageIndicator;
+window.showInitialLevelModeModal = showInitialLevelModeModal;
+window.updateTopStats = updateTopStats;
+
+console.log('✅ stats.js vollständig initialisiert (mit Restore-Dialog + TopStats)');

@@ -1,0 +1,307 @@
+// src/ui/import.js
+import { store } from '../state.js';
+import { getLevelMode } from '../levelMode.js';
+import { applyFilters } from '../resources.js';
+import { updateSubjectStats } from '../stats.js';
+import { showFancyAlert } from './modals.js';
+import { createSafetyBackup } from '../stats.js';
+
+console.log('✅ Import-Modul vollständig geladen');
+
+// ====================== HAUPT-EINSTIEG ======================
+export function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const content = e.target.result;
+        const lower = file.name.toLowerCase();
+
+        if (lower.endsWith('.json')) handleJSONImport(content);
+        else if (lower.endsWith('.csv')) handleCSVImport(content);
+        else showFancyAlert('Falsches Format', 'warning', 'Nur .json oder .csv Dateien werden unterstützt.');
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// ====================== JSON & CSV ======================
+function handleJSONImport(jsonString) {
+    try {
+        const backup = JSON.parse(jsonString);
+        let imported = backup.resources || backup.data || (Array.isArray(backup) ? backup : []);
+
+        if (!Array.isArray(imported) || imported.length === 0) {
+            throw new Error("Keine Ressourcen gefunden");
+        }
+
+        const sourceLevels = parseInt(backup.levelMode || backup.numLevels || 5);
+        const targetLevels = parseInt(getLevelMode() || 5);
+
+        if (sourceLevels !== targetLevels && sourceLevels > 0) {
+            imported = migrateImportedResources(imported, sourceLevels, targetLevels);
+        }
+
+        prepareImportData(imported);
+    } catch (e) {
+        console.error('JSON Parse Fehler:', e);
+        showFancyAlert('JSON ungültig', 'error', 'Die Datei ist kein gültiges Backup.');
+    }
+}
+
+function handleCSVImport(csvString) {
+    const lines = csvString.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return showFancyAlert('CSV leer', 'warning');
+
+    const headers = parseCSVLine(lines[0]);
+    const imported = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
+
+        if (row['Thema'] || row['Unterrichtsfach']) {
+            imported.push({
+                topic: row['Thema'] || '(Ohne Thema)',
+                subject: row['Unterrichtsfach'] || '',
+                grade: row['Klassenstufe'] || '',
+                competence: row['Kompetenzbereich'] || '',
+                level: row['Niveaustufe'] || '',
+                tool: row['Digitales_Hilfsmittel'] || '',
+                description: row['Beschreibung'] || ''
+            });
+        }
+    }
+
+    if (imported.length === 0) return showFancyAlert('Keine Einträge', 'warning');
+    prepareImportData(imported);
+}
+
+// ====================== VORBEREITUNG ======================
+function prepareImportData(importedResources) {
+    createSafetyBackup('Vor Import');
+
+    const toImport = [];
+    const similar = [];
+    const duplicates = [];
+
+    importedResources.forEach(entry => {
+        const n = {
+            topic: String(entry.topic || '').trim(),
+            subject: String(entry.subject || '').trim(),
+            grade: String(entry.grade || '').trim(),
+            competence: String(entry.competence || '').trim(),
+            level: String(entry.level || '').trim(),
+            tool: String(entry.tool || '').trim(),
+            description: String(entry.description || '').trim()
+        };
+
+        const normalizeTool = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const isExactDuplicate = store.resources.some(r =>
+            r.topic === n.topic && r.subject === n.subject && r.grade === n.grade &&
+            r.competence === n.competence && r.tool === n.tool && r.description === n.description
+        );
+
+        if (isExactDuplicate) { duplicates.push(n); return; }
+
+        const similarMatch = store.resources.find(r =>
+            r.subject === n.subject && r.grade === n.grade && normalizeTool(r.tool) === normalizeTool(n.tool)
+        );
+
+        if (similarMatch) {
+            similar.push({ ...n, existing: similarMatch, similarityScore: similarity(similarMatch.topic || '', n.topic) });
+            return;
+        }
+
+        toImport.push(n);
+    });
+
+    showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
+}
+
+// ====================== DIALOG ======================
+function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
+    if (newOnes.length === 0 && similarOnes.length === 0) {
+        showFancyAlert('Import abgeschlossen', 'info', `${duplicateCount} Duplikate ignoriert.`);
+        return;
+    }
+
+    const modal = document.createElement('dialog');
+    modal.id = 'importDecisionDialog';
+    modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:1180px;width:96%;max-height:92vh;border:none;border-radius:16px;padding:0;box-shadow:0 25px 80px rgba(0,0,0,0.6);overflow:hidden;background:var(--card);`;
+
+    modal.innerHTML = `
+        <div style="padding:24px 32px;border-bottom:1px solid #ddd;">
+            <h2 style="margin:0;color:var(--primary);">Import verarbeiten</h2>
+            <p style="margin:10px 0 0;font-size:15px;color:var(--text-light);">
+                ${newOnes.length} neue • ${similarOnes.length} ähnliche • <span style="color:#e74c3c;">${duplicateCount} Duplikate ignoriert</span>
+            </p>
+        </div>
+        <div style="max-height:560px;overflow-y:auto;background:#fafafa;padding:0 8px;">
+            <table style="width:100%;border-collapse:collapse;font-size:14.8px;">
+                <thead style="position:sticky;top:0;background:#6b46c1;color:white;z-index:10;">
+                    <tr>
+                        <th style="padding:14px 8px;width:80px;text-align:center;">Importieren</th>
+                        <th style="padding:14px 8px;width:90px;text-align:center;">Überschreiben</th>
+                        <th style="padding:14px 8px;">Thema</th>
+                        <th style="padding:14px 8px;width:180px;">Hinweis</th>
+                        <th style="padding:14px 8px;">Fach • Klasse • Tool</th>
+                    </tr>
+                </thead>
+                <tbody id="importTableBody"></tbody>
+            </table>
+        </div>
+        <div style="padding:20px 32px;background:#f8f9fa;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #ddd;">
+            <button id="cancelImportBtn" style="padding:12px 32px;background:#95a5a6;color:white;border:none;border-radius:10px;cursor:pointer;">Abbrechen</button>
+            <button id="confirmImportBtn" style="padding:12px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Import durchführen</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.showModal();
+
+    const tbody = modal.querySelector('#importTableBody');
+    let html = '';
+
+    newOnes.forEach((item, i) => {
+        html += `<tr style="background:#f0fdf4;">
+            <td style="text-align:center;padding:12px;"><input type="checkbox" class="new-check" data-index="${i}" checked></td>
+            <td style="text-align:center;color:#aaa;">—</td>
+            <td style="padding:12px;font-weight:600;">${escapeHtml(item.topic)}</td>
+            <td style="padding:12px;color:#27ae60;">neu</td>
+            <td style="padding:12px;font-size:14px;">${escapeHtml(item.subject)} • ${item.grade} • ${escapeHtml(item.tool || '—')}</td>
+        </tr>`;
+    });
+
+    similarOnes.forEach((item, i) => {
+        const perc = Math.round((item.similarityScore || 0) * 100);
+        html += `<tr style="background:#fffaf0;">
+            <td style="text-align:center;padding:12px;"><input type="checkbox" class="similar-check" data-index="${i}" checked></td>
+            <td style="text-align:center;padding:12px;"><input type="checkbox" class="replace-check" data-index="${i}"></td>
+            <td style="padding:12px;font-weight:600;color:#e67e22;">${escapeHtml(item.topic)}</td>
+            <td style="padding:12px;color:#e67e22;">ähnlich erkannt<br><small>Ähnlichkeit: ${perc}%</small></td>
+            <td style="padding:12px;font-size:14px;">
+                ${escapeHtml(item.subject)} • ${item.grade} • ${escapeHtml(item.tool || '—')}
+                <div style="margin-top:4px;font-size:13px;color:#c0392b;">Vorhanden: ${escapeHtml(item.existing.topic)}</div>
+            </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+    const updateButton = () => {
+        let add = 0, rep = 0;
+        modal.querySelectorAll('.new-check').forEach(c => { if (c.checked) add++; });
+        modal.querySelectorAll('.similar-check').forEach((c, i) => {
+            if (c.checked) {
+                const r = modal.querySelectorAll('.replace-check')[i];
+                if (r && r.checked) rep++; else add++;
+            }
+        });
+        const btn = modal.querySelector('#confirmImportBtn');
+        btn.textContent = (add + rep === 0) ? "Nichts importieren" : 
+                          (rep === 0 ? `${add} hinzufügen` : `${add} hinzufügen • ${rep} überschreiben`);
+    };
+
+    modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateButton));
+    updateButton();
+
+    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
+    modal.querySelector('#confirmImportBtn').onclick = () => performImport(newOnes, similarOnes, modal);
+}
+
+// ====================== PERFORM IMPORT ======================
+function performImport(newOnes, similarOnes, modal) {
+    let added = 0, overwritten = 0;
+
+    newOnes.forEach((item, i) => {
+        if (modal.querySelectorAll('.new-check')[i]?.checked) {
+            store.resources.push({ ...item, favorite: false, lastModified: new Date().toLocaleDateString('de-DE') });
+            added++;
+        }
+    });
+
+    similarOnes.forEach((item, i) => {
+        const simCheck = modal.querySelectorAll('.similar-check')[i];
+        if (!simCheck?.checked) return;
+        const repCheck = modal.querySelectorAll('.replace-check')[i];
+
+        if (repCheck?.checked) {
+            const idx = store.resources.findIndex(r => r === item.existing);
+            if (idx > -1) {
+                store.resources[idx] = { ...item, favorite: store.resources[idx].favorite || false, lastModified: new Date().toLocaleDateString('de-DE') };
+                overwritten++;
+            }
+        } else {
+            store.resources.push({ ...item, favorite: false, lastModified: new Date().toLocaleDateString('de-DE') });
+            added++;
+        }
+    });
+
+    store.save();
+    applyFilters();
+    if (typeof updateSubjectStats === 'function') updateSubjectStats();
+
+    modal.remove();
+    showFancyAlert('✅ Import erfolgreich', 'success', `${added} hinzugefügt • ${overwritten} überschrieben`);
+}
+
+// ====================== HILFSFUNKTIONEN ======================
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function similarity(a, b) {
+    if (!a || !b) return 0;
+    const len = Math.max(a.length, b.length);
+    return (len - levenshteinDistance(a.toLowerCase().trim(), b.toLowerCase().trim())) / len;
+}
+
+function levenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = Array.from({ length: b.length + 1 }, () => Array(a.length + 1).fill(0));
+    for (let i = 0; i <= b.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            const cost = a[j-1] === b[i-1] ? 0 : 1;
+            matrix[i][j] = Math.min(matrix[i-1][j]+1, matrix[i][j-1]+1, matrix[i-1][j-1]+cost);
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+            else inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current); current = '';
+        } else current += char;
+    }
+    result.push(current);
+    return result;
+}
+
+function migrateImportedResources(imported, sourceLevels, targetLevels) {
+    if (sourceLevels === targetLevels || !Array.isArray(imported)) return imported;
+    return imported.map(r => {
+        if (!r?.level) return r;
+        let num = parseInt(String(r.level).match(/\d+/)?.[0] || 0);
+        if (!num) return r;
+        if (sourceLevels === 5 && targetLevels === 3) num = num <= 2 ? 1 : (num === 3 ? 2 : 3);
+        else if (sourceLevels === 3 && targetLevels === 5) num = num === 1 ? 1 : (num === 2 ? 3 : 5);
+        r.level = `Niveaustufe ${num}`;
+        return r;
+    });
+}

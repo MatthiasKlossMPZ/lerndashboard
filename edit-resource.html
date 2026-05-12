@@ -118,6 +118,9 @@ button {
 </div>
 
 <script>
+
+    window.currentEditIndex = -1;
+
 // Globale Variablen
 let currentEditIndex = -1;
 let allTopics = [];
@@ -150,38 +153,32 @@ function populateLevelSelect() {
     if (current) select.value = current;
 }
 
-// Autocomplete mit dynamischer Position
+// Autocomplete
 function setupAutocomplete(inputId, dropdownId, getList) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     if (!input || !dropdown) return;
 
     function positionDropdown() {
-    const rect = input.getBoundingClientRect();
-    
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = `${rect.bottom + window.scrollY + 6}px`;
-    dropdown.style.left = `${rect.left + window.scrollX}px`;
-    dropdown.style.width = `${rect.width}px`;
-    dropdown.style.zIndex = '2147483640';    
-    dropdown.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
-}
+        const rect = input.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${rect.bottom + window.scrollY + 6}px`;
+        dropdown.style.left = `${rect.left + window.scrollX}px`;
+        dropdown.style.width = `${rect.width}px`;
+    }
 
     input.addEventListener('input', () => {
         const val = input.value.toLowerCase().trim();
         dropdown.innerHTML = '';
-
         if (val.length < 1) {
             dropdown.style.display = 'none';
             return;
         }
-
         const suggestions = getList().filter(s => s.toLowerCase().includes(val)).slice(0, 12);
         if (!suggestions.length) {
             dropdown.style.display = 'none';
             return;
         }
-
         suggestions.forEach(s => {
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
@@ -193,12 +190,10 @@ function setupAutocomplete(inputId, dropdownId, getList) {
             };
             dropdown.appendChild(div);
         });
-
         positionDropdown();
         dropdown.style.display = 'block';
     });
 
-    // Schließen bei Klick außerhalb
     document.addEventListener('click', (e) => {
         if (!input.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.style.display = 'none';
@@ -224,7 +219,7 @@ function saveResource() {
 
     if (window.opener) {
         window.opener.postMessage({
-            type: currentEditIndex >= 0 ? 'SAVE_EDIT' : 'SAVE_NEW',
+            type: 'SAVE_EDIT',
             index: currentEditIndex,
             data: data
         }, location.origin);
@@ -232,22 +227,32 @@ function saveResource() {
     window.close();
 }
 
-// Message Handler
+// ==================== MESSAGE HANDLER ====================
+
 window.addEventListener('message', event => {
     if (event.origin !== location.origin) return;
+
     const msg = event.data;
+    if (!msg || !msg.type) return;
 
-    allTopics = msg.allTopics || [];
-    allTools = msg.allTools || [];
+    console.log('📥 Nachricht empfangen:', msg.type);
 
-    setupAutocomplete('topic', 'topicDropdown', () => allTopics);
-    setupAutocomplete('tool', 'toolDropdown', () => allTools);
+    // Globale Variablen für Autocomplete
+    window.allTopics = msg.allTopics || [];
+    window.allTools = msg.allTools || [];
+
+    // Autocomplete initialisieren
+    if (typeof setupAutocomplete === 'function') {
+        setupAutocomplete('topic', 'topicDropdown', () => window.allTopics);
+        setupAutocomplete('tool', 'toolDropdown', () => window.allTools);
+    }
 
     if (msg.type === 'EDIT_RESOURCE') {
-        currentEditIndex = msg.index;
+        window.currentEditIndex = msg.index;
         document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
-        
+
         const r = msg.data || {};
+        
         document.getElementById('topic').value = r.topic || '';
         document.getElementById('subject').value = r.subject || '';
         document.getElementById('grade').value = r.grade || '';
@@ -255,27 +260,30 @@ window.addEventListener('message', event => {
         document.getElementById('tool').value = r.tool || '';
         document.getElementById('description').value = r.description || '';
 
-        populateLevelSelect();
+        if (typeof populateLevelSelect === 'function') {
+            populateLevelSelect();
+        }
         document.getElementById('level').value = r.level || '';
 
+        console.log('✏️ Bearbeitungsmodus geladen für Index', msg.index);
+
     } else if (msg.type === 'NEW_RESOURCE') {
-        currentEditIndex = -1;
+        window.currentEditIndex = -1;
         document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
-        
+
+        // Formular zurücksetzen
         document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea')
             .forEach(el => el.value = '');
-        populateLevelSelect();
-    }
 
-    setTimeout(() => {
-        const topicInput = document.getElementById('topic');
-        if (topicInput) {
-            topicInput.focus();
-            topicInput.select();
+        if (typeof populateLevelSelect === 'function') {
+            populateLevelSelect();
         }
-    }, 150);
+
+        console.log('➕ Neuer Ressourcen-Modus aktiviert');
+    }
 });
 
+// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
     initSelects();
     populateLevelSelect();
@@ -294,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    console.log('✅ edit-resource.html – dynamische Positionierung aktiv');
+    console.log('✅ edit-resource.html geladen (modular)');
 });
 </script>
 </body>
