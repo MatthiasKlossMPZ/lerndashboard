@@ -11,11 +11,13 @@ import {
 } from './stats.js';
 import { 
     deleteResourceConfirmed, 
-    cancelDelete 
+    cancelDelete,
+    showUndoToast,
+    undoLastAction ,
+    showFancyAlert,
+    showUpdateToast
 } from './ui/modals.js';
 import { openNewResourceWindow, initNewResourceListener } from './ui/newResource.js';
-import { showUndoToast, undoLastAction } from './ui/modals.js';
-import { showFancyAlert } from './ui/modals.js';
 import { handleImportFile } from './ui/import.js';
 import { initEditResourceListener } from './ui/editResource.js';
 
@@ -78,32 +80,6 @@ export function initUI() {
         console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
         showInitialLevelModeModal();
     }
-
-    // ====================== AUTO-UPDATE CHECK ======================
-    const CURRENT_VERSION = '1.1.54';   // ← Mit version.js synchron halten!
-
-    function checkForAppUpdate() {
-        const savedVersion = localStorage.getItem('appVersion');
-        if (savedVersion !== CURRENT_VERSION) {
-            console.log(`🔄 Neue Version erkannt: ${savedVersion || 'keine'} → ${CURRENT_VERSION}`);
-            localStorage.setItem('appVersion', CURRENT_VERSION);
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    regs.forEach(reg => reg.unregister());
-                });
-            }
-            if ('caches' in window) {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
-            }
-
-            setTimeout(() => window.location.reload(true), 800);
-        }
-    }
-
-    checkForAppUpdate();
 
     // ====================== NORMALER UI-START (dein Original-Code) ======================
     // Sichere Aufrufe mit Fallback
@@ -180,6 +156,7 @@ export function initUI() {
     window.showFancyAlert = showFancyAlert;
     window.applyFilters = applyFilters;
     window.toggleFavorite = toggleFavorite;
+    window.showUpdateToast = showUpdateToast;
 
     // Restore Button
     document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
@@ -239,6 +216,32 @@ window.openNewResource = function() {
     }, 300);
 };
 
+// ====================== SERVICE WORKER + UPDATE TOAST ======================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+            console.log('✅ Service Worker registriert');
+
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('🚀 Neue Version aktiviert');
+
+                        // Toast anzeigen
+                        if (typeof showUpdateToast === 'function') {
+                            showUpdateToast();
+                        }
+
+                        // Service Worker sofort aktivieren
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            });
+        })
+        .catch(err => console.error('❌ SW-Fehler:', err));
+}
 bootApp();
 
 // ====================== DARK MODE ======================

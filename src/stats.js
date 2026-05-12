@@ -121,23 +121,22 @@ export function updateStorageIndicator() {
 
 // ====================== LEVEL-MODUS + MIGRATION ======================
 export function initLevelMode() {
-    const saved = localStorage.getItem('levelMode') || '5';
-    store.levelMode = saved;
-
-    if (!localStorage.getItem('levelMode')) {
-        showInitialLevelModeModal();
-    } else {
+    const saved = localStorage.getItem('levelMode');
+    if (saved) {
+        store.levelMode = saved;
         populateLevelFilter();
         updateLevelModeButtons();
+    } else {
+        showInitialLevelModeModal();
     }
 }
 
 function showInitialLevelModeModal() {
     // Nur anzeigen, wenn wirklich noch nichts gespeichert ist
-    if (store.levelMode === 3 || store.levelMode === 5) {
-        console.log('✅ Level-Modus bereits gesetzt:', store.levelMode);
-        return;
-    }
+    if (store.levelMode === '3' || store.levelMode === '5') {
+    console.log('Level-Modus bereits gesetzt:', store.levelMode);
+    return;
+}
 
     const message = `
         <strong>Willkommen zum LernDashboard!</strong><br><br>

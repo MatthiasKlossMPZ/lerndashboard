@@ -215,6 +215,53 @@ export function showFancyAlert(title, type = 'info', subtitle = '', onConfirm = 
     }
 }
 
+// ====================== UPDATE-TOAST (Neue Version) ======================
+export function showUpdateToast() {
+    // Alten Toast ggf. entfernen
+    let existing = document.getElementById('updateToast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'updateToast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #27ae60;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        font-weight: 600;
+        font-size: 15.2px;
+        z-index: 40000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 280px;
+        max-width: 90vw;
+        white-space: nowrap;
+        overflow: hidden;
+    `;
+
+    toast.innerHTML = `
+        <span style="font-size:20px;">🚀</span>
+        <span>App wurde aktualisiert</span>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Automatisch nach 5 Sekunden ausblenden
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.style.transition = 'opacity 0.4s ease';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }
+    }, 5000);
+}
+
 // ====================== WINDOW BINDINGS ======================
 window.showDeleteConfirm = showDeleteConfirm;
 window.undoLastAction = undoLastAction;
