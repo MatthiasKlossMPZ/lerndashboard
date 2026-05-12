@@ -132,7 +132,6 @@ export function initLevelMode() {
     }
 }
 
-// === FEHLENDE FUNKTION ===
 function showInitialLevelModeModal() {
     const message = `
         <strong>Willkommen zum LernDashboard!</strong><br><br>
@@ -146,16 +145,10 @@ function showInitialLevelModeModal() {
             'Niveaustufen-Modus wählen',
             'info',
             message,
-            () => {
-                // Standard auf 5 Stufen
-                changeLevelMode('5');
-            },
-            () => {
-                changeLevelMode('3'); // Alternative
-            }
+            () => changeLevelMode('5'),   // 5 Stufen
+            () => changeLevelMode('3')    // 3 Stufen
         );
     } else {
-        // Fallback
         if (confirm('5 Niveaustufen verwenden? (Abbrechen = 3 Stufen)')) {
             changeLevelMode('5');
         } else {
@@ -165,8 +158,15 @@ function showInitialLevelModeModal() {
 }
 
 export function changeLevelMode(newMode) {
-    const oldMode = store.levelMode;
-    if (oldMode === newMode) return;
+    newMode = String(newMode); // Sicherheit
+    const oldMode = store.levelMode || '5';
+
+    if (oldMode === newMode) {
+        updateLevelModeButtons(); // nur visuelle Aktualisierung
+        return;
+    }
+
+    // ... (der Rest der bestehenden Funktion bleibt gleich bis zum Ende)
 
     const direction = oldMode === '5' && newMode === '3'
         ? "5 → 3 Stufen:<br>• Stufen 1+2 → Stufe 1<br>• Stufe 3 → Stufe 2<br>• Stufen 4+5 → Stufe 3"
@@ -187,7 +187,6 @@ export function changeLevelMode(newMode) {
             () => executeLevelChange(oldMode, newMode)
         );
     } else {
- 
         if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction.replace(/<br>/g, '\n')}\n\nAlle Ressourcen werden automatisch angepasst.`)) {
             executeLevelChange(oldMode, newMode);
         }
@@ -257,8 +256,14 @@ function updateLevelModeButtons() {
     const btn5 = document.getElementById('levelBtn5');
     const currentText = document.getElementById('currentLevelText');
 
-    if (btn3) btn3.style.background = store.levelMode === '3' ? '#00bfff' : '#e2e8f0';
-    if (btn5) btn5.style.background = store.levelMode === '5' ? '#6b46c1' : '#e2e8f0';
+    if (btn3) {
+        btn3.style.background = (store.levelMode === '3' || store.levelMode === 3) ? '#00bfff' : '#e2e8f0';
+        btn3.style.color = (store.levelMode === '3' || store.levelMode === 3) ? 'white' : '#475569';
+    }
+    if (btn5) {
+        btn5.style.background = (store.levelMode === '5' || store.levelMode === 5) ? '#6b46c1' : '#e2e8f0';
+        btn5.style.color = (store.levelMode === '5' || store.levelMode === 5) ? 'white' : '#475569';
+    }
     if (currentText) currentText.textContent = `${store.levelMode} Niveaustufen`;
 }
 
@@ -295,35 +300,40 @@ export function showRestoreDialog() {
         return;
     }
 
+    // Alten Dialog sicher entfernen
+    document.querySelectorAll('dialog#restoreDialog').forEach(d => d.remove());
+
     const modal = document.createElement('dialog');
+    modal.id = 'restoreDialog';
     modal.style.cssText = `
         position: fixed;
-        top: 50%;
+        top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
         max-width: 720px;
         width: 94%;
-        max-height: 92vh;
-        height: 620px;                 /* feste Mindesthöhe */
+        max-height: 88vh;
         border: none;
         border-radius: 20px;
         padding: 0;
-        box-shadow: 0 30px 90px rgba(0,0,0,0.5);
+        box-shadow: 0 30px 90px rgba(0,0,0,0.55);
         background: white;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        z-index: 40000;
     `;
 
     let html = `
         <!-- Header -->
         <div style="padding:28px 24px; text-align:center; background: linear-gradient(135deg, #fff9e6, #fef3c7); flex-shrink:0;">
-            <div style="font-size:48px; margin-bottom:8px;">🛡️</div>
-            <h2 style="margin:0; color:#d97706;">Ressourcen wiederherstellen</h2>
+            <div style="font-size:52px; margin-bottom:8px;">🛡️</div>
+            <h2 style="margin:0; color:#d97706; font-size:24px;">Ressourcen wiederherstellen</h2>
+            <p style="margin:8px 0 0; color:#b45309; font-size:15px;">Notfall-Backups (letzte ${backups.length})</p>
         </div>
 
-        <!-- Großer Scroll-Bereich -->
-        <div style="flex: 1; overflow-y: auto; padding: 16px; background: #f8f9fa; min-height: 320px;">
+        <!-- Scroll-Bereich -->
+        <div style="flex: 1; overflow-y: auto; padding: 16px 20px; background: #f8f9fa;">
     `;
 
     backups.forEach((backup, i) => {
@@ -332,17 +342,17 @@ export function showRestoreDialog() {
         const timeStr = date.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
 
         html += `
-            <div style="background:white; border-radius:14px; padding:18px; margin:10px 0; 
-                        border-left:7px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:white; border-radius:14px; padding:20px; margin:12px 0; 
+                        border-left:6px solid #f59e0b; box-shadow:0 4px 15px rgba(0,0,0,0.08);">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
                     <div>
                         <strong style="font-size:17.5px;">${dateStr}, ${timeStr}</strong><br>
                         <span style="color:#555;">${backup.action || 'Automatisches Backup'}</span><br>
                         <span style="color:#d97706; font-weight:700;">${backup.resourceCount || backup.resources?.length || 0} Ressourcen</span>
                     </div>
-                    <button onclick="restoreFromSafetyBackup(${i}); this.closest('dialog').close()" 
+                    <button onclick="restoreFromSafetyBackup(${i}); closeRestoreDialog()" 
                             style="background:#ef4444; color:white; border:none; border-radius:12px; 
-                                   padding:14px 28px; font-weight:700; cursor:pointer; min-width:150px;">
+                                   padding:14px 32px; font-weight:700; cursor:pointer; min-width:160px; flex-shrink:0;">
                         Wiederherstellen
                     </button>
                 </div>
@@ -355,9 +365,9 @@ export function showRestoreDialog() {
 
         <!-- Footer -->
         <div style="padding:24px; text-align:center; background:#f1f5f9; border-top:1px solid #e2e8f0; flex-shrink:0;">
-            <button onclick="this.closest('dialog').close()" 
-                    style="background:#64748b; color:white; border:none; border-radius:12px; 
-                           padding:14px 48px; font-size:16.5px; cursor:pointer;">
+            <button onclick="closeRestoreDialog()" 
+                    style="padding:14px 42px; background:#64748b; color:white; border:none; 
+                           border-radius:12px; font-weight:600; cursor:pointer; font-size:16px;">
                 Abbrechen
             </button>
         </div>
@@ -367,41 +377,41 @@ export function showRestoreDialog() {
     document.body.appendChild(modal);
     modal.showModal();
 
- modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.close();
+    // ESC-Taste + Klick außerhalb
+    modal.addEventListener('close', () => {
+        setTimeout(() => modal.remove(), 300);
     });
 }
 
-export function restoreFromSafetyBackup(index) {
+// Hilfsfunktion für sauberes Schließen
+window.closeRestoreDialog = function() {
+    const dialog = document.getElementById('restoreDialog');
+    if (dialog) {
+        dialog.close();
+        setTimeout(() => dialog.remove(), 400);
+    }
+};
+
+window.restoreFromSafetyBackup = function(index) {
     const backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
     if (!backups[index]) return;
 
-    if (!confirm(`⚠️ Alle aktuellen Daten werden überschrieben!\n\nBackup vom ${new Date(backups[index].timestamp).toLocaleString('de-DE')} wirklich wiederherstellen?`)) {
-        return;
+    const backup = backups[index];
+
+    if (confirm(`Wirklich auf den Backup vom ${backup.date} mit ${backup.resourceCount} Ressourcen zurücksetzen?`)) {
+        store.resources = JSON.parse(JSON.stringify(backup.resources || []));
+        if (backup.levelMode) store.levelMode = backup.levelMode;
+
+        store.save();
+        applyFilters();
+        updateSubjectStats();
+        updateStorageIndicator();
+        updateTopStats?.();
+
+        showFancyAlert('✅ Wiederhergestellt!', 'success', `Backup vom ${backup.date} wurde geladen.`);
+        closeRestoreDialog();
     }
-
-    // Daten wiederherstellen
-    store.resources = JSON.parse(JSON.stringify(backups[index].resources));
-    store.levelMode = backups[index].levelMode || '5';
-    localStorage.setItem('levelMode', store.levelMode);
-
-    store.save();
-    applyFilters();
-    updateSubjectStats();
-    updateStorageIndicator();
-
-    const allDialogs = document.querySelectorAll('dialog');
-    allDialogs.forEach(d => {
-        if (d.open) d.close();
-    });
-
-    document.querySelectorAll('#importDecisionDialog, dialog').forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el);
-    });
-
-    showFancyAlert('✅ Erfolgreich wiederhergestellt!', 'success', 
-        `${backups[index].resourceCount || backups[index].resources?.length || 0} Ressourcen geladen.`);
-}
+};
 
 // ====================== WINDOW BINDINGS ======================
 window.changeLevelMode = changeLevelMode;

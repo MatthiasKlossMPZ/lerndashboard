@@ -123,7 +123,7 @@ function prepareImportData(importedResources) {
 }
 
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
-    console.log('🚀 showUnifiedImportDecisionDialog aufgerufen');
+    console.log('🚀 showUnifiedImportDecisionDialog aufgerufen mit:', { newOnes: newOnes?.length, similarOnes: similarOnes?.length, duplicates: duplicateCount });
 
     if ((newOnes?.length || 0) === 0 && (similarOnes?.length || 0) === 0) {
         showFancyAlert('Import abgeschlossen', 'info', `${duplicateCount} Duplikate ignoriert.`);
@@ -133,11 +133,23 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     const modal = document.createElement('dialog');
     modal.id = 'importDecisionDialog';
     modal.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        max-width: 1180px; width: 96%; max-height: 94vh; height: auto;
-        border: none; border-radius: 20px; padding: 0; overflow: hidden;
-        box-shadow: 0 30px 90px rgba(0,0,0,0.55); background: var(--card);
-        display: flex; flex-direction: column; z-index: 30000;
+        position: fixed; 
+        top: 42%; 
+        left: 50%; 
+        transform: translate(-50%, -50%);
+        max-width: 1180px; 
+        width: 96%; 
+        max-height: 88vh; 
+        height: auto;
+        border: none; 
+        border-radius: 20px; 
+        padding: 0; 
+        overflow: hidden;
+        box-shadow: 0 30px 90px rgba(0,0,0,0.55); 
+        background: var(--card);
+        display: flex; 
+        flex-direction: column; 
+        z-index: 30000;
     `;
 
     modal.innerHTML = `
@@ -145,22 +157,26 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
             <h2 style="margin:0 0 8px 0; color:var(--primary); font-size:22px;">Import verarbeiten</h2>
             <p style="margin:0; font-size:15.2px; color:var(--text-light);">
                 ${(newOnes?.length || 0)} neue • ${(similarOnes?.length || 0)} ähnliche • 
-                <span style="color:#e74c3c;">${duplicateCount} Duplikate ignoriert</span>
+                <span style="color:#e74c3c;font-weight:600;">${duplicateCount} Duplikate ignoriert</span>
             </p>
         </div>
 
-        <div style="flex:1; overflow-y:auto; padding:8px 16px; background:#fafafa;">
+        <div style="flex:1; overflow-y:auto; padding:0; background:#fafafa; max-height: calc(88vh - 210px);">
             <table style="width:100%; border-collapse:collapse; font-size:14.8px; table-layout:fixed;">
-                <thead style="position:sticky; top:0; background:#6b46c1; color:white; z-index:10;">
+                <thead style="position:sticky; top:0; z-index:30; background:#6b46c1;">
                     <tr>
-                        <th style="padding:14px 8px; width:85px; text-align:center;">Importieren</th>
-                        <th style="padding:14px 8px; width:95px; text-align:center;">Überschreiben</th>
-                        <th style="padding:14px 8px;">Thema</th>
-                        <th style="padding:14px 8px; width:190px;">Hinweis</th>
-                        <th style="padding:14px 8px;">Fach • Klasse • Tool</th>
+                        <th style="padding:16px 8px; width:85px; text-align:center; background:#6b46c1; color:white; position:relative;">Importieren</th>
+                        <th style="padding:16px 8px; width:95px; text-align:center; background:#6b46c1; color:white; position:relative;">Überschreiben</th>
+                        <th style="padding:16px 8px; background:#6b46c1; color:white; position:relative;">Thema</th>
+                        <th style="padding:16px 8px; width:220px; background:#6b46c1; color:white; position:relative;">Hinweis</th>
+                        <th style="padding:16px 8px; background:#6b46c1; color:white; position:relative;">Fach • Klasse • Tool</th>
+                    </tr>
+                    <!-- Schatten für bessere Trennung -->
+                    <tr style="height:0;">
+                        <td colspan="5" style="height:0; padding:0; margin:0; border:none; box-shadow:0 4px 8px rgba(0,0,0,0.15);"></td>
                     </tr>
                 </thead>
-                <tbody id="importTableBody"></tbody>
+                <tbody id="importTableBody" style="background:#fafafa;"></tbody>
             </table>
         </div>
 
@@ -178,29 +194,93 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     const tbody = modal.querySelector('#importTableBody');
     const confirmBtn = modal.querySelector('#confirmImportBtn');
 
-    const allItems = [...(newOnes || []), ...(similarOnes || [])];
-
-    allItems.forEach((item, idx) => {
-        const res = item.resource || item;
-        const isNew = idx < (newOnes?.length || 0);
-
+    // === NEUE RESSOURCEN ===
+    (newOnes || []).forEach((item, i) => {
         const row = document.createElement('tr');
-        row.style.borderBottom = '1px solid #eee';
+        row.style.background = '#f0fdf4';
         row.innerHTML = `
             <td style="text-align:center; padding:12px 8px;">
-                <input type="checkbox" class="import-checkbox" data-index="${idx}" ${isNew ? 'checked' : ''}>
+                <input type="checkbox" class="import-checkbox" data-index="${i}" checked>
             </td>
-            <td style="text-align:center; padding:12px 8px;">
-                ${!isNew ? `<input type="checkbox" class="overwrite-checkbox" data-index="${idx}">` : ''}
-            </td>
-            <td style="padding:12px 8px; font-weight:500;">${escapeHtml(res.topic || '(Kein Thema)')}</td>
-            <td style="padding:12px 8px; color:#666; font-size:13.5px;">${item.message || (isNew ? 'Neu' : 'Ähnlich')}</td>
+            <td style="text-align:center; padding:12px 8px; color:#aaa;">—</td>
+            <td style="padding:12px 8px; font-weight:600;">${escapeHtml(item.topic || '(Kein Thema)')}</td>
+            <td style="padding:12px 8px; color:#27ae60; font-weight:600;">NEU</td>
             <td style="padding:12px 8px; font-size:13.5px; color:#555;">
-                ${escapeHtml(res.subject || '-')} • ${escapeHtml(res.grade || '-')} • ${escapeHtml(res.tool || '-')}
+                ${escapeHtml(item.subject || '-')} • ${escapeHtml(item.grade || '-')} • ${escapeHtml(item.tool || '-')}
             </td>
         `;
         tbody.appendChild(row);
     });
+
+    // === ÄHNLICHE RESSOURCEN ===
+    (similarOnes || []).forEach((item, i) => {
+        const perc = Math.round((item.similarityScore || 0) * 100);
+        const diffHint = getDifferenceHint(item.existing, item);
+
+        const row = document.createElement('tr');
+        row.style.background = '#fff3e0';
+        row.innerHTML = `
+            <td style="text-align:center; padding:12px 8px;">
+                <input type="checkbox" class="import-checkbox" data-index="${newOnes.length + i}" checked>
+            </td>
+            <td style="text-align:center; padding:12px 8px;">
+                <input type="checkbox" class="overwrite-checkbox" data-index="${i}">
+            </td>
+            <td style="padding:12px 8px; font-weight:600; color:#e67e22;">${escapeHtml(item.topic)}</td>
+            <td style="padding:12px 8px; color:#e74c3c; font-weight:600; line-height:1.4;">
+                ÄHNLICH<br>
+                <small style="color:#c0392b;">Ähnlichkeit: ${perc}%</small><br>
+                <small style="color:#e67e22;">${diffHint}</small>
+            </td>
+            <td style="padding:12px 8px; font-size:13.5px; color:#555;">
+                ${escapeHtml(item.subject)} • ${item.grade} • ${escapeHtml(item.tool || '-')}
+                <div style="margin-top:4px; font-size:13px; color:#c0392b;">
+                    Vorhanden: ${escapeHtml(item.existing.topic)}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Button-Logik (unverändert)
+    function updateConfirmButton() {
+        const importCbs = modal.querySelectorAll('.import-checkbox');
+        const overwriteCbs = modal.querySelectorAll('.overwrite-checkbox');
+
+        let toAdd = 0;
+        let toOverwrite = 0;
+
+        (newOnes || []).forEach((_, i) => {
+            if (importCbs[i]?.checked) toAdd++;
+        });
+
+        (similarOnes || []).forEach((_, i) => {
+            const idx = (newOnes?.length || 0) + i;
+            if (importCbs[idx]?.checked) {
+                if (overwriteCbs[i]?.checked) toOverwrite++;
+                else toAdd++;
+            }
+        });
+
+        let text = '✅ Import durchführen';
+        if (toAdd + toOverwrite > 0) {
+            text = `✅ ${toAdd} hinzufügen`;
+            if (toOverwrite > 0) text += ` • ${toOverwrite} überschreiben`;
+        }
+        confirmBtn.textContent = text;
+    }
+
+    modal.addEventListener('change', updateConfirmButton);
+    updateConfirmButton();
+
+    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
+    modal.querySelector('#confirmImportBtn').onclick = () => {
+        performImport(newOnes, similarOnes, modal);
+        modal.remove();
+    };
+
+    modal.addEventListener('close', () => modal.remove());
+
 
     // === DYNAMISCHE BUTTON-AKTUALISIERUNG ===
     function updateConfirmButton() {
@@ -309,6 +389,16 @@ function performImport(newOnes, similarOnes, modal) {
 }
 
 // ====================== HILFSFUNKTIONEN ======================
+
+function getDifferenceHint(existing, imported) {
+    const diffs = [];
+    if (existing.topic !== imported.topic) diffs.push("anderer Titel");
+    if ((existing.description || '') !== (imported.description || '')) diffs.push("andere Beschreibung");
+    if (existing.level !== imported.level) diffs.push("anderes Level");
+    if (existing.competence !== imported.competence) diffs.push("andere Kompetenz");
+    return diffs.length ? diffs.join(" • ") : "ähnliche Metadaten";
+}
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
