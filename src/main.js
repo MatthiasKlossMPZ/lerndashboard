@@ -64,10 +64,8 @@ function setupImportHandler(handleImportFile) {
         return;
     }
 
-    // Alten Listener entfernen
     importInput.removeEventListener('change', handleImportFile);
     
-    // Neuen Listener setzen
     importInput.addEventListener('change', handleImportFile);
     console.log('✅ Import-Button erfolgreich verbunden');
 }
@@ -75,101 +73,135 @@ function setupImportHandler(handleImportFile) {
 export function initUI() {
     console.log('🚀 initUI() gestartet');
 
-    // Sichere Aufrufe mit Fallback
-    if (typeof updateTopStats === 'function') updateTopStats();
-    if (typeof updateSubjectStats === 'function') updateSubjectStats();
-    if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
+    store.load().then(() => {
+        console.log('✅ Store geladen –', store.resources?.length || 0, 'Ressourcen');
 
-    initFilters();
-    initLevelMode();
+        // ====================== ERSTER START - LEVEL-MODUS ======================
+        if (!store.levelMode || (store.levelMode !== 3 && store.levelMode !== 5)) {
+            console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
+            showInitialLevelModeModal();
+        }
 
-    // Export Module
-    import('./export/index.js')
-        .then(({
-            exportTemplate, exportCSV, exportPDF,
-            exportMatrixCSV, exportMatrixPDF, exportMatrixExcel,
-            autoBackup, printOptimized
-        }) => {
-            window.exportTemplate = exportTemplate;
-            window.exportCSV = exportCSV;
-            window.exportPDF = exportPDF;
-            window.exportMatrixCSV = exportMatrixCSV;
-            window.exportMatrixPDF = exportMatrixPDF;
-            window.exportMatrixExcel = exportMatrixExcel;
-            window.autoBackup = autoBackup;
-            window.printOptimized = printOptimized;
-            console.log('✅ Export-Module erfolgreich geladen');
-        })
-        .catch(err => console.error('❌ Export-Module:', err));
+        // ====================== AUTO-UPDATE CHECK ======================
+        const CURRENT_VERSION = '1.1.53';   // ← Immer mit src/ui/version.js synchron halten!
 
-    // Import Module
-    import('./ui/import.js')
-        .then(({ handleImportFile }) => {
-            setupImportHandler(handleImportFile);
-            console.log('✅ Import-Modul geladen');
-        })
-        .catch(err => console.error('❌ Import-Modul:', err));
+        function checkForAppUpdate() {
+            const savedVersion = localStorage.getItem('appVersion');
+            if (savedVersion !== CURRENT_VERSION) {
+                console.log(`🔄 Neue Version erkannt: ${savedVersion || 'keine'} → ${CURRENT_VERSION}`);
+                localStorage.setItem('appVersion', CURRENT_VERSION);
 
-    import('./levelMode.js')
-        .then(() => console.log('✅ levelMode.js geladen'))
-        .catch(() => console.warn('levelMode.js noch nicht gefunden'));
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(regs => {
+                        regs.forEach(reg => reg.unregister());
+                    });
+                }
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
 
-    // ====================== NORMALER UI-START ======================
-    startUI();
-    initFilters();
-    window.applyQuickFilter = applyQuickFilter;
-    populateFilterOptions();
-    applyFilters();
-    updateTopStats(); 
-    updateSubjectStats();
-    updateStorageIndicator();
-    initLevelMode();
-    updateVersionDisplay();
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 800);
+            }
+        }
 
-    // Level-Buttons
-    document.getElementById('levelBtn3')?.addEventListener('click', () => changeLevelMode('3'));
-    document.getElementById('levelBtn5')?.addEventListener('click', () => changeLevelMode('5'));
+        checkForAppUpdate();
 
-    // Delete Dialog
-    const dialog = document.getElementById('confirmDeleteDialog');
-    if (dialog) {
-        dialog.querySelector('button[value="delete"]')?.addEventListener('click', deleteResourceConfirmed);
-        dialog.querySelector('button[value="cancel"]')?.addEventListener('click', cancelDelete);
-    }
+        // Sichere Aufrufe mit Fallback
+        if (typeof updateTopStats === 'function') updateTopStats();
+        if (typeof updateSubjectStats === 'function') updateSubjectStats();
+        if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
+        initFilters();
+        initLevelMode();
 
-    // Neue Ressource Button
-    const newBtn = document.querySelector('.new-resource-btn');
-    if (newBtn) newBtn.addEventListener('click', openNewResourceWindow);
+        // Export Module
+        import('./export/index.js')
+            .then(({
+                exportTemplate, exportCSV, exportPDF,
+                exportMatrixCSV, exportMatrixPDF, exportMatrixExcel,
+                autoBackup, printOptimized
+            }) => {
+                window.exportTemplate = exportTemplate;
+                window.exportCSV = exportCSV;
+                window.exportPDF = exportPDF;
+                window.exportMatrixCSV = exportMatrixCSV;
+                window.exportMatrixPDF = exportMatrixPDF;
+                window.exportMatrixExcel = exportMatrixExcel;
+                window.autoBackup = autoBackup;
+                window.printOptimized = printOptimized;
+                console.log('✅ Export-Module erfolgreich geladen');
+            })
+            .catch(err => console.error('❌ Export-Module:', err));
 
-    initNewResourceListener();
-    initEditResourceListener();
+        // Import Module
+        import('./ui/import.js')
+            .then(({ handleImportFile }) => {
+                setupImportHandler(handleImportFile);
+                console.log('✅ Import-Modul geladen');
+            })
+            .catch(err => console.error('❌ Import-Modul:', err));
 
-    // Undo & FancyAlert
-    window.showUndoToast = showUndoToast;
-    window.undoLastAction = undoLastAction;
-    window.showFancyAlert = showFancyAlert;
-    window.applyFilters = applyFilters;
-    window.toggleFavorite = toggleFavorite;
+        import('./levelMode.js')
+            .then(() => console.log('✅ levelMode.js geladen'))
+            .catch(() => console.warn('levelMode.js noch nicht gefunden'));
 
-    // Restore Button
-    document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
+        startUI();
+        initFilters();
+        window.applyQuickFilter = applyQuickFilter;
+        populateFilterOptions();
+        applyFilters();
+        updateTopStats();
+        updateSubjectStats();
+        updateStorageIndicator();
+        initLevelMode();
+        updateVersionDisplay();
 
-    console.log('✅ UI vollständig initialisiert mit', store.resources?.length || 0, 'Ressourcen');
+        // Level-Buttons
+        document.getElementById('levelBtn3')?.addEventListener('click', () => changeLevelMode('3'));
+        document.getElementById('levelBtn5')?.addEventListener('click', () => changeLevelMode('5'));
 
-        // ====================== LOGO = DARK MODE TOGGLE ======================
-    const logo = document.querySelector('.logo-left');
-    if (logo) {
-        logo.addEventListener('click', () => {
-            toggleDarkMode();
-            
-            // Kleiner visueller Feedback
-            logo.style.transition = 'transform 0.4s';
-            logo.style.transform = 'rotate(15deg)';
-            setTimeout(() => {
-                logo.style.transform = 'rotate(0deg)';
-            }, 300);
-        });
-    }
+        // Delete Dialog
+        const dialog = document.getElementById('confirmDeleteDialog');
+        if (dialog) {
+            dialog.querySelector('button[value="delete"]')?.addEventListener('click', deleteResourceConfirmed);
+            dialog.querySelector('button[value="cancel"]')?.addEventListener('click', cancelDelete);
+        }
+
+        // Neue Ressource Button
+        const newBtn = document.querySelector('.new-resource-btn');
+        if (newBtn) newBtn.addEventListener('click', openNewResourceWindow);
+
+        initNewResourceListener();
+        initEditResourceListener();
+
+        // Undo & FancyAlert
+        window.showUndoToast = showUndoToast;
+        window.undoLastAction = undoLastAction;
+        window.showFancyAlert = showFancyAlert;
+        window.applyFilters = applyFilters;
+        window.toggleFavorite = toggleFavorite;
+
+        // Restore Button
+        document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
+
+        // Logo = Dark Mode Toggle
+        const logo = document.querySelector('.logo-left');
+        if (logo) {
+            logo.addEventListener('click', () => {
+                toggleDarkMode();
+                logo.style.transition = 'transform 0.4s';
+                logo.style.transform = 'rotate(15deg)';
+                setTimeout(() => {
+                    logo.style.transform = 'rotate(0deg)';
+                }, 300);
+            });
+        }
+
+        console.log('✅ UI vollständig initialisiert mit', store.resources?.length || 0, 'Ressourcen');
+    });
 }
 
 // === EDIT & NEW RESOURCE WINDOW HANDLER ===
@@ -189,7 +221,6 @@ window.editResource = function(index) {
         'width=720,height=820,scrollbars=yes,resizable=yes'
     );
 
-    // Daten nach kurzer Verzögerung senden
     setTimeout(() => {
         if (popup) {
             popup.postMessage({
@@ -241,5 +272,4 @@ function toggleDarkMode() {
     console.log('🌗 Dark Mode:', isDark ? 'AN' : 'AUS');
 }
 
-// Init aufrufen
 initDarkMode();

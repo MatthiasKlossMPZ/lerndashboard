@@ -133,6 +133,12 @@ export function initLevelMode() {
 }
 
 function showInitialLevelModeModal() {
+    // Nur anzeigen, wenn wirklich noch nichts gespeichert ist
+    if (store.levelMode === 3 || store.levelMode === 5) {
+        console.log('✅ Level-Modus bereits gesetzt:', store.levelMode);
+        return;
+    }
+
     const message = `
         <strong>Willkommen zum LernDashboard!</strong><br><br>
         Welchen Niveaustufen-Modus möchtest du verwenden?<br><br>
@@ -145,14 +151,14 @@ function showInitialLevelModeModal() {
             'Niveaustufen-Modus wählen',
             'info',
             message,
-            () => changeLevelMode('5'),   // 5 Stufen
-            () => changeLevelMode('3')    // 3 Stufen
+            () => changeLevelMode(5),
+            () => changeLevelMode(3)
         );
     } else {
         if (confirm('5 Niveaustufen verwenden? (Abbrechen = 3 Stufen)')) {
-            changeLevelMode('5');
+            changeLevelMode(5);
         } else {
-            changeLevelMode('3');
+            changeLevelMode(3);
         }
     }
 }
