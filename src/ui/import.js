@@ -122,41 +122,53 @@ function prepareImportData(importedResources) {
     showUnifiedImportDecisionDialog(toImport, similar, duplicates.length);
 }
 
-// ====================== DIALOG ======================
 function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 0) {
-    if (newOnes.length === 0 && similarOnes.length === 0) {
+    console.log('🚀 showUnifiedImportDecisionDialog aufgerufen');
+
+    if ((newOnes?.length || 0) === 0 && (similarOnes?.length || 0) === 0) {
         showFancyAlert('Import abgeschlossen', 'info', `${duplicateCount} Duplikate ignoriert.`);
         return;
     }
 
     const modal = document.createElement('dialog');
     modal.id = 'importDecisionDialog';
-    modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:1180px;width:96%;max-height:92vh;border:none;border-radius:16px;padding:0;box-shadow:0 25px 80px rgba(0,0,0,0.6);overflow:hidden;background:var(--card);`;
+    modal.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        max-width: 1180px; width: 96%; max-height: 94vh; height: auto;
+        border: none; border-radius: 20px; padding: 0; overflow: hidden;
+        box-shadow: 0 30px 90px rgba(0,0,0,0.55); background: var(--card);
+        display: flex; flex-direction: column; z-index: 30000;
+    `;
 
     modal.innerHTML = `
-        <div style="padding:24px 32px;border-bottom:1px solid #ddd;">
-            <h2 style="margin:0;color:var(--primary);">Import verarbeiten</h2>
-            <p style="margin:10px 0 0;font-size:15px;color:var(--text-light);">
-                ${newOnes.length} neue • ${similarOnes.length} ähnliche • <span style="color:#e74c3c;">${duplicateCount} Duplikate ignoriert</span>
+        <div style="padding:28px 32px 20px; border-bottom:1px solid #e2e8f0; background: linear-gradient(135deg, #f8fafc, #f1f5f9); flex-shrink:0;">
+            <h2 style="margin:0 0 8px 0; color:var(--primary); font-size:22px;">Import verarbeiten</h2>
+            <p style="margin:0; font-size:15.2px; color:var(--text-light);">
+                ${(newOnes?.length || 0)} neue • ${(similarOnes?.length || 0)} ähnliche • 
+                <span style="color:#e74c3c;">${duplicateCount} Duplikate ignoriert</span>
             </p>
         </div>
-        <div style="max-height:560px;overflow-y:auto;background:#fafafa;padding:0 8px;">
-            <table style="width:100%;border-collapse:collapse;font-size:14.8px;">
-                <thead style="position:sticky;top:0;background:#6b46c1;color:white;z-index:10;">
+
+        <div style="flex:1; overflow-y:auto; padding:8px 16px; background:#fafafa;">
+            <table style="width:100%; border-collapse:collapse; font-size:14.8px; table-layout:fixed;">
+                <thead style="position:sticky; top:0; background:#6b46c1; color:white; z-index:10;">
                     <tr>
-                        <th style="padding:14px 8px;width:80px;text-align:center;">Importieren</th>
-                        <th style="padding:14px 8px;width:90px;text-align:center;">Überschreiben</th>
+                        <th style="padding:14px 8px; width:85px; text-align:center;">Importieren</th>
+                        <th style="padding:14px 8px; width:95px; text-align:center;">Überschreiben</th>
                         <th style="padding:14px 8px;">Thema</th>
-                        <th style="padding:14px 8px;width:180px;">Hinweis</th>
+                        <th style="padding:14px 8px; width:190px;">Hinweis</th>
                         <th style="padding:14px 8px;">Fach • Klasse • Tool</th>
                     </tr>
                 </thead>
                 <tbody id="importTableBody"></tbody>
             </table>
         </div>
-        <div style="padding:20px 32px;background:#f8f9fa;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #ddd;">
-            <button id="cancelImportBtn" style="padding:12px 32px;background:#95a5a6;color:white;border:none;border-radius:10px;cursor:pointer;">Abbrechen</button>
-            <button id="confirmImportBtn" style="padding:12px 36px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Import durchführen</button>
+
+        <div style="padding:24px 32px; background:#f8f9fa; border-top:1px solid #e2e8f0; display:flex; gap:14px; justify-content:flex-end; flex-shrink:0;">
+            <button id="cancelImportBtn" style="padding:13px 34px; background:#64748b; color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer;">Abbrechen</button>
+            <button id="confirmImportBtn" style="padding:13px 38px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer;">
+                ✅ Import durchführen
+            </button>
         </div>
     `;
 
@@ -164,89 +176,136 @@ function showUnifiedImportDecisionDialog(newOnes, similarOnes, duplicateCount = 
     modal.showModal();
 
     const tbody = modal.querySelector('#importTableBody');
-    let html = '';
+    const confirmBtn = modal.querySelector('#confirmImportBtn');
 
-    newOnes.forEach((item, i) => {
-        html += `<tr style="background:#f0fdf4;">
-            <td style="text-align:center;padding:12px;"><input type="checkbox" class="new-check" data-index="${i}" checked></td>
-            <td style="text-align:center;color:#aaa;">—</td>
-            <td style="padding:12px;font-weight:600;">${escapeHtml(item.topic)}</td>
-            <td style="padding:12px;color:#27ae60;">neu</td>
-            <td style="padding:12px;font-size:14px;">${escapeHtml(item.subject)} • ${item.grade} • ${escapeHtml(item.tool || '—')}</td>
-        </tr>`;
-    });
+    const allItems = [...(newOnes || []), ...(similarOnes || [])];
 
-    similarOnes.forEach((item, i) => {
-        const perc = Math.round((item.similarityScore || 0) * 100);
-        html += `<tr style="background:#fffaf0;">
-            <td style="text-align:center;padding:12px;"><input type="checkbox" class="similar-check" data-index="${i}" checked></td>
-            <td style="text-align:center;padding:12px;"><input type="checkbox" class="replace-check" data-index="${i}"></td>
-            <td style="padding:12px;font-weight:600;color:#e67e22;">${escapeHtml(item.topic)}</td>
-            <td style="padding:12px;color:#e67e22;">ähnlich erkannt<br><small>Ähnlichkeit: ${perc}%</small></td>
-            <td style="padding:12px;font-size:14px;">
-                ${escapeHtml(item.subject)} • ${item.grade} • ${escapeHtml(item.tool || '—')}
-                <div style="margin-top:4px;font-size:13px;color:#c0392b;">Vorhanden: ${escapeHtml(item.existing.topic)}</div>
+    allItems.forEach((item, idx) => {
+        const res = item.resource || item;
+        const isNew = idx < (newOnes?.length || 0);
+
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #eee';
+        row.innerHTML = `
+            <td style="text-align:center; padding:12px 8px;">
+                <input type="checkbox" class="import-checkbox" data-index="${idx}" ${isNew ? 'checked' : ''}>
             </td>
-        </tr>`;
+            <td style="text-align:center; padding:12px 8px;">
+                ${!isNew ? `<input type="checkbox" class="overwrite-checkbox" data-index="${idx}">` : ''}
+            </td>
+            <td style="padding:12px 8px; font-weight:500;">${escapeHtml(res.topic || '(Kein Thema)')}</td>
+            <td style="padding:12px 8px; color:#666; font-size:13.5px;">${item.message || (isNew ? 'Neu' : 'Ähnlich')}</td>
+            <td style="padding:12px 8px; font-size:13.5px; color:#555;">
+                ${escapeHtml(res.subject || '-')} • ${escapeHtml(res.grade || '-')} • ${escapeHtml(res.tool || '-')}
+            </td>
+        `;
+        tbody.appendChild(row);
     });
 
-    tbody.innerHTML = html;
+    // === DYNAMISCHE BUTTON-AKTUALISIERUNG ===
+    function updateConfirmButton() {
+        const importCbs = modal.querySelectorAll('.import-checkbox');
+        const overwriteCbs = modal.querySelectorAll('.overwrite-checkbox');
 
-    const updateButton = () => {
-        let add = 0, rep = 0;
-        modal.querySelectorAll('.new-check').forEach(c => { if (c.checked) add++; });
-        modal.querySelectorAll('.similar-check').forEach((c, i) => {
-            if (c.checked) {
-                const r = modal.querySelectorAll('.replace-check')[i];
-                if (r && r.checked) rep++; else add++;
+        let toAdd = 0;
+        let toOverwrite = 0;
+
+        newOnes.forEach((_, i) => {
+            if (importCbs[i]?.checked) toAdd++;
+        });
+
+        similarOnes.forEach((_, i) => {
+            const idx = newOnes.length + i;
+            if (importCbs[idx]?.checked) {
+                if (overwriteCbs[i]?.checked) toOverwrite++;
+                else toAdd++;
             }
         });
-        const btn = modal.querySelector('#confirmImportBtn');
-        btn.textContent = (add + rep === 0) ? "Nichts importieren" : 
-                          (rep === 0 ? `${add} hinzufügen` : `${add} hinzufügen • ${rep} überschreiben`);
+
+        let text = '✅ Import durchführen';
+        if (toAdd + toOverwrite > 0) {
+            text = `✅ ${toAdd} hinzufügen`;
+            if (toOverwrite > 0) text += ` • ${toOverwrite} überschreiben`;
+        }
+        confirmBtn.textContent = text;
+    }
+
+    // Event Listener für Checkbox-Änderungen
+    modal.addEventListener('change', updateConfirmButton);
+    updateConfirmButton(); // Initial aufrufen
+
+    // Buttons
+    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
+    modal.querySelector('#confirmImportBtn').onclick = () => {
+        performImport(newOnes, similarOnes, modal);
+        modal.remove();
     };
 
-    modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateButton));
-    updateButton();
-
-    modal.querySelector('#cancelImportBtn').onclick = () => modal.remove();
-    modal.querySelector('#confirmImportBtn').onclick = () => performImport(newOnes, similarOnes, modal);
+    modal.addEventListener('close', () => modal.remove());
 }
 
-// ====================== PERFORM IMPORT ======================
+/// ====================== PERFORM IMPORT ======================
 function performImport(newOnes, similarOnes, modal) {
-    let added = 0, overwritten = 0;
+    let added = 0;
+    let overwritten = 0;
 
+    const importCheckboxes = modal.querySelectorAll('.import-checkbox');
+    const overwriteCheckboxes = modal.querySelectorAll('.overwrite-checkbox');
+
+    // Neue Ressourcen
     newOnes.forEach((item, i) => {
-        if (modal.querySelectorAll('.new-check')[i]?.checked) {
-            store.resources.push({ ...item, favorite: false, lastModified: new Date().toLocaleDateString('de-DE') });
+        if (importCheckboxes[i]?.checked) {
+            const res = item.resource || item;
+            store.resources.push({
+                ...res,
+                favorite: false,
+                lastModified: new Date().toLocaleDateString('de-DE')
+            });
             added++;
         }
     });
 
+    // Ähnliche Ressourcen
     similarOnes.forEach((item, i) => {
-        const simCheck = modal.querySelectorAll('.similar-check')[i];
-        if (!simCheck?.checked) return;
-        const repCheck = modal.querySelectorAll('.replace-check')[i];
+        const importCb = importCheckboxes[newOnes.length + i];
+        if (!importCb?.checked) return;
 
-        if (repCheck?.checked) {
+        const overwriteCb = overwriteCheckboxes[i];
+        const res = item.resource || item;
+
+        if (overwriteCb?.checked && item.existing) {
             const idx = store.resources.findIndex(r => r === item.existing);
-            if (idx > -1) {
-                store.resources[idx] = { ...item, favorite: store.resources[idx].favorite || false, lastModified: new Date().toLocaleDateString('de-DE') };
+            if (idx !== -1) {
+                store.resources[idx] = {
+                    ...res,
+                    favorite: store.resources[idx].favorite ?? false,
+                    lastModified: new Date().toLocaleDateString('de-DE')
+                };
                 overwritten++;
             }
         } else {
-            store.resources.push({ ...item, favorite: false, lastModified: new Date().toLocaleDateString('de-DE') });
+            store.resources.push({
+                ...res,
+                favorite: false,
+                lastModified: new Date().toLocaleDateString('de-DE')
+            });
             added++;
         }
     });
 
+    createSafetyBackup(`Import: ${added} neu + ${overwritten} überschrieben`);
+
     store.save();
     applyFilters();
-    if (typeof updateSubjectStats === 'function') updateSubjectStats();
+    updateTopStats();
+    updateSubjectStats();
+    updateStorageIndicator();
 
-    modal.remove();
-    showFancyAlert('✅ Import erfolgreich', 'success', `${added} hinzugefügt • ${overwritten} überschrieben`);
+    showFancyAlert(
+        '✅ Import erfolgreich',
+        'success',
+        `${added} neue Ressourcen hinzugefügt<br>${overwritten} Ressourcen überschrieben`
+    );
 }
 
 // ====================== HILFSFUNKTIONEN ======================

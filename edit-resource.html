@@ -220,7 +220,7 @@ function saveResource() {
     if (window.opener) {
         window.opener.postMessage({
             type: 'SAVE_EDIT',
-            index: currentEditIndex,
+            index: window.currentEditIndex,
             data: data
         }, location.origin);
     }
@@ -249,6 +249,8 @@ window.addEventListener('message', event => {
 
     if (msg.type === 'EDIT_RESOURCE') {
         window.currentEditIndex = msg.index;
+        currentEditIndex = msg.index;
+        
         document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
 
         const r = msg.data || {};
