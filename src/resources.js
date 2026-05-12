@@ -100,7 +100,6 @@ export function applyFilters() {
 }
 
 // ====================== ACTION FUNCTIONS ======================
-// Diese müssen VOR den window-Bindings stehen!
 
 function toggleFavorite(i) {
     if (i < 0 || i >= store.resources.length) return;
@@ -164,6 +163,38 @@ export function toggleCompactMode() {
     localStorage.setItem('compactMode', store.compactMode);
     applyFilters();
 }
+
+// ====================== DETAIL-ANSICHT TOGGLE (DREIECK) ======================
+export function toggleResource(index) {
+    const items = document.querySelectorAll('.resource-item');
+    const item = Array.from(items).find(el => parseInt(el.dataset.index) === index);
+    
+    if (!item) return;
+
+    const isCurrentlyCompact = item.classList.contains('compact');
+
+    if (isCurrentlyCompact) {
+        // → Erweiterte Ansicht (Pfeil nach oben)
+        item.classList.remove('compact');
+        item.classList.add('expanded');
+    } else {
+        // → Kompakt-Ansicht (Pfeil nach unten)
+        item.classList.add('compact');
+        item.classList.remove('expanded');
+    }
+
+    // Icon korrekt drehen
+    const icon = item.querySelector('.toggle-icon');
+    if (icon) {
+        icon.style.transform = isCurrentlyCompact ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    // Zustand speichern
+    store.compactMode = item.classList.contains('compact');
+    localStorage.setItem('compactMode', store.compactMode);
+}
+
+window.toggleResource = toggleResource;
 
 // ====================== GLOBALE BINDINGS ======================
 window.toggleFavorite = toggleFavorite;
