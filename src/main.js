@@ -76,11 +76,10 @@ export function initUI() {
     console.log('🚀 initUI() gestartet');
 
     // ====================== ERSTER START - LEVEL-MODUS ======================
-    if (!store.levelMode || (store.levelMode !== 3 && store.levelMode !== 5)) {
-        console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
-        showInitialLevelModeModal();
-    }
-
+if (!store.levelMode || (store.levelMode !== '3' && store.levelMode !== '5')) {
+    console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
+    showInitialLevelModeModal();
+}
     // ====================== NORMALER UI-START (dein Original-Code) ======================
     // Sichere Aufrufe mit Fallback
     if (typeof updateTopStats === 'function') updateTopStats();
@@ -218,29 +217,30 @@ window.openNewResource = function() {
 
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-            console.log('✅ Service Worker registriert');
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log(`✅ Service Worker registriert (v${CACHE_VERSION || '1.1.56'})`);
 
-            registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('🔍 Neue Version wird heruntergeladen...');
 
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('🚀 Neue Version aktiviert');
-
-                        // Toast anzeigen
-                        if (typeof showUpdateToast === 'function') {
-                            showUpdateToast();
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('🚀 Neue Version aktiviert');
+                            
+                            if (typeof showUpdateToast === 'function') {
+                                showUpdateToast();
+                            }
+                            
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
                         }
-
-                        // Service Worker sofort aktivieren
-                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    }
+                    });
                 });
-            });
-        })
-        .catch(err => console.error('❌ SW-Fehler:', err));
+            })
+            .catch(err => console.error('❌ SW-Registrierung fehlgeschlagen:', err));
+    });
 }
 bootApp();
 

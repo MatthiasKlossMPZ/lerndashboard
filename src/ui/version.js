@@ -1,5 +1,5 @@
 // src/ui/version.js
-const VERSION = '1.1.56';
+const VERSION = '1.1.57';
 
 export function updateVersionDisplay() {
     const el = document.getElementById('versionInfo');
