@@ -216,6 +216,7 @@ window.openNewResource = function() {
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+        // WICHTIG: Relativer Pfad bei GitHub Pages Sub-Ordner
         navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
                 console.log('✅ Service Worker erfolgreich registriert');
@@ -228,7 +229,7 @@ if ('serviceWorker' in navigator) {
                         console.log(`SW State: ${newWorker.state}`);
 
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🚀 Neue Version installiert – Toast wird angezeigt');
+                            console.log('🚀 Neue Version installiert → aktiviere jetzt');
                             if (typeof showUpdateToast === 'function') {
                                 showUpdateToast();
                             }
@@ -238,11 +239,16 @@ if ('serviceWorker' in navigator) {
                         if (newWorker.state === 'activated') {
                             console.log('🎉 Neue Version ist jetzt aktiv!');
                         }
+
+                        if (newWorker.state === 'redundant') {
+                            console.warn('⚠️ SW wurde redundant (Konflikt mit neuerer Version)');
+                        }
                     });
                 });
             })
             .catch(err => console.error('❌ SW-Registrierung fehlgeschlagen:', err));
     });
+
 }
 bootApp();
 

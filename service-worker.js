@@ -11,7 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const CACHE_VERSION = '1.1.61';                    // ← Bei jedem Update hochzählen!
+const CACHE_VERSION = '1.1.62';                    // ← Bei jedem Update hochzählen!
 const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -133,9 +133,8 @@ self.addEventListener('message', event => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         console.log('⏭️ SKIP_WAITING erhalten – aktiviere neuen SW');
         self.skipWaiting()
-            .then(() => {
-                console.log('✅ skipWaiting erfolgreich');
-            });
+            .then(() => self.clients.claim())
+            .then(() => console.log('✅ skipWaiting + clients.claim() erfolgreich'));
     }
 });
 
