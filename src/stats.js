@@ -132,16 +132,16 @@ export function initLevelMode() {
 }
 
 function showInitialLevelModeModal() {
-    // Nur anzeigen, wenn wirklich noch nichts gespeichert ist
-    if (store.levelMode === '3' || store.levelMode === '5') {
-    console.log('Level-Modus bereits gesetzt:', store.levelMode);
-    return;
-}
+    // Nur anzeigen, wenn wirklich noch nichts im localStorage steht
+    if (localStorage.getItem('levelMode')) {
+        console.log('✅ Level-Modus bereits im localStorage gesetzt');
+        return;
+    }
 
     const message = `
         <strong>Willkommen zum LernDashboard!</strong><br><br>
         Welchen Niveaustufen-Modus möchtest du verwenden?<br><br>
-        <strong>5 Stufen</strong> = feinere Abstufung (empfohlen für die meisten)<br>
+        <strong>5 Stufen</strong> = feinere Abstufung (empfohlen)<br>
         <strong>3 Stufen</strong> = einfacher für schnelle Übersicht
     `;
 

@@ -75,11 +75,9 @@ function setupImportHandler(handleImportFile) {
 export function initUI() {
     console.log('🚀 initUI() gestartet');
 
-    // ====================== ERSTER START - LEVEL-MODUS ======================
-if (!store.levelMode || (store.levelMode !== '3' && store.levelMode !== '5')) {
-    console.log('🆕 Erster Start erkannt – Level-Modus Auswahl wird angezeigt');
-    showInitialLevelModeModal();
-}
+    // ====================== LEVEL-MODUS INITIALISIERUNG ======================
+    initLevelMode();   
+
     // ====================== NORMALER UI-START (dein Original-Code) ======================
     // Sichere Aufrufe mit Fallback
     if (typeof updateTopStats === 'function') updateTopStats();
