@@ -20,14 +20,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4   # ← von v3 auf v4 aktualisiert
         with:
-          path: '.'           # Alles aus dem Root-Ordner deployen
+          path: '.' 
 
       - name: Deploy to GitHub Pages
         id: deployment
