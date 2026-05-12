@@ -155,6 +155,21 @@ export function initUI() {
     document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
 
     console.log('✅ UI vollständig initialisiert mit', store.resources?.length || 0, 'Ressourcen');
+
+        // ====================== LOGO = DARK MODE TOGGLE ======================
+    const logo = document.querySelector('.logo-left');
+    if (logo) {
+        logo.addEventListener('click', () => {
+            toggleDarkMode();
+            
+            // Kleiner visueller Feedback
+            logo.style.transition = 'transform 0.4s';
+            logo.style.transform = 'rotate(15deg)';
+            setTimeout(() => {
+                logo.style.transform = 'rotate(0deg)';
+            }, 300);
+        });
+    }
 }
 
 // === EDIT & NEW RESOURCE WINDOW HANDLER ===
@@ -212,3 +227,19 @@ window.openNewResource = function() {
 };
 
 bootApp();
+
+// ====================== DARK MODE ======================
+function initDarkMode() {
+    const saved = localStorage.getItem('darkMode') === 'true';
+    if (saved) document.documentElement.classList.add('dark');
+}
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', isDark);
+    
+    console.log('🌗 Dark Mode:', isDark ? 'AN' : 'AUS');
+}
+
+// Init aufrufen
+initDarkMode();

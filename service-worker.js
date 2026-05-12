@@ -11,10 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-// ====================== LernDashboard Service Worker v1.1.52 ======================
-// Modern, zuverlässig offline + Update-Benachrichtigung
-
-const CACHE_VERSION = '1.1.52';                    // ← Bei jedem Update hochzählen!
+const CACHE_VERSION = '1.1.53';                    // ← Bei jedem Update hochzählen!
 const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
