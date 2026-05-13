@@ -47,7 +47,30 @@ export function exportCSV() {
         return;
     }
 
+    // === Schulname & Metadaten (wie bei Matrix-Excel) ===
+    const schoolName = store.schoolName || localStorage.getItem('schoolName') || 'Deine Schule';
+    const filters = updateCurrentFilters();
+    let filterParts = [];
+    if (filters.subject) filterParts.push(filters.subject);
+    if (filters.grade) filterParts.push(filters.grade);
+    if (filters.level) filterParts.push(filters.level);
+    if (filters.competence) filterParts.push(filters.competence);
+    if (filters.tool) filterParts.push(`Tool: ${filters.tool}`);
+
+    const documentTitle = filterParts.length > 0 
+        ? filterParts.join(' | ') 
+        : 'Lernressourcen';
+
+    const exportDate = `Export: ${new Date().toLocaleDateString('de-DE')}`;
+
+    // Header mit Schulname
+    let csv = `"${schoolName}";"${documentTitle}";"${exportDate}"\n\n`;
+
+    // Spalten-Header
     const columns = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung'];
+    csv += columns.join(',') + '\n';
+
+    // Daten
     const rows = filtered.map(r => [
         `"${(r.topic || '').replace(/"/g, '""')}"`,
         `"${r.subject || ''}"`,
@@ -58,21 +81,48 @@ export function exportCSV() {
         `"${(r.description || '').replace(/"/g, '""')}"`
     ].join(','));
 
-    const csv = [columns.join(','), ...rows].join('\n');
+    csv += rows.join('\n');
+
     downloadFile(csv, `LernDashboard_${getDateString()}.csv`, 'text/csv');
-    showFancyAlert('CSV Export erfolgreich!', 'success');
+    showFancyAlert('CSV Export mit Schulname erfolgreich!', 'success');
 }
 
 // ====================== MATRIX EXPORTS ======================
 
 export function exportMatrixCSV() {
     const filtered = getFilteredResources();
-    if (filtered.length === 0) return showFancyAlert('Keine Daten!', 'warning');
+    if (filtered.length === 0) {
+        return showFancyAlert('Keine Daten!', 'warning');
+    }
 
-    const competences = ["Suchen, Verarbeiten und Aufbewahren","Kommunizieren und Kooperieren","Produzieren und Präsentieren","Schützen und sicher Agieren","Problemlösen und Handeln","Analysieren und Reflektieren"];
+    const schoolName = store.schoolName || localStorage.getItem('schoolName') || 'Deine Schule';
+
+    const filters = updateCurrentFilters();
+    let filterParts = [];
+    if (filters.subject) filterParts.push(filters.subject);
+    if (filters.grade) filterParts.push(filters.grade);
+    if (filters.level) filterParts.push(filters.level);
+    if (filters.competence) filterParts.push(filters.competence);
+    if (filters.tool) filterParts.push(`Tool: ${filters.tool}`);
+
+    const documentTitle = filterParts.length > 0 
+        ? filterParts.join(' | ') 
+        : 'Kompetenzmatrix';
+
+    const exportDate = `Export: ${new Date().toLocaleDateString('de-DE')}`;
+
+    const competences = [
+        "Suchen, Verarbeiten und Aufbewahren",
+        "Kommunizieren und Kooperieren",
+        "Produzieren und Präsentieren",
+        "Schützen und sicher Agieren",
+        "Problemlösen und Handeln",
+        "Analysieren und Reflektieren"
+    ];
+
     const levels = getLevelOptions();
-    const matrix = {};
 
+    const matrix = {};
     competences.forEach(c => {
         matrix[c] = {};
         levels.forEach(l => matrix[c][l] = new Set());
@@ -82,13 +132,14 @@ export function exportMatrixCSV() {
         const comp = r.competence?.trim();
         const level = r.level?.trim();
         if (matrix[comp]?.[level]) {
-            const entry = `${r.topic} (${r.grade || ''}${r.tool ? ` – ${r.tool}` : ''})`;
-            matrix[comp][level].add(entry);
+            const entry = `${r.topic} (${[r.subject, r.grade, r.tool].filter(Boolean).join(', ')})`;
+            const desc = r.description ? `: ${r.description}` : '';
+            matrix[comp][level].add(entry + desc);
         }
     });
 
-    let csv = `"Kompetenzmatrix ${getDateString()}"\n\n`;
-    csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';
+    let csv = `"${schoolName}";"${documentTitle}";"${exportDate}"\n\n`; 
+    csv += '"Kompetenz";' + levels.map(l => `"${l}"`).join(';') + '\n';  
 
     competences.forEach(comp => {
         const row = [`"${comp}"`];
@@ -100,7 +151,7 @@ export function exportMatrixCSV() {
     });
 
     downloadFile(csv, `Matrix_${getDateString()}.csv`, 'text/csv');
-    showFancyAlert('Matrix CSV exportiert!', 'success');
+    showFancyAlert('Matrix CSV exportiert! (mit Schulname)', 'success');
 }
 
 export function exportPDF() {
@@ -113,19 +164,45 @@ export function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 30;
+    let y = 35;
 
-    const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
+    // === Schulname & Metadaten ===
+    const schoolName = store.schoolName || localStorage.getItem('schoolName') || 'Deine Schule';
+    const filters = updateCurrentFilters();
+    let filterParts = [];
+    if (filters.subject) filterParts.push(filters.subject);
+    if (filters.grade) filterParts.push(filters.grade);
+    if (filters.level) filterParts.push(filters.level);
+    if (filters.competence) filterParts.push(filters.competence);
+    if (filters.tool) filterParts.push(`Tool: ${filters.tool}`);
+
+    const documentTitle = filterParts.length > 0 
+        ? filterParts.join(' | ') 
+        : 'Lernressourcen';
+
+    const today = new Date().toLocaleDateString('de-DE');
+
+    // Header
     doc.setFontSize(11);
+    doc.setTextColor(100);
     doc.text(schoolName, pageWidth - 15, 15, { align: 'right' });
 
     doc.setFontSize(20);
     doc.setTextColor(107, 70, 193);
-    doc.text('LernDashboard Digital', pageWidth / 2, y, { align: 'center' });
-    y += 15;
+    doc.text('LernDashboard Digital', pageWidth / 2, y - 5, { align: 'center' });
 
+    doc.setFontSize(12);
+    doc.text(documentTitle, pageWidth / 2, y + 8, { align: 'center' });
+    doc.text(`Exportiert am: ${today}`, pageWidth / 2, y + 16, { align: 'center' });
+
+    y += 25;
+
+    // Ressourcen auflisten
     filtered.forEach((r, i) => {
-        if (y > 260) { doc.addPage(); y = 30; }
+        if (y > 260) {
+            doc.addPage();
+            y = 30;
+        }
 
         doc.setFontSize(12);
         doc.setTextColor(0);
@@ -142,17 +219,16 @@ export function exportPDF() {
         }
 
         if (r.description) {
-            doc.setFontSize(10);
             const descLines = doc.splitTextToSize(r.description, 170);
             doc.text(descLines, 20, y);
-            y += descLines.length * 5 + 5;
+            y += descLines.length * 5 + 8;
         } else {
-            y += 5;
+            y += 8;
         }
     });
 
     doc.save(`LernDashboard_${getDateString()}.pdf`);
-    showFancyAlert('PDF Export erfolgreich!', 'success');
+    showFancyAlert('PDF Export mit Schulname erfolgreich!', 'success');
 }
 
 export function exportMatrixPDF() {
