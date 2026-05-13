@@ -7,7 +7,8 @@ import {
     updateSubjectStats, 
     updateStorageIndicator, 
     initLevelMode,
-    changeLevelMode 
+    changeLevelMode,
+    showInitialLevelModeModal
 } from './stats.js';
 import { 
     deleteResourceConfirmed, 
@@ -75,19 +76,22 @@ function setupImportHandler(handleImportFile) {
 export function initUI() {
     console.log('🚀 initUI() gestartet');
 
-    // ====================== LEVEL-MODUS INITIALISIERUNG ======================
-    initLevelMode();   
+    // ====================== ERSTER START - LEVEL-MODUS ======================
+    if (!localStorage.getItem('levelMode')) {
+        console.log('🆕 Frische Neuinstallation erkannt – Stufenabfrage wird angezeigt');
+        showInitialLevelModeModal();
+    } else {
+        initLevelMode();   // Nur laden, kein Modal
+    }
 
-    // ====================== NORMALER UI-START (dein Original-Code) ======================
+    // ====================== NORMALER UI-START ======================
     // Sichere Aufrufe mit Fallback
     if (typeof updateTopStats === 'function') updateTopStats();
     if (typeof updateSubjectStats === 'function') updateSubjectStats();
     if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
 
     initFilters();
-    initLevelMode();
 
-    // Export / Import Module (wie bei dir)
     import('./export/index.js')
         .then(({
             exportTemplate, exportCSV, exportPDF,

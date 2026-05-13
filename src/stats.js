@@ -119,19 +119,18 @@ export function updateStorageIndicator() {
     }
 }
 
-// ====================== LEVEL-MODUS + MIGRATION ======================
+// ====================== LEVEL-MODUS INITIALISIERUNG ======================
 export function initLevelMode() {
     const saved = localStorage.getItem('levelMode');
     if (saved) {
         store.levelMode = saved;
         populateLevelFilter();
         updateLevelModeButtons();
-    } else {
-        showInitialLevelModeModal();
+        console.log('✅ Level-Modus geladen:', saved);
     }
 }
 
-function showInitialLevelModeModal() {
+export function showInitialLevelModeModal() {
     // Nur anzeigen, wenn wirklich noch nichts im localStorage steht
     if (localStorage.getItem('levelMode')) {
         console.log('✅ Level-Modus bereits im localStorage gesetzt');
