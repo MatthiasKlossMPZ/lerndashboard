@@ -81,7 +81,7 @@ export function initUI() {
         console.log('🆕 Frische Neuinstallation erkannt – Stufenabfrage wird angezeigt');
         showInitialLevelModeModal();
     } else {
-        initLevelMode();   // Nur laden, kein Modal
+        initLevelMode(); 
     }
 
     // ====================== NORMALER UI-START ======================
