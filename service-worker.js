@@ -15,7 +15,7 @@
  * Optimierte Version für GitHub Pages + Subpfad
  */
 
-const VERSION = '1.1.78';                     // ← Immer hochzählen!
+const VERSION = '1.1.79';                     // ← Immer hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
