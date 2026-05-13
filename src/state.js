@@ -2,6 +2,7 @@
 export const store = {
     resources: [],
     undoStack: [],
+    schoolName: '',
     
     // WICHTIG: Filter-Objekt
     filters: {
@@ -21,6 +22,8 @@ export const store = {
     save() {
         try {
             localStorage.setItem('resources', JSON.stringify(this.resources));
+            localStorage.setItem('schoolName', this.schoolName || '');
+            
         } catch (e) {
             console.error("Speicherfehler", e);
         }
@@ -37,3 +40,6 @@ const savedUndo = localStorage.getItem('undoStack');
 if (savedUndo) store.undoStack = JSON.parse(savedUndo);
 
 console.log('✅ state.js geladen');
+
+const savedSchool = localStorage.getItem('schoolName');
+if (savedSchool) store.schoolName = savedSchool;

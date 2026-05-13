@@ -210,30 +210,24 @@ if (manualBtn) {
     console.warn('⚠️ Button für openManual nicht gefunden');
 }
 
-// Schulbutton beim Start aktualisieren
+// ====================== Schulbutton beim Start aktualisieren ======================
 const schoolBtnEl = document.getElementById('schoolButton');
 const schoolTextEl = document.getElementById('schoolButtonText');
-if (schoolTextEl && store.schoolName) {
-    schoolTextEl.textContent = store.schoolName;
-    if (schoolBtnEl) schoolBtnEl.dataset.set = 'true';
+
+if (schoolTextEl) {
+    schoolTextEl.textContent = store.schoolName || 'Schule einstellen';
+}
+if (schoolBtnEl) {
+    schoolBtnEl.dataset.set = store.schoolName ? 'true' : 'false';
 }
 
 // ====================== SCHOOL NAME BUTTON ======================
 const schoolButton = document.getElementById('schoolButton');
-
 if (schoolButton) {
-    // Entferne ggf. alten inline onclick (falls noch vorhanden)
-    schoolButton.removeAttribute('onclick');
-    
-    // WICHTIG: Listener setzen
-    schoolButton.addEventListener('click', setSchoolName);
-    
-    console.log('✅ Schulname-Button Listener erfolgreich gesetzt');
-} else {
-    console.error('❌ #schoolButton nicht gefunden!');
+    schoolButton.removeAttribute('onclick'); // falls noch vorhanden
+    schoolButton.addEventListener('click', () => window.setSchoolName());
+    console.log('✅ Schulname-Button Listener gesetzt');
 }
-
-console.log('✅ Buttons erfolgreich mit addEventListener verbunden');
 }
 
 window.openNewResource = function() {
@@ -428,6 +422,8 @@ function setSchoolName() {
         const name = input.value.trim();
         
         store.schoolName = name;
+        localStorage.setItem('schoolName', name);
+    
         store.save();
 
         if (schoolTextEl) schoolTextEl.textContent = name || 'Schule einstellen';
