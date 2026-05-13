@@ -15,7 +15,7 @@
  * Optimierte Version für GitHub Pages + Subpfad
  */
 
-const VERSION = '1.1.73';                     // ← Immer hochzählen!
+const VERSION = '1.1.74';                     // ← Immer hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -60,52 +60,52 @@ self.addEventListener('message', event => {
 
 // ==================== INSTALL ====================
 self.addEventListener('install', event => {
-  console.log(`SW Installiere Version ${VERSION}`);
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('SW Cache wird befüllt...');
-        return Promise.allSettled(
-          urlsToCache.map(url =>
-            fetch(url, { cache: 'reload' })
-              .then(response => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return cache.put(url, response);
-              })
-              .catch(err => console.warn('Cache-Fehler bei:', url, err))
-          )
-        );
-      })
-      .then(() => {
-        console.log(`SW Version ${VERSION} installiert`);
-        // skipWaiting hier nur, wenn kein Controller vorhanden
-        if (!self.registration.waiting) self.skipWaiting();
-      })
-  );
+    console.log(`SW Installiere Version ${VERSION}`);
+    
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('SW Cache wird befüllt...');
+            return Promise.allSettled(
+                urlsToCache.map(url =>
+                    fetch(url, { cache: 'reload' })
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            return cache.put(url, response);
+                        })
+                        .catch(err => console.warn('Cache-Fehler bei:', url, err))
+                )
+            );
+        })
+        .then(() => {
+            console.log(`SW Version ${VERSION} installiert`);
+            self.skipWaiting();        // ← immer ausführen
+        })
+    );
 });
 
 // ==================== ACTIVATE ====================
 self.addEventListener('activate', event => {
-  console.log(`SW Aktiviere Version ${VERSION}`);
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key.startsWith('lerndashboard-v') && key !== CACHE_NAME)
-          .map(key => {
-            console.log('SW Lösche alten Cache:', key);
-            return caches.delete(key);
-          })
-      )
-    )
-    .then(() => {
-      console.log('SW Alte Caches bereinigt');
-      return self.clients.claim();
-    })
-    .then(() => {
-    console.log('🎉 SW vollständig aktiv und übernimmt alle Clients');
-})
-  );
+    console.log(`SW Aktiviere Version ${VERSION}`);
+    
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(
+                keys
+                    .filter(key => key.startsWith('lerndashboard-v') && key !== CACHE_NAME)
+                    .map(key => {
+                        console.log('SW Lösche alten Cache:', key);
+                        return caches.delete(key);
+                    })
+            )
+        )
+        .then(() => {
+            console.log('SW Alte Caches bereinigt');
+            return self.clients.claim();   // ← wichtig: sofort alle Tabs übernehmen
+        })
+        .then(() => {
+            console.log('🎉 SW vollständig aktiv und übernimmt alle Clients');
+        })
+    );
 });
 
 // ==================== FETCH ====================

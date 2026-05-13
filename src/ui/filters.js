@@ -183,13 +183,13 @@ function populateGradeSelect(options) {
     if (current && options.includes(current)) select.value = current;
 }
 
-// ====================== LEVEL SELECT (wichtig!) ======================
+// ====================== LEVEL SELECT ======================
 function populateLevelSelect() {
     const select = document.getElementById('filterLevel');
     if (!select) return;
 
     const current = select.value;
-    const allLevels = getLevelOptions();   // lokale Funktion
+    const allLevels = getLevelOptions();
 
     select.innerHTML = '<option value="">Alle</option>';
     allLevels.forEach(level => {
@@ -199,12 +199,13 @@ function populateLevelSelect() {
         select.appendChild(o);
     });
 
-    // Aktuellen Wert beibehalten, falls noch gültig
     if (current && allLevels.includes(current)) {
         select.value = current;
     } else {
-        select.value = '';   // auf "Alle" zurücksetzen
+        select.value = '';
     }
+
+    console.log(`📊 Level-Filter aktualisiert für ${allLevels.length} Stufen`);
 }
 
 function getLevelOptions() {

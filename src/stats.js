@@ -231,15 +231,31 @@ function executeLevelChange(oldMode, newMode) {
 
     store.save();
 
-    // === Filter und UI neu aufbauen ===
+    // === UI & Filter NEU AUFBAUEN ===
     updateLevelModeButtons();
 
-    // Zentrale Filter-Populate-Funktion aufrufen
     if (typeof populateFilterOptions === 'function') {
-        console.log('🔄 populateFilterOptions() aufgerufen (nach Level-Wechsel)');
+        console.log(`🔄 populateFilterOptions() nach Wechsel auf ${newMode} Stufen`);
         populateFilterOptions();
-    } else {
-        console.warn('populateFilterOptions immer noch nicht verfügbar');
+        
+        setTimeout(() => {
+            const levelSelect = document.getElementById('filterLevel');
+            if (levelSelect) {
+                // Force Re-Populate
+                const allLevels = getLevelOptions ? getLevelOptions() : 
+                    Array.from({ length: parseInt(newMode) }, (_, i) => `Niveaustufe ${i + 1}`);
+                
+                levelSelect.innerHTML = '<option value="">Alle</option>';
+                allLevels.forEach(level => {
+                    const o = document.createElement('option');
+                    o.value = level;
+                    o.textContent = level;
+                    levelSelect.appendChild(o);
+                });
+                levelSelect.value = '';   // auf "Alle" setzen
+                console.log(`✅ Force Level-Dropdown Update: ${allLevels.length} Stufen`);
+            }
+        }, 100);
     }
 
     applyFilters();
@@ -251,6 +267,11 @@ function executeLevelChange(oldMode, newMode) {
             `Alle Ressourcen und Filter wurden auf ${newMode} Niveaustufen angepasst.`
         );
     }
+
+    setTimeout(() => {
+        console.log('🔄 Automatischer Refresh nach Level-Modus-Wechsel');
+        window.location.reload();
+    }, 600);
 }
 
 function migrateResourceLevels(resources, oldMode, newMode) {
