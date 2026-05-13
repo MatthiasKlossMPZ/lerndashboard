@@ -2,7 +2,7 @@
 console.log('🚀 stats.js START');
 
 import { store } from './state.js';
-import { getFilteredResources } from './ui/filters.js';
+import { getFilteredResources, populateFilterOptions } from './ui/filters.js';
 import { applyFilters } from './resources.js';
 import { showFancyAlert } from './ui/modals.js';
 
@@ -224,24 +224,32 @@ function executeLevelChange(oldMode, newMode) {
     // Safety-Backup
     createSafetyBackup(`Level-Modus-Wechsel: ${oldMode} → ${newMode}`);
 
-    // Migration
+    // Migration der Ressourcen
     store.resources = migrateResourceLevels(store.resources, oldMode, newMode);
     store.levelMode = newMode;
     localStorage.setItem('levelMode', newMode);
 
     store.save();
-    populateLevelFilter();
+
+    // === Filter und UI neu aufbauen ===
     updateLevelModeButtons();
+
+    // Zentrale Filter-Populate-Funktion aufrufen
+    if (typeof populateFilterOptions === 'function') {
+        console.log('🔄 populateFilterOptions() aufgerufen (nach Level-Wechsel)');
+        populateFilterOptions();
+    } else {
+        console.warn('populateFilterOptions immer noch nicht verfügbar');
+    }
+
     applyFilters();
 
     if (typeof showFancyAlert === 'function') {
         showFancyAlert(
             '✅ Erfolgreich umgestellt!',
             'success',
-            `Alle Ressourcen wurden auf ${newMode} Niveaustufen angepasst.`
+            `Alle Ressourcen und Filter wurden auf ${newMode} Niveaustufen angepasst.`
         );
-    } else {
-        alert(`✅ Erfolgreich auf ${newMode} Niveaustufen umgestellt!`);
     }
 }
 
@@ -294,8 +302,12 @@ function updateLevelModeButtons() {
     if (currentText) currentText.textContent = `${store.levelMode} Niveaustufen`;
 }
 
-function populateLevelFilter() {
-    console.log('📊 Level-Filter aktualisiert für', store.levelMode, 'Stufen');
+export function populateLevelFilter() {
+    console.log('📊 Level-Filter wird für', store.levelMode, 'Stufen neu aufgebaut');
+    
+    if (typeof populateFilterOptions === 'function') {
+        populateFilterOptions();
+    }
 }
 
 // ====================== SAFETY BACKUPS ======================
