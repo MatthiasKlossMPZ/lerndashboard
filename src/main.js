@@ -216,10 +216,19 @@ window.openNewResource = function() {
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // WICHTIG: Relativer Pfad für /lerndashboard/
+        // Zuerst alle alten SWs sauber entfernen (hilft gegen redundant)
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => {
+                if (reg.active && reg.active.scriptURL !== new URL('./service-worker.js', location.href).href) {
+                    console.log('🧹 Alten SW entfernt');
+                    reg.unregister();
+                }
+            });
+        });
+
         navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
-                console.log('✅ Service Worker erfolgreich registriert');
+                console.log('✅ Service Worker registriert (Scope:', registration.scope, ')');
 
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
@@ -229,24 +238,22 @@ if ('serviceWorker' in navigator) {
                         console.log(`SW State: ${newWorker.state}`);
 
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🚀 Neue Version installiert → SKIP_WAITING');
-                            if (typeof showUpdateToast === 'function') {
-                                showUpdateToast();
-                            }
+                            console.log('🚀 Neue Version installiert → aktiviere');
+                            if (typeof showUpdateToast === 'function') showUpdateToast();
                             newWorker.postMessage({ type: 'SKIP_WAITING' });
                         }
 
                         if (newWorker.state === 'activated') {
-                            console.log('🎉 Neue Version ist jetzt aktiv!');
+                            console.log('🎉 Neue Version aktiv!');
                         }
 
                         if (newWorker.state === 'redundant') {
-                            console.warn('⚠️ SW redundant – meist Pfad-Problem');
+                            console.warn('⚠️ SW redundant – versuche Neuregistrierung');
                         }
                     });
                 });
             })
-            .catch(err => console.error('❌ SW-Registrierung fehlgeschlagen:', err));
+            .catch(err => console.error('❌ SW-Fehler:', err));
     });
 }
 bootApp();

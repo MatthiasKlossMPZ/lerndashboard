@@ -11,131 +11,160 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const CACHE_VERSION = '1.1.63';                    // ← Bei jedem Update hochzählen!
-const CACHE_NAME = `lerndashboard-v${CACHE_VERSION}`;
+/**
+ * Optimierte Version für GitHub Pages + Subpfad
+ */
 
-const PRECACHE_URLS = [
-    '/',
-    '/index.html',
-    '/edit-resource.html',
-    '/new-resource.html',
-    '/manifest.json',
+const VERSION = '1.1.66';                     // ← Immer hochzählen!
+const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
-    // Styles
-    '/src/styles/main.css',
+const REPO_PATH = (() => {
+  const hostname = self.location.hostname;
+  const pathname = self.location.pathname;
 
-    // Kern-Module
-    '/src/main.js',
-    '/src/state.js',
-    '/src/resources.js',
-    '/src/stats.js',
-    '/src/levelMode.js',
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
+    return self.location.origin + '/';
+  }
+  if (pathname.includes('/lerndashboard-test/')) {
+    return 'https://matthiasklossmpz.github.io/lerndashboard-test/';
+  }
+  if (hostname === 'matthiasklossmpz.github.io') {
+    return 'https://matthiasklossmpz.github.io/lerndashboard/';
+  }
 
-    // UI Module
-    '/src/ui/filters.js',
-    '/src/ui/modals.js',
-    '/src/ui/newResource.js',
-    '/src/ui/editResource.js',
-    '/src/ui/import.js',
-    '/src/ui/version.js',
+  const parts = pathname.split('/').filter(p => p);
+  const base = parts.length > 0 ? '/' + parts[0] + '/' : '/';
+  return self.location.origin + base;
+})();
 
-    // Export Module
-    '/src/export/index.js',
+console.log('SW aktiv – REPO_PATH:', REPO_PATH, 'Version:', VERSION);
 
-    // Utils
-    '/src/utils/helpers.js',
+// Dateien zum Cachen
+const urlsToCache = [
+  './', 'index.html', 'manifest.json',
+  'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png',
+  'libs/jspdf.umd.min.js', 'libs/jspdf.plugin.autotable.min.js',
+  'libs/jszip.min.js', 'libs/exceljs.min.js', 'libs/FileSaver.min.js',
+  'new-resource.html', 'edit-resource.html'
+].map(url => new URL(url, REPO_PATH).href);
 
-    // Bibliotheken
-    '/libs/jspdf.umd.min.js',
-    '/libs/jspdf.plugin.autotable.min.js',
-    '/libs/exceljs.min.js',
-    '/libs/FileSaver.min.js',
-
-    // Assets
-    '/icon-192.png',
-    '/icon-512.png',
-    '/icon-maskable-192.png',
-    '/icon-maskable-512.png',
-    '/schule_in_mv.png'
-];
-
-// ==================== INSTALL – Precache aller wichtigen Dateien ====================
-self.addEventListener('install', event => {
-    console.log(`🚀 Service Worker v${CACHE_VERSION} wird installiert...`);
-
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('📦 Precache wird gestartet...');
-                return cache.addAll(PRECACHE_URLS);
-            })
-            .then(() => {
-                console.log('✅ Precache erfolgreich abgeschlossen');
-                return self.skipWaiting();
-            })
-    );
-});
-
-// ==================== ACTIVATE – Alte Caches löschen + Clients übernehmen ====================
-self.addEventListener('activate', event => {
-    console.log(`✅ Service Worker v${CACHE_VERSION} aktiviert`);
-
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('🗑️ Lösche alten Cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => {
-            console.log('👥 Clients.claim() – neue Version übernimmt sofort');
-            return self.clients.claim();
-        })
-    );
-});
-
-// ==================== FETCH – Intelligente Strategie ====================
-self.addEventListener('fetch', event => {
-    if (event.request.mode === 'navigate') {
-        // HTML-Seiten: Network First mit Fallback auf index.html
-        event.respondWith(
-            fetch(event.request).catch(() => caches.match('/index.html'))
-        );
-        return;
-    }
-
-    // Alle anderen Ressourcen: Cache First
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            if (cachedResponse) return cachedResponse;
-
-            return fetch(event.request).then(networkResponse => {
-                if (!networkResponse || networkResponse.status !== 200) {
-                    return networkResponse;
-                }
-
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-
-                return networkResponse;
-            });
-        })
-    );
-});
-
-// ==================== Update-Benachrichtigung ====================
+// ==================== MESSAGE (vom Client) ====================
 self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        console.log('⏭️ SKIP_WAITING erhalten – aktiviere neuen SW');
-        self.skipWaiting()
-        .then(() => self.clients.claim())
-        .then(() => console.log('✅ skipWaiting + clients.claim() erfolgreich'));
-    }
+  if (event.data?.type === 'SKIP_WAITING') {
+    console.log('SW: SKIP_WAITING erhalten');
+    self.skipWaiting()
+      .then(() => self.clients.claim())
+      .then(() => console.log('SW: skipWaiting + clients.claim() erfolgreich'));
+  }
 });
 
-console.log(`📦 Service Worker v${CACHE_VERSION} geladen und bereit`);
+// ==================== INSTALL ====================
+self.addEventListener('install', event => {
+  console.log(`SW Installiere Version ${VERSION}`);
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('SW Cache wird befüllt...');
+        return Promise.allSettled(
+          urlsToCache.map(url =>
+            fetch(url, { cache: 'reload' })
+              .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return cache.put(url, response);
+              })
+              .catch(err => console.warn('Cache-Fehler bei:', url, err))
+          )
+        );
+      })
+      .then(() => {
+        console.log(`SW Version ${VERSION} installiert`);
+        // skipWaiting hier nur, wenn kein Controller vorhanden
+        if (!self.registration.waiting) self.skipWaiting();
+      })
+  );
+});
+
+// ==================== ACTIVATE ====================
+self.addEventListener('activate', event => {
+  console.log(`SW Aktiviere Version ${VERSION}`);
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key.startsWith('lerndashboard-v') && key !== CACHE_NAME)
+          .map(key => {
+            console.log('SW Lösche alten Cache:', key);
+            return caches.delete(key);
+          })
+      )
+    )
+    .then(() => {
+      console.log('SW Alte Caches bereinigt');
+      return self.clients.claim();
+    })
+  );
+});
+
+// ==================== FETCH ====================
+self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+
+  // Spezielle PDF-Behandlung (immer frisch holen)
+  if (requestUrl.pathname.includes('Bedienungsanleitung_LernDashboard.pdf')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then(fresh => {
+          if (fresh && fresh.ok) {
+            const cloned = fresh.clone();           // ← Korrektur
+            caches.open(CACHE_NAME).then(c => c.put(event.request, cloned));
+          }
+          return fresh;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Interne Anfragen (Cache-First + Background Update)
+  if (requestUrl.origin === new URL(REPO_PATH).origin) {
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        // Cache-Hit → zurückgeben + im Hintergrund aktualisieren
+        if (cachedResponse) {
+          if (navigator.onLine) {
+            fetch(event.request)
+              .then(freshResponse => {
+                if (freshResponse && freshResponse.ok) {
+                  const cloned = freshResponse.clone();
+                  caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
+                }
+              })
+              .catch(() => {}); 
+          }
+          return cachedResponse;
+        }
+
+        // Cache-Miss → normal holen und cachen
+        return fetch(event.request).then(freshResponse => {
+          if (freshResponse && freshResponse.ok) {
+            const cloned = freshResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
+          }
+          return freshResponse;
+        }).catch(err => {
+          console.warn('Fetch fehlgeschlagen:', event.request.url, err);
+          if (event.request.mode === 'navigate') {
+            return caches.match('index.html');
+          }
+          return new Response('Offline', { status: 503 });
+        });
+      })
+    );
+    return;
+  }
+
+  // Externe Ressourcen (z. B. Fonts, etc.)
+  event.respondWith(
+    fetch(event.request).catch(() => new Response('Offline', { status: 503 }))
+  );
+});
