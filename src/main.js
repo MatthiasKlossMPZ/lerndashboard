@@ -1,4 +1,8 @@
 // src/main.js
+
+console.log('📦 MAIN.JS VERSION: 1.1.78 – ' + new Date().toISOString());
+
+
 import { escapeHtml } from './utils/helpers.js';
 import { store } from './state.js';
 import { initializeData, startUI, applyFilters } from './resources.js';
