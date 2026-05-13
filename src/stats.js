@@ -131,11 +131,13 @@ export function initLevelMode() {
 }
 
 export function showInitialLevelModeModal() {
-    // Nur anzeigen, wenn wirklich noch nichts im localStorage steht
+    // Nur beim allerersten Start anzeigen
     if (localStorage.getItem('levelMode')) {
-        console.log('✅ Level-Modus bereits im localStorage gesetzt');
+        console.log('✅ Level-Modus bereits im localStorage gesetzt – Onboarding übersprungen');
         return;
     }
+
+    console.log('🆕 Frische Installation – zeige Stufenauswahl-Modal');
 
     const message = `
         <strong>Willkommen zum LernDashboard!</strong><br><br>
@@ -149,10 +151,11 @@ export function showInitialLevelModeModal() {
             'Niveaustufen-Modus wählen',
             'info',
             message,
-            () => changeLevelMode(5),
-            () => changeLevelMode(3)
+            () => changeLevelMode(5),   // 5 Stufen
+            () => changeLevelMode(3)    // 3 Stufen
         );
     } else {
+        // Fallback für sehr alte Browser
         if (confirm('5 Niveaustufen verwenden? (Abbrechen = 3 Stufen)')) {
             changeLevelMode(5);
         } else {
@@ -163,15 +166,30 @@ export function showInitialLevelModeModal() {
 
 export function changeLevelMode(newMode) {
     newMode = String(newMode); // Sicherheit
+
+    const isFirstTime = !localStorage.getItem('levelMode');
     const oldMode = store.levelMode || '5';
 
-    if (oldMode === newMode) {
-        updateLevelModeButtons(); // nur visuelle Aktualisierung
+    // =============================================
+    // ERSTSTART – direkt ausführen (kein Dialog)
+    // =============================================
+    if (isFirstTime) {
+        console.log(`🆕 Erststart: Level-Modus direkt auf ${newMode} setzen`);
+        
+        executeLevelChange(oldMode, newMode);
+        updateLevelModeButtons();
         return;
     }
 
-    // ... (der Rest der bestehenden Funktion bleibt gleich bis zum Ende)
+    // =============================================
+    // NORMALER WECHSEL (nach Erststart)
+    // =============================================
+    if (oldMode === newMode) {
+        updateLevelModeButtons();
+        return;
+    }
 
+    // Richtungstext für Bestätigung
     const direction = oldMode === '5' && newMode === '3'
         ? "5 → 3 Stufen:<br>• Stufen 1+2 → Stufe 1<br>• Stufe 3 → Stufe 2<br>• Stufen 4+5 → Stufe 3"
         : "3 → 5 Stufen:<br>• Stufe 1 → Stufe 1<br>• Stufe 2 → Stufe 3<br>• Stufe 3 → Stufe 5";
@@ -188,11 +206,16 @@ export function changeLevelMode(newMode) {
             `Wechsel zu ${newMode} Niveaustufen`,
             'warning',
             message,
-            () => executeLevelChange(oldMode, newMode)
+            () => {
+                executeLevelChange(oldMode, newMode);
+                updateLevelModeButtons();   // nach erfolgreichem Wechsel
+            }
         );
     } else {
+        // Fallback für sehr alte Browser
         if (confirm(`Niveaustufen-Modus von ${oldMode} auf ${newMode} ändern?\n\n${direction.replace(/<br>/g, '\n')}\n\nAlle Ressourcen werden automatisch angepasst.`)) {
             executeLevelChange(oldMode, newMode);
+            updateLevelModeButtons();
         }
     }
 }
