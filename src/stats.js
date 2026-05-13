@@ -274,7 +274,7 @@ function executeLevelChange(oldMode, newMode) {
     }, 600);
 }
 
-function migrateResourceLevels(resources, oldMode, newMode) {
+function migrateResourceLevels(resources, oldMode, newMode) { 
     if (oldMode === newMode) return resources;
     return resources.map(r => {
         if (!r.level) return r;

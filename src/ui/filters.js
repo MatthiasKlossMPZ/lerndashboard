@@ -193,7 +193,7 @@ function populateLevelSelect() {
 
     select.innerHTML = '<option value="">Alle</option>';
     allLevels.forEach(level => {
-        const o = document.createElement('option');
+        const o = document.createElement('option'); 
         o.value = level;
         o.textContent = level;
         select.appendChild(o);
