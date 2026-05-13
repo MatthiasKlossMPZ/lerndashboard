@@ -230,33 +230,35 @@ function executeLevelChange(oldMode, newMode) {
     localStorage.setItem('levelMode', newMode);
 
     store.save();
-
-    // === UI & Filter NEU AUFBAUEN ===
     updateLevelModeButtons();
 
     if (typeof populateFilterOptions === 'function') {
-        console.log(`🔄 populateFilterOptions() nach Wechsel auf ${newMode} Stufen`);
         populateFilterOptions();
-        
-        setTimeout(() => {
-            const levelSelect = document.getElementById('filterLevel');
-            if (levelSelect) {
-                // Force Re-Populate
-                const allLevels = getLevelOptions ? getLevelOptions() : 
-                    Array.from({ length: parseInt(newMode) }, (_, i) => `Niveaustufe ${i + 1}`);
-                
-                levelSelect.innerHTML = '<option value="">Alle</option>';
-                allLevels.forEach(level => {
-                    const o = document.createElement('option');
-                    o.value = level;
-                    o.textContent = level;
-                    levelSelect.appendChild(o);
-                });
-                levelSelect.value = '';   // auf "Alle" setzen
-                console.log(`✅ Force Level-Dropdown Update: ${allLevels.length} Stufen`);
-            }
-        }, 100);
     }
+
+    applyFilters();
+
+    // =============================================
+    // Erfolgs-Modal + Reload DANACH
+    // =============================================
+    if (typeof showFancyAlert === 'function') {
+        showFancyAlert(
+            '✅ Erfolgreich umgestellt!',
+            'success',
+            `Alle Ressourcen und Filter wurden auf ${newMode} Niveaustufen angepasst.`,
+            () => {
+                // Dieser Code läuft, wenn der User auf "OK" klickt
+                console.log(`🔄 Seite wird neu geladen für ${newMode} Stufen...`);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
+            }
+        );
+    } else {
+        // Fallback ohne FancyAlert
+        setTimeout(() => window.location.reload(), 800);
+    }
+
 
     applyFilters();
 

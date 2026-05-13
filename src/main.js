@@ -1,4 +1,5 @@
 // src/main.js
+import { escapeHtml } from './utils/helpers.js';
 import { store } from './state.js';
 import { initializeData, startUI, applyFilters } from './resources.js';
 import { updateVersionDisplay } from './ui/version.js';
@@ -42,6 +43,7 @@ window.exportMatrixExcel = exportMatrixExcel;
 window.autoBackup = autoBackup;
 window.printOptimized = printOptimized;
 window.handleImportFile = handleImportFile;  
+window.escapeHtml = escapeHtml;
 
 async function bootApp() {
     console.log('🚀 LernDashboard Modular startet...');
@@ -163,8 +165,8 @@ export function initUI() {
     document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
 
 
-// === EDIT & NEW RESOURCE WINDOW HANDLER ===
-window.editResource = function(index) {
+    // === EDIT & NEW RESOURCE WINDOW HANDLER ===
+    window.editResource = function(index) {
     if (index < 0 || index >= store.resources.length) {
         console.error('Ungültiger Edit-Index:', index);
         return;
@@ -193,8 +195,46 @@ window.editResource = function(index) {
     }, 300);
 
     console.log(`📝 Edit-Fenster geöffnet für Index ${index}`);
-};
-};
+    };
+
+// ====================== GLOBALE BUTTONS PER addEventListener ======================
+console.log('🔗 Globale Buttons werden verbunden...');
+
+// Handbuch-Button
+const manualBtn = document.getElementById('btnOpenManual') ||
+                  document.querySelector('button[onclick*="openManual"]');
+if (manualBtn) {
+    manualBtn.addEventListener('click', openManual);
+    manualBtn.removeAttribute('onclick');
+} else {
+    console.warn('⚠️ Button für openManual nicht gefunden');
+}
+
+// Schulbutton beim Start aktualisieren
+const schoolBtnEl = document.getElementById('schoolButton');
+const schoolTextEl = document.getElementById('schoolButtonText');
+if (schoolTextEl && store.schoolName) {
+    schoolTextEl.textContent = store.schoolName;
+    if (schoolBtnEl) schoolBtnEl.dataset.set = 'true';
+}
+
+// ====================== SCHOOL NAME BUTTON ======================
+const schoolButton = document.getElementById('schoolButton');
+
+if (schoolButton) {
+    // Entferne ggf. alten inline onclick (falls noch vorhanden)
+    schoolButton.removeAttribute('onclick');
+    
+    // WICHTIG: Listener setzen
+    schoolButton.addEventListener('click', setSchoolName);
+    
+    console.log('✅ Schulname-Button Listener erfolgreich gesetzt');
+} else {
+    console.error('❌ #schoolButton nicht gefunden!');
+}
+
+console.log('✅ Buttons erfolgreich mit addEventListener verbunden');
+}
 
 window.openNewResource = function() {
     const allTopics = [...new Set(store.resources.map(r => r.topic))];
@@ -215,6 +255,7 @@ window.openNewResource = function() {
             }, location.origin);
         }
     }, 300);
+
 };
 
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
@@ -281,3 +322,135 @@ window.toggleDarkMode = toggleDarkMode;
 initDarkMode();
 
 console.log('🌗 Dark Mode Funktionen global registriert'); 
+
+// ====================== GLOBALE FUNKTIONEN ======================
+
+function openManual() {
+    console.log('📖 Bedienungsanleitung wird geöffnet...');
+    
+    const pdfUrl = 'docs/Bedienungsanleitung_LernDashboard.pdf';
+    
+    const modal = document.createElement('dialog');
+    modal.style.cssText = `
+        width: 94%; 
+        max-width: 1100px; 
+        height: 92vh; 
+        border: none; 
+        border-radius: 16px; 
+        padding: 0; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    `;
+
+    modal.innerHTML = `
+        <div style="position:relative; height:100%; display:flex; flex-direction:column;">
+            <div style="padding:12px 20px; background:#f8f9fa; border-bottom:1px solid #ddd; 
+                        display:flex; justify-content:space-between; align-items:center;">
+                <strong>📖 Bedienungsanleitung LernDashboard</strong>
+                <button onclick="this.closest('dialog').close()" 
+                        style="background:#e74c3c; color:white; border:none; padding:8px 18px; 
+                               border-radius:8px; cursor:pointer; font-weight:600;">
+                    ✕ Schließen
+                </button>
+            </div>
+            <iframe src="${pdfUrl}?v=${Date.now()}" 
+                    style="flex:1; border:none; width:100%;" 
+                    title="Bedienungsanleitung"></iframe>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.showModal();
+}
+
+function setSchoolName() {
+    const current = store.schoolName || '';
+    
+    const schoolBtnEl = document.getElementById('schoolButton');
+    const schoolTextEl = document.getElementById('schoolButtonText');
+
+    // Alten Modal ggf. entfernen
+    document.querySelectorAll('.school-modal').forEach(m => m.remove());
+
+    const modal = document.createElement('div');
+    modal.className = 'school-modal';
+    modal.style.cssText = `
+        position:fixed; top:0; left:0; width:100%; height:100%;
+        background:rgba(0,0,0,0.65); backdrop-filter:blur(10px);
+        display:flex; align-items:center; justify-content:center;
+        z-index:30000;
+    `;
+
+    modal.innerHTML = `
+        <div style="background:var(--card); padding:32px; border-radius:20px; width:90%; max-width:460px; 
+                    box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <h3 style="margin:0 0 8px; text-align:center; font-size:20px;">🏫 Schulname festlegen</h3>
+            <p style="text-align:center; color:#666; margin-bottom:24px;">
+                Wird in Druck-Exports und oben angezeigt
+            </p>
+            <input type="text" id="schoolNameInput" value="${escapeHtml(current)}" 
+                   placeholder="z. B. Grundschule am Park" 
+                   style="width:100%; padding:14px; font-size:16px; border:2px solid #ddd; 
+                          border-radius:12px; margin-bottom:24px; box-sizing:border-box;">
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button id="cancelSchoolBtn"
+                        style="padding:12px 26px; background:#95a5a6; color:white; border:none; 
+                               border-radius:12px; font-weight:600; cursor:pointer;">
+                    Abbrechen
+                </button>
+                <button id="saveSchoolBtn"
+                        style="padding:12px 32px; background:var(--primary); color:white; border:none; 
+                               border-radius:12px; font-weight:700; cursor:pointer;">
+                    Speichern
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // === Event Listener (sauber und zuverlässig) ===
+    const input = modal.querySelector('#schoolNameInput');
+    const cancelBtn = modal.querySelector('#cancelSchoolBtn');
+    const saveBtn = modal.querySelector('#saveSchoolBtn');
+
+    const closeModal = () => modal.remove();
+
+    cancelBtn.addEventListener('click', closeModal);
+
+    saveBtn.addEventListener('click', () => {
+        const name = input.value.trim();
+        
+        store.schoolName = name;
+        store.save();
+
+        if (schoolTextEl) schoolTextEl.textContent = name || 'Schule einstellen';
+        if (schoolBtnEl) schoolBtnEl.dataset.set = name ? 'true' : 'false';
+
+        closeModal();
+
+        showFancyAlert(
+            '✅ Erfolgreich',
+            'success',
+            name ? `Schulname auf „${name}“ gesetzt.` : 'Schulname entfernt.'
+        );
+    });
+
+    // Enter-Taste im Input = Speichern
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') saveBtn.click();
+    });
+
+    // Fokus setzen
+    setTimeout(() => {
+        input.focus();
+        input.select();
+    }, 100);
+}
+
+// ====================== GLOBALE REGISTRIERUNG ======================
+
+window.setSchoolName = setSchoolName;
+window.openManual = openManual;
+
+
+console.log('🌍 Globale Funktionen final registriert → setSchoolName, openManual');
