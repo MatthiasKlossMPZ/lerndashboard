@@ -15,7 +15,7 @@
  * Optimierte Version für GitHub Pages + Subpfad
  */
 
-const VERSION = '1.1.67';                     // ← Immer hochzählen!
+const VERSION = '1.1.68';                     // ← Immer hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -102,6 +102,9 @@ self.addEventListener('activate', event => {
       console.log('SW Alte Caches bereinigt');
       return self.clients.claim();
     })
+    .then(() => {
+    console.log('🎉 SW vollständig aktiv und übernimmt alle Clients');
+})
   );
 });
 
