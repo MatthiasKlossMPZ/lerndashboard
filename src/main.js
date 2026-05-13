@@ -289,6 +289,13 @@ if ('serviceWorker' in navigator) {
                         }
 
                         if (newWorker.state === 'activated') {
+                        console.log('🎉 Neue Version aktiv! Seite wird neu geladen...');
+                        setTimeout(() => {
+                        window.location.reload();
+                        }, 800);
+                        }
+
+                        if (newWorker.state === 'activated') {
                             console.log('🎉 Neue Version aktiv!');
                         }
 
