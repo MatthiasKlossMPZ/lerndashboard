@@ -46,6 +46,18 @@ export function initFilters() {
         resetBtn.addEventListener('click', resetFilters);
     }
 
+const sortSelect = document.getElementById('sortBy');
+if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+
+        localStorage.setItem('sortMode', sortSelect.value);
+        applyFilters();
+    });
+    
+    const savedSort = localStorage.getItem('sortMode');
+    if (savedSort) sortSelect.value = savedSort;
+}
+
     console.log('🎛️ Filter-Listener initialisiert');
 }
 
@@ -252,5 +264,40 @@ export function applyQuickFilter(key, value) {
     setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 80);
 }
 
+// ====================== SORTIERUNG ======================
+export function getSortedResources(filteredList) {
+    const sortMode = document.getElementById('sortBy')?.value || 'default';
+    const list = [...filteredList]; // Kopie, um Original nicht zu verändern
+
+    switch (sortMode) {
+        case 'topic-asc':
+            return list.sort((a, b) => (a.topic || '').localeCompare(b.topic || ''));
+        case 'topic-desc':
+            return list.sort((a, b) => (b.topic || '').localeCompare(a.topic || ''));
+        case 'modified-desc':
+            return list.sort((a, b) => {
+                const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
+                const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
+                return dateB - dateA;
+            });
+        case 'subject-asc':
+            return list.sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));
+        case 'favorite-first':
+            return list.sort((a, b) => {
+                if (a.favorite && !b.favorite) return -1;
+                if (!a.favorite && b.favorite) return 1;
+                return (a.topic || '').localeCompare(b.topic || '');
+            });
+        case 'level-asc':
+            return list.sort((a, b) => {
+                const levelA = parseInt((a.level || '').match(/\d+/)?.[0] || 0);
+                const levelB = parseInt((b.level || '').match(/\d+/)?.[0] || 0);
+                return levelA - levelB;
+            });
+        case 'default':
+        default:
+            return list; // Beibehält aktuelle Array-Reihenfolge
+    }
+}
 // ====================== EXPORTS ======================
 window.applyQuickFilter = applyQuickFilter;

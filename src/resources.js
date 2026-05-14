@@ -2,7 +2,7 @@
 console.log('🚀 resources.js START');
 
 import { store } from './state.js';
-import { getFilteredResources } from './ui/filters.js';
+import { getFilteredResources, getSortedResources } from './ui/filters.js';
 import { updateSubjectStats, updateStorageIndicator, updateTopStats } from './stats.js';
 import { showDeleteConfirm, deleteResourceConfirmed, cancelDelete } from './ui/modals.js';
 import { escapeHtml } from './utils/helpers.js';
@@ -93,7 +93,10 @@ export function displayResources(list) {
 
 // ====================== DISPLAY ======================
 export function applyFilters() {
-    displayResources(getFilteredResources());
+    let filtered = getFilteredResources();   
+    filtered = getSortedResources(filtered);
+    
+    displayResources(filtered);
     updateTopStats();
     updateSubjectStats();
     updateStorageIndicator();
@@ -203,3 +206,5 @@ window.editResource = editResource;
 window.toggleCompactMode = toggleCompactMode;
 
 console.log('✅ resources.js vollständig initialisiert');
+
+export { getSortedResources };

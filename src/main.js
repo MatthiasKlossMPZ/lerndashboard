@@ -123,6 +123,12 @@ export function initUI() {
         .then(() => console.log('✅ levelMode.js geladen'))
         .catch(() => console.warn('levelMode.js noch nicht gefunden'));
 
+const sortSelect = document.getElementById('sortBy');
+if (sortSelect) {
+    const saved = localStorage.getItem('sortMode');
+    if (saved) sortSelect.value = saved;
+}
+
     // ====================== UI AUFBAU ======================
     startUI();
     initFilters();

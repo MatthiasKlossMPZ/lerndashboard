@@ -778,46 +778,61 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
             </div>
         </div>
 
-        <!-- FILTER -->
-        <div class="filter-container">
-            <div class="filters">
-                <div class="filter-group">
-                    <label>Fach</label>
-                    <select id="filterSubject"><option value="">Alle</option></select>
-                </div>
-                <div class="filter-group">
-                    <label>Klasse</label>
-                    <select id="filterGrade"><option value="">Alle</option></select>
-                </div>
-                <div class="filter-group">
-    <label>Kompetenz</label>
-    <select id="filterCompetence"><option value="">Alle</option></select>
-</div>
-<div class="filter-group">
-    <label>Niveaustufe</label>
-    <select id="filterLevel">
-        <option value="">Alle</option>
-    </select>
-</div>
-<div class="filter-group">
-    <label>Tool</label>
-    <select id="filterTool"><option value="">Alle</option></select>
-</div>
-                <div class="filter-group">
-                    <label>Favoriten</label>
-                    <select id="filterFavorite">
-                        <option value="">Alle</option>
-                        <option value="true">Nur Favoriten</option>
-                    </select>
-                </div>
-                <div class="search-container">
-                    <label>Thema</label>
-                    <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel">
-                    <div id="suggestions"></div>
-                </div>
-                <button id="resetFilters" class="reset-btn">Reset</button>
-            </div>
+<!-- FILTER -->
+<div class="filter-container">
+    <div class="filters">
+        <div class="filter-group">
+            <label>Fach</label>
+            <select id="filterSubject"><option value="">Alle</option></select>
         </div>
+        <div class="filter-group">
+            <label>Klasse</label>
+            <select id="filterGrade"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Kompetenz</label>
+            <select id="filterCompetence"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Niveaustufe</label>
+            <select id="filterLevel">
+                <option value="">Alle</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Tool</label>
+            <select id="filterTool"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Favoriten</label>
+            <select id="filterFavorite">
+                <option value="">Alle</option>
+                <option value="true">Nur Favoriten</option>
+            </select>
+        </div>
+
+        <div class="search-container">
+            <label>Thema</label>
+            <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel">
+            <div id="suggestions"></div>
+        </div>
+
+        <div class="filter-group">
+            <label for="sortBy">Sortieren nach</label>
+            <select id="sortBy">
+                <option value="default">Einfügereihenfolge</option>
+                <option value="topic-asc">Thema A → Z</option>
+                <option value="topic-desc">Thema Z → A</option>
+                <option value="modified-desc">Zuletzt bearbeitet (neueste zuerst)</option>
+                <option value="subject-asc">Fach A → Z</option>
+                <option value="favorite-first">Favoriten zuerst</option>
+                <option value="level-asc">Niveaustufe aufsteigend</option>
+            </select>
+        </div>
+
+        <button id="resetFilters" class="reset-btn">Reset</button>
+    </div>
+</div>
 
         <!-- STATISTIK -->
         <div class="stats">
