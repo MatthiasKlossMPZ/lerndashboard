@@ -50,33 +50,62 @@ function handleJSONImport(jsonString) {
     }
 }
 
+// ====================== CSV IMPORT ======================
 function handleCSVImport(csvString) {
-    const lines = csvString.split('\n').map(l => l.trim()).filter(Boolean);
-    if (lines.length < 2) return showFancyAlert('CSV leer', 'warning');
-
-    const headers = parseCSVLine(lines[0]);
-    const imported = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        const row = {};
-        headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
-
-        if (row['Thema'] || row['Unterrichtsfach']) {
-            imported.push({
-                topic: row['Thema'] || '(Ohne Thema)',
-                subject: row['Unterrichtsfach'] || '',
-                grade: row['Klassenstufe'] || '',
-                competence: row['Kompetenzbereich'] || '',
-                level: row['Niveaustufe'] || '',
-                tool: row['Digitales_Hilfsmittel'] || '',
-                description: row['Beschreibung'] || ''
-            });
+    try {
+        const lines = csvString.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length < 2) {
+            return showFancyAlert('CSV leer', 'warning', 'Die Datei enthält keine Daten.');
         }
-    }
 
-    if (imported.length === 0) return showFancyAlert('Keine Einträge', 'warning');
-    prepareImportData(imported);
+        // Header flexibel erkennen (auch mit Anführungszeichen oder leicht abweichenden Namen)
+        let headers = parseCSVLine(lines[0]);
+        headers = headers.map(h => h.trim().replace(/"/g, '').toLowerCase());
+
+        const imported = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i]);
+            if (values.length < 2) continue;
+
+            const row = {};
+            headers.forEach((header, idx) => {
+                let val = (values[idx] || '').trim().replace(/^"|"$/g, '');
+                // Mögliche Spaltennamen abfangen
+                if (header.includes('thema') || header.includes('topic')) row.topic = val;
+                else if (header.includes('fach') || header.includes('subject')) row.subject = val;
+                else if (header.includes('klasse') || header.includes('grade')) row.grade = val;
+                else if (header.includes('kompetenz') || header.includes('competence')) row.competence = val;
+                else if (header.includes('niveau') || header.includes('level')) row.level = val;
+                else if (header.includes('tool') || header.includes('hilfsmittel')) row.tool = val;
+                else if (header.includes('beschreibung') || header.includes('description')) row.description = val;
+            });
+
+            if (row.topic || row.subject) {
+                imported.push({
+                    topic: row.topic || '(Ohne Thema)',
+                    subject: row.subject || '',
+                    grade: row.grade || '',
+                    competence: row.competence || '',
+                    level: row.level || '',
+                    tool: row.tool || '',
+                    description: row.description || '',
+                    favorite: false,
+                    lastModified: new Date().toISOString().slice(0, 16).replace('T', ' ')
+                });
+            }
+        }
+
+        if (imported.length === 0) {
+            return showFancyAlert('Keine gültigen Einträge', 'warning', 'Prüfe, ob die CSV die Spalten "Thema", "Unterrichtsfach" etc. enthält.');
+        }
+
+        console.log(`📥 ${imported.length} CSV-Einträge erkannt`);
+        prepareImportData(imported);
+    } catch (e) {
+        console.error('CSV Parse Fehler:', e);
+        showFancyAlert('CSV-Fehler', 'error', 'Die Datei konnte nicht gelesen werden.');
+    }
 }
 
 // ====================== VORBEREITUNG ======================
@@ -428,15 +457,18 @@ function levenshteinDistance(a, b) {
 
 function parseCSVLine(line) {
     const result = [];
-    let current = '', inQuotes = false;
+    let current = '';
+    let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
         const char = line[i];
         if (char === '"') {
-            if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
-            else inQuotes = !inQuotes;
+            inQuotes = !inQuotes;
         } else if (char === ',' && !inQuotes) {
-            result.push(current); current = '';
-        } else current += char;
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
     }
     result.push(current);
     return result;
