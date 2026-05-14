@@ -159,6 +159,8 @@ function getExistingResources() {
 document.getElementById('saveBtn').onclick = () => {
     const levelNum = document.getElementById('level').value;
 
+    const now = new Date();   
+
     const resource = {
         topic: document.getElementById('topic').value.trim(),
         subject: document.getElementById('subject').value,
@@ -168,8 +170,10 @@ document.getElementById('saveBtn').onclick = () => {
         tool: document.getElementById('tool').value.trim(),
         description: document.getElementById('description').value.trim(),
         favorite: false,
-        created: new Date().toISOString(),
-        lastModified: new Date().toLocaleDateString('de-DE')
+        
+        // === Zeitstempel ===
+        created: now.toISOString(),
+        lastModified: now.toISOString().slice(0, 16).replace('T', ' ')
     };
 
     if (!resource.topic || !resource.subject || !resource.grade || !resource.competence || !resource.level) {

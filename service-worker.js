@@ -15,7 +15,7 @@
  * Lerndashboard - Service Worker (zuverlässiges Update-Verhalten)
  */
 
-const VERSION = '1.1.84';                     // ← Bei jedem Deploy hochzählen!
+const VERSION = '1.1.85';                     // ← Bei jedem Deploy hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {

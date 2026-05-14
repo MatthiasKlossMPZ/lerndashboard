@@ -275,10 +275,10 @@ export function getSortedResources(filteredList) {
         case 'topic-desc':
             return list.sort((a, b) => (b.topic || '').localeCompare(a.topic || ''));
         case 'modified-desc':
-            return list.sort((a, b) => {
-                const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
-                const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
-                return dateB - dateA;
+    return list.sort((a, b) => {
+        const dateA = a.lastModified || a.created || '1970-01-01';
+        const dateB = b.lastModified || b.created || '1970-01-01';
+        return new Date(dateB) - new Date(dateA);
             });
         case 'subject-asc':
             return list.sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));

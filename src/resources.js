@@ -16,6 +16,20 @@ export async function initializeData() {
 
     console.log('📊 Ressourcen geladen:', store.resources.length);
     return true;
+
+    let needsSave = false;
+    store.resources.forEach(r => {
+        if (!r.created) {
+            r.created = r.lastModified || new Date().toISOString();
+            needsSave = true;
+        }
+        if (!r.lastModified) {
+            r.lastModified = r.created || new Date().toISOString().slice(0, 16).replace('T', ' ');
+            needsSave = true;
+        }
+    });
+
+    if (needsSave) store.save();
 }
 
 // ====================== UI START ======================
@@ -37,8 +51,8 @@ export function displayResources(list) {
         const realIndex = store.resources.findIndex(r => r === resource);
         
         const lastModifiedText = resource.lastModified 
-            ? `Zuletzt: ${resource.lastModified}` 
-            : '';
+        ? `Zuletzt: ${resource.lastModified}` 
+        : (resource.created ? `Erstellt: ${new Date(resource.created).toLocaleDateString('de-DE')}` : '');
 
         const div = document.createElement('div');
         div.className = `resource-item ${store.compactMode ? 'compact' : 'expanded'}`;
