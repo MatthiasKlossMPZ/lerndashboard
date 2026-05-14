@@ -63,7 +63,7 @@ export function exportCSV() {
 
     const exportDate = `Export: ${new Date().toLocaleDateString('de-DE')}`;
 
-    // Header mit Schulname
+    // Header mit Schulnamen
     let csv = `"${schoolName}";"${documentTitle}";"${exportDate}"\n\n`;
 
     // Spalten-Header
@@ -84,7 +84,7 @@ export function exportCSV() {
     csv += rows.join('\n');
 
     downloadFile(csv, `LernDashboard_${getDateString()}.csv`, 'text/csv');
-    showFancyAlert('CSV Export mit Schulname erfolgreich!', 'success');
+    showFancyAlert('CSV Export erfolgreich!', 'success');
 }
 
 // ====================== MATRIX EXPORTS ======================
@@ -151,7 +151,7 @@ export function exportMatrixCSV() {
     });
 
     downloadFile(csv, `Matrix_${getDateString()}.csv`, 'text/csv');
-    showFancyAlert('Matrix CSV exportiert! (mit Schulname)', 'success');
+    showFancyAlert('Matrix CSV exportiert!', 'success');
 }
 
 export function exportPDF() {
@@ -228,7 +228,7 @@ export function exportPDF() {
     });
 
     doc.save(`LernDashboard_${getDateString()}.pdf`);
-    showFancyAlert('PDF Export mit Schulname erfolgreich!', 'success');
+    showFancyAlert('PDF Export erfolgreich!', 'success');
 }
 
 export function exportMatrixPDF() {

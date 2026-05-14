@@ -1,3 +1,12 @@
+/**
+ * Lerndashboard
+ * 
+ * Copyright (c) 2025-2026 Matthias Kloss
+ * 
+ * This file is part of Lerndashboard and licensed under the MIT License.
+ * See the LICENSE file in the project root for full license text.
+ */
+
 // src/main.js
 import { escapeHtml } from './utils/helpers.js';
 import { store } from './state.js';
