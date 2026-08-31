@@ -1,6 +1,7 @@
 // src/ui/editResource.js
 import { store } from '../state.js';
 import { applyFilters } from '../resources.js';
+import { populateFilterOptions } from './filters.js';
 import { updateSubjectStats } from '../stats.js';
 import { showUndoToast } from './modals.js';
 
@@ -25,6 +26,7 @@ export function initEditResourceListener() {
             const newResource = store.resources[index];
 
             store.save();
+            populateFilterOptions();
             applyFilters();
             updateSubjectStats();
 

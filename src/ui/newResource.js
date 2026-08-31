@@ -1,6 +1,7 @@
 // src/ui/newResource.js
 import { store } from '../state.js';
 import { applyFilters } from '../resources.js'; 
+import { populateFilterOptions } from './filters.js';
 
 export function openNewResourceWindow() {
     const popup = window.open('new-resource.html', 'newResource', 
@@ -38,6 +39,8 @@ export function initNewResourceListener() {
 
             store.resources.push(resource);
             store.save();
+            populateFilterOptions();
+            applyFilters();
 
             const undoEntry = {
                 action: 'add',
@@ -67,6 +70,7 @@ export function initNewResourceListener() {
                 lastModified: new Date().toLocaleDateString('de-DE')
             };
             store.save();
+            populateFilterOptions();
             applyFilters();
         }
     });

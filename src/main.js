@@ -270,7 +270,6 @@ window.openNewResource = function() {
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Zuerst alle alten SWs sauber entfernen (hilft gegen redundant)
         navigator.serviceWorker.getRegistrations().then(regs => {
             regs.forEach(reg => {
                 if (reg.active && reg.active.scriptURL !== new URL('./service-worker.js', location.href).href) {

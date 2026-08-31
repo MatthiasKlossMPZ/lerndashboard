@@ -1,6 +1,7 @@
 // src/ui/modals.js
 import { store } from '../state.js';
 import { applyFilters } from '../resources.js';
+import { populateFilterOptions } from './filters.js';
 import { updateSubjectStats, updateStorageIndicator } from '../stats.js';
 
 console.log('✅ modals.js geladen');
@@ -32,6 +33,7 @@ export function deleteResourceConfirmed() {
     // Ressource löschen
     store.resources.splice(resourceToDeleteIndex, 1);
     store.save();
+    populateFilterOptions();
     applyFilters();
     updateSubjectStats();
     updateStorageIndicator();
@@ -124,6 +126,7 @@ export function undoLastAction() {
     }
 
     store.save();
+    populateFilterOptions();
     applyFilters();
     updateSubjectStats();
     updateStorageIndicator();

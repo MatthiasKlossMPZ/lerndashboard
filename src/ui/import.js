@@ -2,6 +2,7 @@
 import { store } from '../state.js';
 import { getLevelMode } from '../levelMode.js';
 import { applyFilters } from '../resources.js';
+import { populateFilterOptions } from './filters.js';
 import { updateSubjectStats } from '../stats.js';
 import { showFancyAlert } from './modals.js';
 import { createSafetyBackup } from '../stats.js';
@@ -405,6 +406,7 @@ function performImport(newOnes, similarOnes, modal) {
     createSafetyBackup(`Import: ${added} neu + ${overwritten} überschrieben`);
 
     store.save();
+    populateFilterOptions();
     applyFilters();
     updateTopStats();
     updateSubjectStats();
