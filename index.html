@@ -1,0 +1,1461 @@
+<!--
+    Lerndashboard
+
+    Copyright (c) 2025-2026 Matthias Kloss
+
+    This project is licensed under the MIT License.
+    See the LICENSE file for details.
+-->
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+    <meta charset="UTF-8">
+    <title>LernDashboard Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6b46c1">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="prefetch" href="edit-resource.html">
+    <link rel="prefetch" href="new-resource.html">
+    <link rel="stylesheet" href="src/styles/main.css">
+
+<!-- Lokale Bibliotheken (für Offline-Betrieb) -->
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/jspdf.plugin.autotable.min.js"></script>
+<script src="libs/exceljs.min.js"></script>
+<script src="libs/FileSaver.min.js"></script>
+
+    <style>
+/* ==================== LOGO HEADER ==================== */
+.logo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    gap: 20px;
+}
+
+.logo-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.logo-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* Linkes SVG-Logo */
+.logo-left svg {
+    height: 155px !important;    
+    width: auto;
+    flex-shrink: 0;
+}
+
+.logo-right img {
+    height: 116px !important;    
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-left:hover {
+    transform: scale(1.05);
+}
+
+.logo-left:active {
+    transform: scale(0.95);
+}
+
+/* ==================== MOBILE OPTIMIERUNG ==================== */
+@media (max-width: 768px) {
+    .logo-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+    
+    .logo-left, .logo-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .logo-left svg {
+        height: 110px !important;
+    }
+    
+    .logo-right img {
+        height: 82px !important;
+    }
+}
+    .logo-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .title-main {
+        font-size: 28px;
+        font-weight: 800;
+        color: #333;
+    }
+    .title-sub {
+        font-size: 18px;
+        color: #666;
+    }
+    :root {
+        --primary: #6b46c1;
+        --primary-light: #7e5be0;
+        --danger: #e53e3e;
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        --tool: #1e90ff;
+        --competence: #ff8c00;
+        --grade: #50c878;
+        --subject: #9b59b6;
+        --text: #333;
+        --text-light: #555;
+        --favorite: #f39c12;
+        --level: #00bfff;  
+        }
+    .dark {
+        --bg: #1a1a1a;
+        --card: #2d2d2d;
+        --text: #e0e0e0;
+        --text-light: #bbbbbb;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        background: #111 !important;
+        color: var(--text) !important;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+.centered-button-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 12px !important;  
+    width: 100%;
+}
+
+    .sidebar h3 { margin: 0 0 16px; color: var(--primary); font-size: 16px; text-align: center; }
+    .stat-bar { margin: 12px 0; }
+    .stat-bar label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--text-light); }
+    .bar-container { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+    .bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.4s ease; }
+    .bar-value { font-weight: bold; color: var(--primary); }
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
+    .filter-group label { font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
+    .filter-group select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; }
+    .search-container {
+    position: relative;          
+    flex: 1;
+    max-width: 280px !important;
+    min-width: 180px;
+    margin-right: 10px;
+    z-index: 10001;             
+}
+    .search-input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+#suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20000;            
+    box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+    display: none;
+}
+
+#suggestions div {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 13.5px !important;   
+    line-height: 1.4;
+    transition: background 0.15s ease;
+}
+
+#suggestions div:hover {
+    background: #eef5ff;
+}
+    .reset-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-left: 12px;
+        align-self: flex-end;
+    }
+    .file-input { display: none; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
+    .stat-card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; box-shadow: var(--shadow); font-weight: 600; }
+    .stat-card:hover {transform: translateY(-3px);}
+    .stat-card span {font-size: 26px;font-weight: 700;}
+    .resource-item { margin: 12px 0; padding: 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); transition: transform 0.2s; }
+    .resource-content strong {
+    font-size: 18px;
+    line-height: 1.35;
+    display: block;
+    margin-bottom: 12px;
+    color: #222;
+}
+   .tag {
+    font-size: 12.8px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    margin: 4px 6px 4px 0;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+    .tag:hover {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+    .grade-tag { background: var(--grade); }
+    .tool-tag { background: var(--tool); }
+    .competence-tag { background: var(--competence); }
+    .level-tag { background: var(--level); }
+    .subject-tag { background: var(--subject); }
+.description {
+    margin-top: 14px;
+    font-size: 14.2px;
+    line-height: 1.5;
+    color: var(--text-light);
+    background: #f8f9fc;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+}    .action-icons { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+    .action-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    .action-icon:hover { transform: scale(55); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .action-icon svg { width: 18px; height: 18px; fill: currentColor; }
+    .edit-icon { background: #e8f5e8; color: #27ae60; } .edit-icon:hover { background: #27ae60; color: white; }
+    .delete-icon { background: #ffe8e8; color: #e74c3c; } .delete-icon:hover { background: #e74c3c; color: white; }
+    .favorite-icon { background: #fff8e1; color: #f39c12; } .favorite-icon.active { background: #f39c12; color: white; }
+
+    .version-info {
+    position: fixed;
+    bottom: 12px;
+    left: 20px;
+    font-size: 11px;
+    color: var(--text-light);
+    background: var(--card);
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 990;
+}
+    .version-info:hover { opacity: 1; }
+
+.school-btn {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+    margin: 16px auto 8px !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 14px 20px !important;
+    box-shadow: 0 6px 16px rgba(155, 89, 182, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    width: 100%;
+}
+
+.school-btn:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.4) !important;
+}
+
+.school-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.school-btn:hover::before {
+    left: 100%;
+}
+
+/* Wenn Schulname gesetzt → grün */
+#schoolButton[data-set="true"] {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3) !important;
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.4) !important;
+}
+
+@media (max-width: 768px) {
+    body { 
+        padding: 10px; 
+        overflow-x: hidden;
+    }
+
+    .title-main { font-size: 19px; }
+    .title-sub { font-size: 12.5px; }
+
+    /* --- FILTER --- */
+    .filter-container {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #f0f0f0;
+    }   
+    .filters {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    .filter-group, .search-container {
+        min-width: 0;
+        max-width: none !important;
+        flex: 1;
+    }
+    .search-container {
+        margin: 0;
+    }
+    .reset-btn {
+        margin: 8px 0 0 0;
+        align-self: stretch;
+        padding: 10px;
+    }
+
+    /* --- SCHULNAME-BUTTON (MOBILE) --- */
+#schoolButton {
+    font-size: 12.5px;
+    padding: 9px 10px;
+    min-height: 42px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#schoolButton:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+#schoolButton[data-set="true"]:hover {
+    box-shadow: 0 4px 10px rgba(197, 143, 224, 0.35);
+}
+
+/* --- NEUE RESSOURCE BUTTON (MOBILE) --- */
+.new-resource-btn {
+    max-width: 100%;
+    font-size: 15.5px;
+    padding: 13px 18px;
+    margin: 18px auto;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+}
+
+.new-resource-btn:hover {
+    box-shadow: 0 10px 24px rgba(0, 210, 211, 0.4);
+}
+
+    /* --- STATS --- */
+    .stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .stat-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px 14px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    transition: transform 0.2s;
+}
+
+    /* --- RESSOURCEN --- */
+    .resource-item {
+    border: none;
+    border-radius: 16px;
+    background: var(--card);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    padding: 22px;
+}
+    .action-icons { gap: 5px; }
+    .action-icon { width: 30px; height: 30px; }
+    .action-icon svg { width: 15px; height: 15px; }
+
+    /* --- VERSION INFO --- */
+    .version-info {
+        position: fixed;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        text-align: center;
+        font-size: 9.5px;
+        padding: 3px 6px;
+        z-index: 10;
+    }
+
+    
+    /* --- TOUCH OPTIMIERUNG --- */
+    .btn, .action-icon, .tag, .reset-btn, .new-resource-btn, select, input {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+
+    .btn.import input[type="file"] {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+}
+/* === NEUE RESSOURCE – TÜRKIS-GRADIENT (DESKTOP & BASIS) === */
+.new-resource-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 14px 28px;
+    font-size: 17px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d2d3, #48cae4);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 210, 211, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 360px;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.new-resource-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.7s;
+}
+
+.new-resource-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 210, 211, 0.4);
+}
+
+.new-resource-btn:hover::before {
+    left: 100%;
+}
+
+@media (max-width: 380px) {
+    .stats { grid-template-columns: 1fr; }
+    .btn { flex: 1 1 auto; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ==================== LÖSCH-CONFIRM-DIALOG ==================== */
+dialog#confirmDeleteDialog {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    padding: 32px 28px;
+    max-width: 420px;
+    width: 90vw;
+    background: var(--card);
+    animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;                    
+    z-index: 30000 !important;
+}
+
+dialog#confirmDeleteDialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+}
+
+@media (max-width: 768px) {
+    dialog#confirmDeleteDialog {
+        width: 94vw !important;
+        padding: 28px 20px !important;
+        max-width: none !important;
+    }
+}
+
+dialog#confirmDeleteDialog p {
+    margin: 0 0 28px;
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: var(--text);
+}
+
+dialog#confirmDeleteDialog .buttons {
+    display: flex;
+    gap: 14px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+dialog#confirmDeleteDialog button {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 100px;
+    transition: all 0.2s;
+}
+
+dialog#confirmDeleteDialog button[value="cancel"] {
+    background: #95a5a6;
+    color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"] {
+    background: var(--danger);
+    color: white;
+}
+
+dialog#confirmDeleteDialog button[value="delete"]:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+@keyframes modalPop {
+    from { 
+        transform: translate(-50%, -50%) scale(0.75); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+    }
+}
+
+.filter-container {
+    overflow: visible !important; 
+}
+
+.export-buttons .btn:hover,
+.export-buttons label.btn:hover {
+    z-index: 20 !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 10px 25px rgba(107,70,193,0.35) !important;
+}
+
+#storageIndicator {
+    margin-bottom: 80px !important;   
+}
+
+/* ==================== FLOATING HELP BUTTON – UNTEN RECHTS ==================== */
+.floating-help-btn {
+    position: fixed;
+    bottom: 24px;           
+    right: 24px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(107, 70, 193, 0.35);
+    cursor: pointer;
+    z-index: 9990;         
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.floating-help-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 30px rgba(107, 70, 193, 0.5);
+    background: #5a37a8;
+}
+
+/* Tooltip */
+.floating-help-btn::after {
+    content: "Bedienungsanleitung";
+    position: absolute;
+    right: 72px;
+    bottom: 50%;
+    transform: translateY(50%);
+    background: #2c3e50;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    z-index: 9991;
+}
+
+.floating-help-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+    right: 78px;
+}
+
+/* ACTION ICONS - Hover Fix */
+.action-icon {
+    width: 34px;
+    height: 34px;
+    transition: all 0.2s ease;
+    transform: scale(1);
+}
+
+.action-icon:hover {
+    transform: scale(1.15) !important;   /* statt 55 (!) */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.action-icon svg {
+    width: 18px;
+    height: 18px;
+    transition: all 0.2s ease;
+}
+
+.action-icon:hover svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ==================== AKTIVER FILTER STYLING ==================== */
+.filter-container.active {
+    background: linear-gradient(135deg, #fff5f5, #ffeaea) !important;
+    box-shadow: 0 2px 12px rgba(255, 80, 80, 0.18) !important;
+    border: 2px solid #ff6b6b !important;
+}
+
+/* Kein roter Strich links */
+.filter-container.active::before {
+    display: none !important;
+}
+
+/* === NUR bei aktivem Filter: Export-Buttons rot umrandet === */
+.filter-container.active ~ .export-buttons .btn,
+.filter-container.active ~ .export-buttons button,
+.export-buttons .btn.filter-active,
+.export-buttons button.filter-active {
+    border: 2px solid #ff6b6b !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+}
+
+/* Hover-Effekt nur bei aktivem Filter */
+.filter-container.active ~ .export-buttons .btn:hover,
+.filter-container.active ~ .export-buttons button:hover {
+    border-color: #e63939 !important;
+    transform: translateY(-2px);
+}
+
+    </style>
+</head>
+<body>
+<!-- DRUCK-FOOTER: Schulname (unsichtbar) -->
+<div id="printSchoolName" style="position: fixed; bottom: 0; left: 0; font-size: 9pt; color: #666; display: none;">
+    Schule: <span id="printSchoolNameText"></span>
+</div>
+    
+    <div class="main">
+        <!-- ZWEI LOGOS + TITEL -->
+        <div class="logo-header">
+            <!-- Linkes Logo + Titel -->
+            <div class="logo-left" onclick="window.toggleDarkMode()">
+                <!-- APP-LOGO -->
+                <svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: auto; height: 130px; cursor: pointer;">
+                    <defs>
+                        <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#8e67d6"/>
+                            <stop offset="100%" stop-color="#5e3ab0"/>
+                        </linearGradient>
+                        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#f0f4ff"/>
+                            <stop offset="100%" stop-color="#d0e0ff"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#frameGrad)" stroke="#4a2e8c" stroke-width="2"/>
+                    <rect x="16" y="16" width="32" height="32" rx="6" fill="#ffffff"/>
+                    <rect x="18" y="18" width="28" height="28" rx="4" fill="url(#screenGrad)"/>
+                    <g transform="translate(19.465148,19.604556)">
+                        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#4caf50"/>
+                        <circle cx="3.5" cy="2.5" r="1.5" fill="#ffffff"/>
+                        <path d="m 2.5,4.5 h 2" stroke="#ffffff" stroke-width="1"/>
+                        <g transform="translate(9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#ff9800"/>
+                            <path d="M 2,2 5,5 M 5,2 2,5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+                        <g transform="translate(18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#e91e63"/>
+                            <circle cx="3.5" cy="3.5" r="2" fill="#ffffff"/>
+                            <circle cx="4" cy="3" r="0.8" fill="#333333"/>
+                        </g>
+                        <g transform="translate(0,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#f44336"/>
+                            <path d="M 2,5 V 3 L 5,4 V 6 L 2,7 Z" fill="#ffffff"/>
+                            <circle cx="4.5" cy="1.5" r="1" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(9,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#2196f3"/>
+                            <path d="M 2.5,2 5,3.5 v -3 z" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(18,9)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#9c27b0"/>
+                            <path d="m 1.5,2 h 4 m -4,1.5 h 4 M 1.5,5 h 2" stroke="#ffffff" stroke-width="0.8"/>
+                        </g>
+                        <g transform="translate(0,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#3f51b5"/>
+                            <path d="m 1.5,5.5 h 1 v -2 h -1 z m 1.5,0 h 1 v -3 H 3 Z m 1.5,0 h 1 v -1 h -1 z" fill="#ffffff"/>
+                        </g>
+                        <g transform="translate(9,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#00bcd4"/>
+                            <circle cx="3.5" cy="3.5" r="2.5" stroke="#ffffff" stroke-width="0.8" fill="none"/>
+                            <path d="m 1.5,3.5 h 4 m -2,-2 v 4" stroke="#ffffff" stroke-width="0.6"/>
+                        </g>
+                        <g transform="translate(18,18)">
+                            <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#eeeeee"/>
+                            <path d="m 1.5,2 h 4 m -4,2 h 4" stroke="#999999" stroke-width="0.8"/>
+                            <path d="M 1.5,2 2.2,2.7 M 1.5,2 2.9,3.4" stroke="#4caf50" stroke-width="1"/>
+                        </g>
+                    </g>
+                    <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.5"/>
+                </svg>
+                <div class="logo-title">
+                    <div class="title-main">LernDashboard</div>
+                    <div class="title-sub">Digital</div>
+                </div>
+            </div>
+
+            <!-- Rechtes Logo  -->
+            <div class="logo-right">
+                <img src="schule_in_mv.png"
+                     alt="Entwickelt für den Einsatz an Schulen in MV"
+                     style="height: 115px; width: auto; max-width: 100%; object-fit: contain;">
+            </div>
+        </div>
+
+<!-- FILTER -->
+<div class="filter-container">
+    <div class="filters">
+        <div class="filter-group">
+            <label>Fach</label>
+            <select id="filterSubject"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Klasse</label>
+            <select id="filterGrade"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Kompetenz</label>
+            <select id="filterCompetence"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Niveaustufe</label>
+            <select id="filterLevel">
+                <option value="">Alle</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Tool</label>
+            <select id="filterTool"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Favoriten</label>
+            <select id="filterFavorite">
+                <option value="">Alle</option>
+                <option value="true">Nur Favoriten</option>
+            </select>
+        </div>
+
+        <div class="search-container">
+            <label>Thema</label>
+            <input type="text" id="searchTopic" class="search-input" placeholder="z.B. Klimawandel">
+            <div id="suggestions"></div>
+        </div>
+
+        <div class="filter-group">
+            <label for="sortBy">Sortieren nach</label>
+            <select id="sortBy">
+                <option value="default">Einfügereihenfolge</option>
+                <option value="topic-asc">Thema A → Z</option>
+                <option value="topic-desc">Thema Z → A</option>
+                <option value="modified-desc">Zuletzt bearbeitet (neueste zuerst)</option>
+                <option value="subject-asc">Fach A → Z</option>
+                <option value="favorite-first">Favoriten zuerst</option>
+                <option value="level-asc">Niveaustufe aufsteigend</option>
+            </select>
+        </div>
+
+        <button id="resetFilters" class="reset-btn">Reset</button>
+    </div>
+</div>
+
+        <!-- STATISTIK -->
+        <div class="stats">
+            <div class="stat-card"><div>Gesamt</div><span id="statTotal">0</span></div>
+            <div class="stat-card"><div>Favoriten</div><span id="statFavorites">0</span></div>
+            <div class="stat-card"><div>Tools</div><span id="statTools">0</span></div>
+            <div class="stat-card"><div>Fächer</div><span id="statSubjects">0</span></div>
+        </div>
+
+         <!-- EXPORT – HORIZONTAL GRUPPIERT + FILTERABHÄNGIGKEIT -->
+        <div class="export-buttons">
+
+    <!-- GRUPPE 1: Filter-Exporte -->
+    <div class="export-group">
+        <h4 class="export-group-title" id="filterExportTitle">Filter-Exporte</h4>
+        <div class="btn-row">
+            <button class="btn csv filtered-export" onclick="exportCSV()" 
+                    title="Exportiert gefilterte Ressourcen als CSV">CSV</button>
+            <button class="btn pdf filtered-export" onclick="exportPDF()" 
+                    title="Exportiert gefilterte Ressourcen als PDF">PDF</button>
+            <button class="btn matrix filtered-export" onclick="exportMatrixCSV()" 
+                    style="background:#e67e22;" 
+                    title="Matrix als CSV – basierend auf aktuellen Filtern">Matrix CSV</button>
+            <button class="btn matrix filtered-export" id="matrixPdfBtn" 
+                    style="background:#9c27b0; color:white;" 
+                    onclick="exportMatrixPDF()">Matrix PDF</button>
+            <button class="btn matrix filtered-export" onclick="exportMatrixExcel()" 
+                    style="background:#27ae60; color:white;" 
+                    title="Formatierte Excel-Matrix mit aktuellen Filtern">Matrix Excel</button>
+        </div>
+    </div>
+
+    <!-- GRUPPE 2: Datenmanagement -->
+    <div class="export-group">
+        <h4 class="export-group-title">Datenmanagement</h4>
+        <div class="btn-row">
+            <button class="btn print" onclick="printOptimized()" 
+                    title="Druckt die aktuelle Ansicht (unabhängig von Filtern)">Drucken</button>
+            
+            <label class="btn import" title="Importiert CSV oder JSON-Backup">
+                <input type="file" id="importFile" 
+                       accept=".csv,.json,text/csv,application/json" 
+                       class="file-input" >
+                <span>Import</span>
+            </label>
+            
+            <button class="btn template" onclick="exportTemplate()" 
+                    title="Lädt eine leere CSV-Vorlage zum Ausfüllen">Vorlage</button>
+            <button class="btn" onclick="autoBackup()" 
+                    title="Erstellt sofort ein lokales Backup aller Daten">Backup jetzt</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- TOGGLE LINKS + ZENTRIERTER BUTTON + SYMMETRISCHER PLATZHALTER RECHTS -->
+<div style="display: flex; align-items: center; margin: 20px 0 12px 0; padding: 0 8px;">
+
+    <!-- Toggle links -->
+    <label style="cursor: pointer; flex-shrink: 0;">
+        <div class="toggle-switch">
+            <input type="checkbox" id="compactToggle" onchange="toggleCompactMode()" checked>
+            <span class="slider"></span>
+        </div>
+    </label>
+
+    <!-- Zentrierungs-Platzhalter -->
+    <div style="flex: 1; display: flex; justify-content: center;">
+        <div class="centered-button-wrapper" style="margin: 0;">
+            <button class="new-resource-btn" onclick="openNewResourceWindow()">
+                Neue Ressource
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 6px;">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Unsichtbarer Platzhalter rechts -->
+    <div style="width: 68px; flex-shrink: 0;"></div>
+
+</div>
+        <!-- RESSOURCEN + SIDEBAR -->
+        <div class="content-wrapper">
+            <div class="resources-container">
+                <div id="resourcesList"></div>
+            </div>
+            <div class="sidebar">
+
+    <!-- Schul-Button -->
+            <div style="margin: 12px 0 20px; text-align:center;">
+            <button id="schoolButton" class="new-resource-btn school-btn">
+            <span id="schoolButtonText">Schule einstellen</span>
+            </button>
+    </div>
+
+    <!-- Niveaustufen-Modus -->
+    <div style="margin: 0 0 24px; padding: 16px; background: #f8f9fa; border-radius: 12px; border: 2px solid var(--primary-light);">
+        <h3 style="margin: 0 0 12px 0; color: var(--primary); font-size: 15px; text-align: center;">Niveaustufen-Modus</h3>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="changeLevelMode('3')" id="levelBtn3" style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; background: #e2e8f0; color: #333; cursor: pointer;">3 Stufen</button>
+            <button onclick="changeLevelMode('5')" id="levelBtn5" style="flex: 1; padding: 12px 16px; font-weight: 700; border-radius: 12px; border: none; background: #e2e8f0; color: #333; cursor: pointer;">5 Stufen</button>
+        </div>
+        <small style="display: block; text-align: center; margin-top: 8px; color: #666; font-size: 12.5px;">
+            Aktuell: <strong id="currentLevelText">5 Niveaustufen</strong>
+        </small>
+    </div>
+
+    <!-- Fächer-Statistik -->
+    <h3 style="margin: 8px 0 16px 0; color: var(--primary); font-size: 16px; text-align: center;">Fächer-Statistik</h3>
+    <div id="statsFach"></div>
+
+    <!-- Notfall-Button -->
+    <div style="margin: 28px 0 12px;">
+        <button onclick="showRestoreDialog()" 
+                style="width:100%; padding:13px 16px; background:#e74c3c; color:white; border:none; 
+                       border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; 
+                       box-shadow:0 4px 12px rgba(231,76,60,0.3);">
+            🛡️ Ressourcen wiederherstellen (Notfall)
+        </button>
+    </div>
+<!-- Storage Monitor -->
+<div style="margin: 16px 0; padding: 16px 14px; background:#f8f9fa; border-radius:12px; border:1px solid #ddd;" 
+     id="storageIndicator">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong style="font-size:13.5px;">💾 Speicherbelegung</strong>
+        <span id="storageUsage" style="font-weight:600; font-size:13px;">— MB</span>
+    </div>
+    <div class="stat-bar" style="margin:0;">
+        <div class="bar-container" style="height:12px; background:#e0e0e0; border-radius:6px; overflow:hidden;">
+            <div id="storageBar" class="bar" style="height:100%; width:0%; transition:width 0.7s ease;"></div>
+        </div>
+    </div>
+    <small id="storagePercent" style="display:block; text-align:right; margin-top:5px; font-size:12.5px; font-weight:500; color:#27ae60;"></small>
+</div>
+
+</div>
+
+            </div>
+        </div>
+<!-- Floating Help Button – unten rechts -->
+<button class="floating-help-btn" id="btnOpenManual" title="Bedienungsanleitung öffnen">?</button>
+    </div>
+
+    <!-- SVG SYMBOLS -->
+    <svg style="display:none">
+        <symbol id="edit-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+        <symbol id="delete-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+        <symbol id="star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
+    </svg>
+
+<!-- === MODULARE APP (Korrigiert) === -->
+<script type="module" src="./src/main.js"></script>
+
+    <div class="version-info" id="versionInfo">Lade Version...</div>
+
+    <div id="deleteAnimation" style="
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+        display:none;justify-content:center;align-items:center;
+        z-index:10000;
+    ">
+        <div style="
+            background:var(--card);padding:40px;border-radius:20px;text-align:center;
+            box-shadow:0 16px 48px rgba(0,0,0,0.25);
+            transform:scale(0.8);opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.4s ease;
+        ">
+            <div style="width:90px;height:90px;margin:0 auto 18px;position:relative;">
+                <svg width="90" height="90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                    <path d="M30 50 L45 65 L70 35" fill="none" stroke="#e74c3c" stroke-width="6"
+                          stroke-linecap="round" stroke-linejoin="round"
+                          style="stroke-dasharray:100;stroke-dashoffset:100;animation:draw 0.6s ease forwards 0.3s;"/>
+                </svg>
+            </div>
+            <p style="font-size:20px;font-weight:700;color:#e74c3c;margin:0 0 6px;">
+                Gelöscht!
+            </p>
+            <p style="font-size:14px;color:var(--text-light);margin:0;">
+                Die Ressource wurde entfernt.
+            </p>
+        </div>
+    </div>
+
+
+<style>
+
+@keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.delete-active { 
+    display: flex !important; 
+}
+.delete-active > div { 
+    transform: scale(1) !important; 
+    opacity: 1 !important; 
+}
+
+:root {
+    --primary: #6b46c1;
+    --primary-light: #7e5be0;
+    --danger: #e53e3e;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --shadow: 0 8px 25px rgba(0,0,0,0.09);
+    --text: #222;
+    --text-light: #555;
+}
+
+.dark {
+    --bg: #1a1a1a;
+    --card: #2d2d2d;
+    --text: #e0e0e0;
+    --text-light: #bbbbbb;
+    --shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; }
+
+.logo-header { margin-bottom: 24px; }
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: var(--card);
+    padding: 18px 14px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-card span {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.resource-item {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+}
+
+.resource-content strong {
+    font-size: 18.5px;
+    line-height: 1.35;
+    display: block;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.tag {
+    display: inline-block;
+    padding: 6px 13px;
+    margin: 4px 6px 4px 0;
+    border-radius: 9999px;
+    font-size: 12.8px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.description {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8f9fc;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    font-size: 14.5px;
+    color: var(--text-light);
+}
+
+/* ==================== KOMPAKTER / EXPANDED MODUS ==================== */
+.resource-item.compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.resource-item.compact:not(.expanded) .resource-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.resource-item.compact:not(.expanded) .description,
+.resource-item.compact:not(.expanded) .last-modified-info {
+    display: none !important;
+}
+
+/* Fallback für globalen Expanded-Modus */
+.resource-item:not(.expanded) {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.resource-item:not(.expanded) .resource-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.resource-item:not(.expanded) .description,
+.resource-item:not(.expanded) .last-modified-info {
+    display: none !important;
+}
+
+/* Pfeil (Toggle) */
+.resource-item .toggle-icon {
+    font-size: 26px;
+    color: #666;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 12px;
+    transition: transform 0.3s ease;
+    z-index: 10;                
+}
+
+.resource-item.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.resource-item.compact .action-icons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ==================== VOLLANSICHT ==================== */
+.resource-item.expanded {
+    display: block;
+    padding: 24px;
+    cursor: default;
+}
+
+.resource-item.expanded .resource-content {
+    display: block;
+}
+
+.resource-item.expanded .description {
+    display: block !important;
+    margin-top: 14px;
+}
+
+.resource-item.expanded .action-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* ==================== EXPORT BUTTONS ==================== */
+.export-buttons .btn {
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.25s ease;
+}
+
+.export-buttons .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(107,70,193,0.25);
+}
+
+@media (max-width: 992px) {
+
+    .resource-item {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    body { padding: 12px; }
+    .filter-container { padding: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* ==================== PRINT ==================== */
+@media print {
+    body * { visibility: hidden !important; }
+    .main, .main * { visibility: visible !important; }
+    .main { position: absolute; left: 0; top: 0; width: 100%; padding: 12mm 10mm !important; }
+    .logo-header, .filter-container, .export-buttons, .sidebar, .new-resource-btn,
+    #deleteAnimation, .version-info { display: none !important; }
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px 20px 120px 20px;
+    background: var(--bg); 
+    color: var(--text);
+    box-sizing: border-box;
+}
+
+body {
+    padding: 20px 20px 120px 20px !important;
+    margin: 0 !important;
+}
+
+.main,
+.filter-container,
+.stats,
+.export-buttons,
+.centered-button-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.content-wrapper {
+    display: flex !important;
+    gap: 24px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
+}
+
+.resources-container {
+    flex: 1 1 600px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.sidebar {
+    flex: 0 0 360px !important;
+    width: 360px !important;
+    min-width: 360px !important;
+    background: var(--card) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.09) !important;
+    
+    margin-top: 10px !important;
+    align-self: flex-start !important;
+    height: fit-content !important;
+}
+
+.stats {
+    margin-bottom: 24px !important;
+}
+
+@media (max-width: 992px) {
+    body {
+        padding: 10px 10px 80px 10px !important;
+    }
+    .content-wrapper {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+    .resources-container {
+        margin-right: 0 !important;
+    }
+    .sidebar {
+        width: 100% !important;
+        position: static !important;
+    }
+}
+
+/* ==================== FILTER + STATS ==================== */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 0 0 28px 0 !important;   /* Abstand zu den Filtern */
+}
+
+.filter-container {
+    background: var(--card) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-bottom: 8px !important;
+    box-shadow: var(--shadow) !important;
+    border: 1px solid rgba(107,70,193,0.1) !important;
+    width: 100% !important;
+}
+
+.filter-container:hover {
+    box-shadow: 0 8px 25px rgba(107,70,193,0.12) !important;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* ==================== SIDEBAR STATISTIK – EINE PRO REIHE ==================== */
+#statsFach .stats {
+    display: grid !important;
+    grid-template-columns: 1fr !important;     /* Immer nur eine Spalte */
+    gap: 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Stat-Cards im Sidebar etwas kompakter */
+#statsFach .stat-card {
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    transition: transform 0.2s ease;
+}
+
+#statsFach .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107,70,193,0.15) !important;
+}
+
+#statsFach .stat-card strong {
+    font-size: 15.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+#statsFach .stat-card span {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    display: block;
+    margin: 4px 0;
+}
+
+/* Balken etwas schlanker */
+#statsFach .bar-container {
+    height: 8px !important;
+}
+
+/* Auf sehr schmalen Bildschirmen sicherstellen */
+@media (max-width: 768px) {
+    #statsFach .stats {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+<dialog id="confirmDeleteDialog">
+  <form method="dialog">
+    <p>Möchtest du diese Ressource <strong>wirklich löschen</strong>?</p>
+    <div class="buttons">
+      <button value="cancel">Abbrechen</button>
+      <button value="delete" autofocus>Löschen</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>

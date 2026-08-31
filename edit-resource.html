@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Ressource bearbeiten</title>
+<style>
+:root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
+.dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+.container {
+    max-width: 680px;
+    margin: 10px auto;
+    background: var(--card);
+    padding: 32px;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+h2 { color: var(--primary); text-align: center; margin-top: 0; font-size: 23px; font-weight: 700; }
+.form-group { 
+    margin-bottom: 22px; 
+    position: relative; 
+}
+label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14.8px; }
+input, select, textarea {
+    width: 100%; padding: 13px; border: 1.5px solid #ccc; border-radius: 12px;
+    font-size: 15.5px; box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus { 
+    border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15); 
+}
+textarea { min-height: 110px; resize: vertical; }
+.buttons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; }
+button {
+    padding: 14px 28px; border: none; border-radius: 14px; cursor: pointer;
+    font-weight: 700; font-size: 15.5px; min-width: 120px;
+}
+.save { background: var(--primary); color: white; }
+.save:hover { background: #5a37a8; }
+.cancel { background: #95a5a6; color: white; }
+
+/* Dropdown – finaler Fix */
+.autocomplete-dropdown {
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    background: var(--card) !important;
+    border: 2px solid var(--primary) !important;
+    border-top: none !important;
+    border-radius: 0 0 12px 12px;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+    display: none;
+    width: 340px; /* wird dynamisch angepasst */
+}
+.autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+}
+.autocomplete-item:hover { background: #eef5ff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="pageTitle">Ressource bearbeiten</h2>
+    <form id="editForm" autocomplete="off">
+        <div class="form-group">
+            <label>Thema *</label>
+            <input type="text" id="topic" autocomplete="off" placeholder="z.B. Klimawandel interaktiv" required>
+            <div id="topicDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
+        <div class="form-group">
+            <label>Fach *</label>
+            <select id="subject" required></select>
+        </div>
+
+        <div class="form-group">
+            <label>Klasse *</label>
+            <select id="grade" required></select>
+        </div>
+
+        <div class="form-group">
+            <label>Kompetenzbereich *</label>
+            <select id="competence" required></select>
+        </div>
+
+        <div class="form-group">
+            <label>Niveaustufe *</label>
+            <select id="level" required></select>
+        </div>
+
+        <div class="form-group">
+            <label>Digitales Tool</label>
+            <input type="text" id="tool" autocomplete="off" placeholder="z.B. GeoGebra, Canva, Anton">
+            <div id="toolDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
+        <div class="form-group">
+            <label>Beschreibung (optional)</label>
+            <textarea id="description"></textarea>
+        </div>
+
+        <div class="buttons">
+            <button type="button" id="cancelBtn" class="cancel">Abbrechen</button>
+            <button type="button" id="saveBtn" class="save">Speichern</button>
+        </div>
+    </form>
+</div>
+
+<script>
+
+    window.currentEditIndex = -1;
+
+// Globale Variablen
+let currentEditIndex = -1;
+let allTopics = [];
+let allTools = [];
+
+// Selects befüllen
+function initSelects() {
+    const subjectSelect = document.getElementById('subject');
+    ["Deutsch","Mathematik","Englisch","Biologie","Chemie","Physik","Geschichte","Geografie","Politik","Wirtschaft","Informatik","Kunst","Musik","Sport","Ethik","Religion","AWT","Naturwissenschaften"]
+        .forEach(s => subjectSelect.add(new Option(s, s)));
+
+    const gradeSelect = document.getElementById('grade');
+    gradeSelect.innerHTML = '<option value="">– Klasse wählen –</option>';
+    for (let i = 1; i <= 13; i++) gradeSelect.add(new Option(`Klasse ${i}`, `Klasse ${i}`));
+
+    const compSelect = document.getElementById('competence');
+    compSelect.innerHTML = '<option value="">– Kompetenz wählen –</option>';
+    ["Suchen, Verarbeiten und Aufbewahren","Kommunizieren und Kooperieren","Produzieren und Präsentieren",
+     "Schützen und sicher Agieren","Problemlösen und Handeln","Analysieren und Reflektieren"]
+        .forEach(c => compSelect.add(new Option(c, c)));
+}
+
+function populateLevelSelect() {
+    const select = document.getElementById('level');
+    const mode = localStorage.getItem('levelMode') || '5';
+    const count = parseInt(mode);
+    const current = select.value;
+    select.innerHTML = '<option value="">– Niveau wählen –</option>';
+    for (let i = 1; i <= count; i++) select.add(new Option(`Niveaustufe ${i}`, `Niveaustufe ${i}`));
+    if (current) select.value = current;
+}
+
+// Autocomplete
+function setupAutocomplete(inputId, dropdownId, getList) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!input || !dropdown) return;
+
+    function positionDropdown() {
+        const rect = input.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${rect.bottom + window.scrollY + 6}px`;
+        dropdown.style.left = `${rect.left + window.scrollX}px`;
+        dropdown.style.width = `${rect.width}px`;
+    }
+
+    input.addEventListener('input', () => {
+        const val = input.value.toLowerCase().trim();
+        dropdown.innerHTML = '';
+        if (val.length < 1) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        const suggestions = getList().filter(s => s.toLowerCase().includes(val)).slice(0, 12);
+        if (!suggestions.length) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        suggestions.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.textContent = s;
+            div.onclick = () => {
+                input.value = s;
+                dropdown.style.display = 'none';
+                input.focus();
+            };
+            dropdown.appendChild(div);
+        });
+        positionDropdown();
+        dropdown.style.display = 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function saveResource() {
+    const data = {
+        topic: document.getElementById('topic').value.trim(),
+        subject: document.getElementById('subject').value,
+        grade: document.getElementById('grade').value,
+        competence: document.getElementById('competence').value,
+        level: document.getElementById('level').value,
+        tool: document.getElementById('tool').value.trim(),
+        description: document.getElementById('description').value.trim()
+    };
+
+    if (!data.topic || !data.subject || !data.grade || !data.competence || !data.level) {
+        alert("Bitte alle Pflichtfelder ausfüllen!");
+        return;
+    }
+
+    if (window.opener) {
+        window.opener.postMessage({
+            type: 'SAVE_EDIT',
+            index: window.currentEditIndex,
+            data: data
+        }, location.origin);
+    }
+    window.close();
+}
+
+// ==================== MESSAGE HANDLER ====================
+
+window.addEventListener('message', event => {
+    if (event.origin !== location.origin) return;
+
+    const msg = event.data;
+    if (!msg || !msg.type) return;
+
+    console.log('📥 Nachricht empfangen:', msg.type);
+
+    // Globale Variablen für Autocomplete
+    window.allTopics = msg.allTopics || [];
+    window.allTools = msg.allTools || [];
+
+    // Autocomplete initialisieren
+    if (typeof setupAutocomplete === 'function') {
+        setupAutocomplete('topic', 'topicDropdown', () => window.allTopics);
+        setupAutocomplete('tool', 'toolDropdown', () => window.allTools);
+    }
+
+    if (msg.type === 'EDIT_RESOURCE') {
+        window.currentEditIndex = msg.index;
+        currentEditIndex = msg.index;
+        
+        document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
+
+        const r = msg.data || {};
+        
+        document.getElementById('topic').value = r.topic || '';
+        document.getElementById('subject').value = r.subject || '';
+        document.getElementById('grade').value = r.grade || '';
+        document.getElementById('competence').value = r.competence || '';
+        document.getElementById('tool').value = r.tool || '';
+        document.getElementById('description').value = r.description || '';
+
+        if (typeof populateLevelSelect === 'function') {
+            populateLevelSelect();
+        }
+        document.getElementById('level').value = r.level || '';
+
+        console.log('✏️ Bearbeitungsmodus geladen für Index', msg.index);
+
+    } else if (msg.type === 'NEW_RESOURCE') {
+        window.currentEditIndex = -1;
+        document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
+
+        // Formular zurücksetzen
+        document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea')
+            .forEach(el => el.value = '');
+
+        if (typeof populateLevelSelect === 'function') {
+            populateLevelSelect();
+        }
+
+        console.log('➕ Neuer Ressourcen-Modus aktiviert');
+    }
+});
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initSelects();
+    populateLevelSelect();
+
+    if (window.opener?.document.body.classList.contains('dark')) {
+        document.body.classList.add('dark');
+    }
+
+    document.getElementById('saveBtn').onclick = saveResource;
+    document.getElementById('cancelBtn').onclick = () => window.close();
+
+    document.getElementById('editForm').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            saveResource();
+        }
+    });
+
+    console.log('✅ edit-resource.html geladen (modular)');
+});
+</script>
+</body>
+</html>
