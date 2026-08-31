@@ -129,7 +129,9 @@ let allTools = [];
 // Selects befüllen
 function initSelects() {
     const subjectSelect = document.getElementById('subject');
-    ["Deutsch","Mathematik","Englisch","Biologie","Chemie","Physik","Geschichte","Geografie","Politik","Wirtschaft","Informatik","Kunst","Musik","Sport","Ethik","Religion","AWT","Naturwissenschaften"]
+    ["AWT","Altgriechisch","Astronomie","Biologie","Chemie","Deutsch","Englisch","Französisch","Geografie","Geschichte","Gesellschaftskunde","Griechisch","Informatik","Italienisch",
+     "Kunst","Latein","Mathematik","Musik","Niederdeutsch","Naturwissenschaften","Philosophieren mit Kindern","Physik","Politische Bildung","Polnisch","Religion","Russisch","Sachkunde",
+     "Schwedisch","Sozialkunde","Spanisch","Sport","Theater","Werken","Wirtschaft"]
         .forEach(s => subjectSelect.add(new Option(s, s)));
 
     const gradeSelect = document.getElementById('grade');
