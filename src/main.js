@@ -270,6 +270,7 @@ window.openNewResource = function() {
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+        // Zuerst alle alten SWs sauber entfernen (hilft gegen redundant)
         navigator.serviceWorker.getRegistrations().then(regs => {
             regs.forEach(reg => {
                 if (reg.active && reg.active.scriptURL !== new URL('./service-worker.js', location.href).href) {
@@ -340,40 +341,133 @@ console.log('🌗 Dark Mode Funktionen global registriert');
 
 // ====================== GLOBALE FUNKTIONEN ======================
 
+// ====================== HILFE / DOKUMENTE ======================
+const HELP_DOCS = [
+    {
+        id: 'manual',
+        title: 'Bedienung',
+        fullTitle: 'Bedienungsanleitung LernDashboard',
+        file: 'docs/Bedienungsanleitung_LernDashboard.pdf'
+    },
+    {
+        id: 'levels-3',
+        title: '3 Niveaustufen',
+        fullTitle: 'KMK-Kompetenzrahmen · 3 Niveaustufen',
+        file: 'docs/Niveaustufen_3.pdf',
+        levelMode: '3'
+    },
+    {
+        id: 'levels-5',
+        title: '5 Niveaustufen',
+        fullTitle: 'KMK-Kompetenzrahmen · 5 Niveaustufen',
+        file: 'docs/Niveaustufen_5.pdf',
+        levelMode: '5',
+        hidden: true   // auf false setzen, sobald die Datei existiert
+    }
+];
+
+function getVisibleHelpDocs() {
+    return HELP_DOCS.filter(doc => !doc.hidden);
+}
+
+function getPreferredHelpDocId() {
+    const last = localStorage.getItem('helpDocId');
+    const visible = getVisibleHelpDocs();
+    if (last && visible.some(doc => doc.id === last)) return last;
+
+    const mode = localStorage.getItem('levelMode') || store.levelMode || '5';
+    const match = visible.find(doc => doc.levelMode === String(mode));
+    return (match || visible[0]).id;
+}
+
 function openManual() {
-    console.log('📖 Bedienungsanleitung wird geöffnet...');
-    
-    const pdfUrl = 'docs/Bedienungsanleitung_LernDashboard.pdf';
-    
+    console.log('📖 Hilfe-Modal wird geöffnet...');
+
+    document.querySelectorAll('dialog.help-modal').forEach(el => el.remove());
+
+    const docs = getVisibleHelpDocs();
+    if (!docs.length) return;
+
+    let activeId = getPreferredHelpDocId();
     const modal = document.createElement('dialog');
+    modal.className = 'help-modal';
     modal.style.cssText = `
-        width: 94%; 
-        max-width: 1100px; 
-        height: 92vh; 
-        border: none; 
-        border-radius: 16px; 
-        padding: 0; 
+        width: 96%;
+        max-width: 1280px;
+        height: 94vh;
+        border: none;
+        border-radius: 16px;
+        padding: 0;
         box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     `;
 
+    const tabButtons = docs.map(doc => `
+        <button type="button" class="help-tab" data-doc-id="${doc.id}"
+                style="border:none; background:transparent; cursor:pointer;
+                       font-weight:700; font-size:14px; padding:8px 14px;
+                       border-radius:999px; color:#4a4458;">
+            ${doc.title}
+        </button>
+    `).join('');
+
     modal.innerHTML = `
         <div style="position:relative; height:100%; display:flex; flex-direction:column;">
-            <div style="padding:12px 20px; background:#f8f9fa; border-bottom:1px solid #ddd; 
-                        display:flex; justify-content:space-between; align-items:center;">
-                <strong>📖 Bedienungsanleitung LernDashboard</strong>
-                <button onclick="this.closest('dialog').close()" 
-                        style="background:#e74c3c; color:white; border:none; padding:8px 18px; 
-                               border-radius:8px; cursor:pointer; font-weight:600;">
-                    ✕ Schließen
-                </button>
+            <div style="padding:10px 16px; background:#f8f9fa; border-bottom:1px solid #ddd;
+                        display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <div style="display:flex; flex-direction:column; gap:8px; min-width:220px;">
+                    <strong id="helpModalTitle">Hilfe</strong>
+                    <div id="helpTabs" style="display:flex; gap:6px; flex-wrap:wrap;">${tabButtons}</div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <a id="helpOpenTab" href="#" target="_blank" rel="noopener"
+                       style="text-decoration:none; background:#6b46c1; color:white;
+                              padding:8px 14px; border-radius:8px; font-weight:600; font-size:13px;">
+                        Im neuen Tab öffnen
+                    </a>
+                    <button type="button" id="helpCloseBtn"
+                            style="background:#e74c3c; color:white; border:none; padding:8px 18px;
+                                   border-radius:8px; cursor:pointer; font-weight:600;">
+                        ✕ Schließen
+                    </button>
+                </div>
             </div>
-            <iframe src="${pdfUrl}?v=${Date.now()}" 
-                    style="flex:1; border:none; width:100%;" 
-                    title="Bedienungsanleitung"></iframe>
+            <iframe id="helpPdfFrame"
+                    style="flex:1; border:none; width:100%; background:#fff;"
+                    title="Hilfedokument"></iframe>
         </div>
     `;
 
     document.body.appendChild(modal);
+
+    const frame = modal.querySelector('#helpPdfFrame');
+    const titleEl = modal.querySelector('#helpModalTitle');
+    const openLink = modal.querySelector('#helpOpenTab');
+
+    const showDoc = (id) => {
+        const doc = docs.find(item => item.id === id) || docs[0];
+        activeId = doc.id;
+        localStorage.setItem('helpDocId', doc.id);
+        titleEl.textContent = '📖 ' + doc.fullTitle;
+        const url = `${doc.file}?v=${Date.now()}`;
+        frame.src = url;
+        openLink.href = doc.file;
+        modal.querySelectorAll('.help-tab').forEach(btn => {
+            const active = btn.dataset.docId === doc.id;
+            btn.style.background = active ? '#6b46c1' : 'transparent';
+            btn.style.color = active ? '#fff' : '#4a4458';
+        });
+    };
+
+    modal.querySelector('#helpTabs').addEventListener('click', (event) => {
+        const btn = event.target.closest('.help-tab');
+        if (!btn) return;
+        showDoc(btn.dataset.docId);
+    });
+
+    modal.querySelector('#helpCloseBtn').addEventListener('click', () => modal.close());
+    modal.addEventListener('close', () => modal.remove());
+
+    showDoc(activeId);
     modal.showModal();
 }
 

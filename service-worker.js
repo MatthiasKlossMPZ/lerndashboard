@@ -11,7 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const VERSION = '1.1.90';                     // ← Bei jedem Deploy hochzählen!
+const VERSION = '1.1.91';                     // ← Bei jedem Deploy hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -34,7 +34,9 @@ const urlsToCache = [
   'src/main.js', 'src/state.js', 'src/resources.js', 'src/stats.js',
   'src/ui/filters.js', 'src/ui/modals.js', /* bei Bedarf weitere src/*.js */
   'new-resource.html', 'edit-resource.html',
-  'icon-192.png', 'icon-512.png', 'schule_in_mv.png'
+  'icon-192.png', 'icon-512.png', 'schule_in_mv.png',
+    'docs/Bedienungsanleitung_LernDashboard.pdf',
+  'docs/Niveaustufen_3.pdf'
 ].map(url => new URL(url, REPO_PATH).href);
 
 // ==================== INSTALL + ACTIVATE (unverändert, aber robust) ====================
@@ -68,8 +70,16 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // PDF immer frisch
-  if (url.pathname.includes('Bedienungsanleitung_LernDashboard.pdf')) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    if (url.pathname.includes('/docs/') && url.pathname.endsWith('.pdf')) {
+    event.respondWith(
+      fetch(event.request).then(fresh => {
+        if (fresh && fresh.ok) {
+          const clone = fresh.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return fresh;
+      }).catch(() => caches.match(event.request))
+    );
     return;
   }
 
