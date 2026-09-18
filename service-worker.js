@@ -11,7 +11,7 @@
 // Service Worker für Lerndashboard (PWA)
 // ================================================
 
-const VERSION = '1.1.91';                     // ← Bei jedem Deploy hochzählen!
+const VERSION = '1.1.92';                     // ← Bei jedem Deploy hochzählen!
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
