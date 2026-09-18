@@ -7,11 +7,7 @@
  * See the LICENSE file for details.
  */
 
-// ================================================
-// Service Worker für Lerndashboard (PWA)
-// ================================================
-
-const VERSION = '1.1.92';                     // ← Bei jedem Deploy hochzählen!
+const VERSION = '1.1.93';
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -28,18 +24,41 @@ const REPO_PATH = (() => {
 
 console.log('SW aktiv – REPO_PATH:', REPO_PATH, 'Version:', VERSION);
 
-// Wichtige Dateien, die immer frisch geholt werden sollen
 const urlsToCache = [
-  './', 'index.html', 'manifest.json', 'service-worker.js',
-  'src/main.js', 'src/state.js', 'src/resources.js', 'src/stats.js',
-  'src/ui/filters.js', 'src/ui/modals.js', /* bei Bedarf weitere src/*.js */
-  'new-resource.html', 'edit-resource.html',
-  'icon-192.png', 'icon-512.png', 'schule_in_mv.png',
-    'docs/Bedienungsanleitung_LernDashboard.pdf',
+  './',
+  'index.html',
+  'manifest.json',
+  'service-worker.js',
+  'new-resource.html',
+  'edit-resource.html',
+  'src/main.js',
+  'src/state.js',
+  'src/resources.js',
+  'src/stats.js',
+  'src/levelMode.js',
+  'src/styles/main.css',
+  'src/utils/helpers.js',
+  'src/export/index.js',
+  'src/ui/filters.js',
+  'src/ui/modals.js',
+  'src/ui/import.js',
+  'src/ui/version.js',
+  'src/ui/newResource.js',
+  'src/ui/editResource.js',
+  'libs/jspdf.umd.min.js',
+  'libs/jspdf.plugin.autotable.min.js',
+  'libs/exceljs.min.js',
+  'libs/FileSaver.min.js',
+  'libs/jszip.min.js',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-192.png',
+  'icon-maskable-512.png',
+  'schule_in_mv.png',
+  'docs/Bedienungsanleitung_LernDashboard.pdf',
   'docs/Niveaustufen_3.pdf'
 ].map(url => new URL(url, REPO_PATH).href);
 
-// ==================== INSTALL + ACTIVATE (unverändert, aber robust) ====================
 self.addEventListener('install', event => {
   console.log(`SW Installiere Version ${VERSION}`);
   event.waitUntil(
@@ -58,19 +77,20 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   console.log(`SW Aktiviere Version ${VERSION}`);
   event.waitUntil(
-    caches.keys().then(keys => 
+    caches.keys().then(keys =>
       Promise.all(keys.filter(k => k.startsWith('lerndashboard-v') && k !== CACHE_NAME)
         .map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
-// ==================== FETCH – JETZT NETWORK-FIRST FÜR KRITISCHE DATEIEN ====================
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  if (event.request.method !== 'GET') return;
 
-  // PDF immer frisch
-    if (url.pathname.includes('/docs/') && url.pathname.endsWith('.pdf')) {
+  const fromCache = () => caches.match(event.request, { ignoreSearch: true });
+
+  if (url.pathname.includes('/docs/') && url.pathname.endsWith('.pdf')) {
     event.respondWith(
       fetch(event.request).then(fresh => {
         if (fresh && fresh.ok) {
@@ -78,32 +98,29 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return fresh;
-      }).catch(() => caches.match(event.request))
+      }).catch(fromCache)
     );
     return;
   }
 
-  // Für HTML, JS und Service Worker → Network-First (wichtig für Updates!)
   if (event.request.mode === 'navigate' ||
       url.pathname.endsWith('.html') ||
       url.pathname.endsWith('.js') ||
-      url.pathname.endsWith('service-worker.js')) {
-
+      url.pathname.endsWith('.css')) {
     event.respondWith(
-      fetch(event.request, { cache: 'reload' })
-        .then(fresh => {
+      fetch(event.request).then(fresh => {
+        if (fresh && fresh.ok) {
           const clone = fresh.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return fresh;
-        })
-        .catch(() => caches.match(event.request))
+        }
+        return fresh;
+      }).catch(fromCache)
     );
     return;
   }
 
-  // Alles andere: Cache-First mit Background-Update (Offline-Optimierung)
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    fromCache().then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(fresh => {
         if (fresh && fresh.ok) {

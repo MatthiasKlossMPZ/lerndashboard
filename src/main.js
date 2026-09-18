@@ -448,8 +448,7 @@ function openManual() {
         activeId = doc.id;
         localStorage.setItem('helpDocId', doc.id);
         titleEl.textContent = '📖 ' + doc.fullTitle;
-        const url = `${doc.file}?v=${Date.now()}`;
-        frame.src = url;
+        frame.src = doc.file;
         openLink.href = doc.file;
         modal.querySelectorAll('.help-tab').forEach(btn => {
             const active = btn.dataset.docId === doc.id;
