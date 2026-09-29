@@ -2,6 +2,7 @@
 import { store } from '../state.js';
 import { applyFilters } from '../resources.js';
 import { updateSubjectStats, updateStorageIndicator, updateTopStats } from '../stats.js';
+import { getActiveProfile } from '../config/profiles.js';
 
 console.log('✅ filters.js geladen');
 
@@ -21,6 +22,8 @@ export function initFilters() {
     const filterMapping = {
         filterSubject: 'subject',
         filterGrade: 'grade',
+        filterProgram: 'program',
+        filterOccupation: 'occupation',
         filterCompetence: 'competence',
         filterLevel: 'level',
         filterTool: 'tool',
@@ -72,6 +75,8 @@ export function getFilteredResources() {
                 !resource.description?.toLowerCase().includes(term)) return false;
         }
         if (f.subject && resource.subject !== f.subject) return false;
+        if (f.program && resource.program !== f.program) return false;
+        if (f.occupation && resource.occupation !== f.occupation) return false;
         if (f.competence && resource.competence !== f.competence) return false;
         if (f.tool && resource.tool !== f.tool) return false;
         if (f.grade && !flexMatch(resource.grade, f.grade)) return false;
@@ -105,11 +110,13 @@ function updateActiveFilterStyle() {
 
 export function resetFilters() {
     store.filters = {
-        subject: '', grade: '', competence: '', level: '',
+        subject: '', grade: '', program: '', occupation: '',
+        competence: '', level: '',
         tool: '', favorite: false, topic: ''
     };
 
-    ['filterSubject', 'filterGrade', 'filterCompetence', 'filterLevel', 'filterTool', 'filterFavorite']
+    ['filterSubject', 'filterGrade', 'filterProgram', 'filterOccupation',
+     'filterCompetence', 'filterLevel', 'filterTool', 'filterFavorite']
         .forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
@@ -126,7 +133,13 @@ export function resetFilters() {
 // ====================== POPULATE FILTER OPTIONS ======================
 export function populateFilterOptions() {
     const r = store.resources;
-    const subjects = [...new Set(r.map(x => x.subject).filter(Boolean))].sort();
+    const profile = getActiveProfile();
+
+    const subjects = [...new Set([
+        ...(profile.subjects || []),
+        ...r.map(x => x.subject).filter(Boolean)
+    ])].sort();
+
     const competences = [...new Set(r.map(x => x.competence).filter(Boolean))].sort();
     const tools = [...new Set(r.map(x => x.tool).filter(Boolean))].sort();
     const gradeOptions = getAllGradeOptions(r);
@@ -135,28 +148,45 @@ export function populateFilterOptions() {
     populateSelect('filterCompetence', competences);
     populateSelect('filterTool', tools);
     populateGradeSelect(gradeOptions);
-    populateLevelSelect();               // ← entscheidend
+    populateLevelSelect();
+
+    const programs = [...new Set([
+        ...(profile.programs || []),
+        ...r.map(x => x.program).filter(Boolean)
+    ])].sort();
+    const occupations = [...new Set(r.map(x => x.occupation).filter(Boolean))].sort();
+    populateSelect('filterProgram', programs);
+    populateSelect('filterOccupation', occupations);
 
     requestAnimationFrame(() => restoreCurrentFilters());
+
+    if (typeof applyProfileLabels === 'function') {
+        applyProfileLabels();
+    } else if (window.LDProfiles?.applyProfileLabels) {
+        window.LDProfiles.applyProfileLabels();
+    }
+
+    const programGroup = document.getElementById('filterProgramGroup');
+    const occupationGroup = document.getElementById('filterOccupationGroup');
+    if (programGroup) programGroup.hidden = !profile.showProgram;
+    if (occupationGroup) occupationGroup.hidden = !profile.showOccupation;
 }
 
 // ====================== GRADE & LEVEL HELFER ======================
 function getAllGradeOptions(resources) {
     const existing = [...new Set(resources.map(x => x.grade).filter(Boolean))];
-    const allGrades = Array.from({ length: 13 }, (_, i) => `Klasse ${i + 1}`);
-    return [...new Set([...allGrades, ...existing])].sort((a, b) => {
-        const numA = parseInt(a.match(/\d+/)?.[0] || 0);
-        const numB = parseInt(b.match(/\d+/)?.[0] || 0);
-        return numA - numB;
-    });
+    const profileGrades = getActiveProfile().grades;
+    return [...new Set([...profileGrades, ...existing])];
 }
 
 function restoreCurrentFilters() {
-    ['subject', 'grade', 'competence', 'level', 'tool'].forEach(key => {
+    ['subject', 'grade', 'program', 'occupation', 'competence', 'level', 'tool'].forEach(key => {
         if (store.filters[key]) {
             const map = {
                 subject: 'filterSubject',
                 grade: 'filterGrade',
+                program: 'filterProgram',
+                occupation: 'filterOccupation',
                 competence: 'filterCompetence',
                 level: 'filterLevel',
                 tool: 'filterTool'
@@ -234,13 +264,20 @@ export function applyQuickFilter(key, value) {
 
     store.filters.subject = key === 'subject' ? filterValue : '';
     store.filters.grade = key === 'grade' ? filterValue : '';
+    store.filters.program = key === 'program' ? filterValue : '';
+    store.filters.occupation = key === 'occupation' ? filterValue : '';
     store.filters.competence = key === 'competence' ? filterValue : '';
     store.filters.level = key === 'level' ? filterValue : '';
     store.filters.tool = key === 'tool' ? filterValue : '';
 
     const selectMap = {
-        subject: 'filterSubject', grade: 'filterGrade',
-        competence: 'filterCompetence', level: 'filterLevel', tool: 'filterTool'
+        subject: 'filterSubject',
+        grade: 'filterGrade',
+        program: 'filterProgram',
+        occupation: 'filterOccupation',
+        competence: 'filterCompetence',
+        level: 'filterLevel',
+        tool: 'filterTool'
     };
 
     Object.keys(selectMap).forEach(k => {

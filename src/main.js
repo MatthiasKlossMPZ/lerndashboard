@@ -10,6 +10,7 @@
 // src/main.js
 import { escapeHtml } from './utils/helpers.js';
 import { store } from './state.js';
+import { getProfileId, setProfileId, applyProfileLabels, getActiveProfile } from './config/profiles.js';
 import { initializeData, startUI, applyFilters } from './resources.js';
 import { updateVersionDisplay } from './ui/version.js';
 import { initFilters, populateFilterOptions, applyQuickFilter } from './ui/filters.js';
@@ -94,6 +95,9 @@ export function initUI() {
     } else {
         initLevelMode(); 
     }
+
+    initSchoolTypeUI();
+    applyProfileLabels();
 
     // ====================== NORMALER UI-START ======================
     // Sichere Aufrufe mit Fallback
@@ -557,10 +561,51 @@ function setSchoolName() {
     }, 100);
 }
 
+function initSchoolTypeUI() {
+    const select = document.getElementById('schoolTypeSelect');
+    if (!select) return;
+
+    select.value = getProfileId();
+    updateProfileDependentUI();
+
+    select.addEventListener('change', () => {
+        const next = select.value;
+        const ok = confirm(
+            'Schulform wirklich wechseln?\n\n' +
+            'Vorhandene Ressourcen bleiben erhalten.\n' +
+            'Filter, Formulare und Bezeichnungen werden umgestellt.'
+        );
+        if (!ok) {
+            select.value = getProfileId();
+            return;
+        }
+        setProfileId(next);
+        store.schoolType = next;
+        location.reload();
+    });
+}
+
+function updateProfileDependentUI() {
+    const profile = getActiveProfile();
+    const programGroup = document.getElementById('filterProgramGroup');
+    const occupationGroup = document.getElementById('filterOccupationGroup');
+    if (programGroup) programGroup.hidden = !profile.showProgram;
+    if (occupationGroup) occupationGroup.hidden = !profile.showOccupation;
+
+    const sortOpt = document.querySelector('#sortBy option[data-label-option="subject"]');
+    if (sortOpt) sortOpt.textContent = `${profile.labels.subject} A → Z`;
+
+    const statsTitle = document.getElementById('statsFachTitle');
+    if (statsTitle) statsTitle.textContent = `${profile.labels.subjectPlural}-Statistik`;
+}
+
+window.initSchoolTypeUI = initSchoolTypeUI;
+
 // ====================== GLOBALE REGISTRIERUNG ======================
 
 window.setSchoolName = setSchoolName;
 window.openManual = openManual;
+window.openNewResourceWindow = openNewResourceWindow;
 
 
 console.log('🌍 Globale Funktionen final registriert → setSchoolName, openManual');

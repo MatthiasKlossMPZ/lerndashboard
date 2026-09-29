@@ -66,28 +66,27 @@
         </div>
 
         <div class="form-group">
-            <label>Fach *</label>
+            <label data-label="subject">Fach *</label>
             <select id="subject" required>
                 <option value="">– Fach wählen –</option>
-                <option>AWT</option><option>Altgriechisch</option><option>Astronomie</option><option>Biologie</option>
-                <option>Chemie</option><option>Deutsch</option><option>Englisch</option>
-                <option>Französisch</option><option>Geografie</option><option>Geschichte</option>
-                <option>Gesellschaftskunde</option><option>Griechisch</option><option>Informatik</option><option>Italienisch</option>
-                <option>Kunst</option><option>Latein</option><option>Mathematik</option><option>Musik</option><option>Niederdeutsch</option>
-                <option>Naturwissenschaften</option><option>Philosophieren mit Kindern</option><option>Physik</option>
-                <option>Politische Bildung</option><option>Polnisch</option><option>Religion</option>
-                <option>Russisch</option><option>Sachkunde</option>
-                <option>Schwedisch</option><option>Sozialkunde</option><option>Spanisch</option>
-                <option>Sport</option><option>Theater</option><option>Werken</option>
-                <option>Wirtschaft</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Klasse *</label>
+            <label data-label="grade">Klasse *</label>
             <select id="grade" required></select>
         </div>
+        <div class="form-group" id="programGroup" hidden>
+            <label data-label="program">Bildungsgang</label>
+            <select id="program">
+                <option value="">– Bildungsgang wählen –</option>
+            </select>
+        </div>
 
+        <div class="form-group" id="occupationGroup" hidden>
+            <label data-label="occupation">Beruf / Fachrichtung</label>
+            <input type="text" id="occupation" placeholder="z. B. Elektroniker/-in, Pflegefachfrau/-mann">
+        </div>
         <div class="form-group">
             <label>Kompetenzbereich *</label>
             <select id="competence" required>
@@ -124,19 +123,33 @@
     </form>
 </div>
 
+<script type="module" src="src/config/profiles.js"></script>
+
 <script>
 // Dark Mode
 if (window.opener?.document.body.classList.contains('dark')) document.body.classList.add('dark');
 
+function waitForProfiles(cb) {
+    if (window.LDProfiles) return cb();
+    setTimeout(() => waitForProfiles(cb), 30);
+}
+
 // ====================== BEFÜLLEN ======================
-function populateGradeAndLevel() {
-    const gradeSelect = document.getElementById('grade');
-    gradeSelect.innerHTML = '<option value="">– Klasse wählen –</option>';
-    for (let i = 1; i <= 12; i++) {
-        const opt = document.createElement('option');
-        opt.value = `Klasse ${i}`;
-        opt.textContent = `Klasse ${i}`;
-        gradeSelect.appendChild(opt);
+function populateFromProfile() {
+    const P = window.LDProfiles;
+    const profile = P.getActiveProfile();
+    P.applyProfileLabels();
+
+    P.fillSelect(document.getElementById('subject'), profile.subjects, `– ${profile.labels.subject} wählen –`);
+    P.fillSelect(document.getElementById('grade'), profile.grades, `– ${profile.labels.grade} wählen –`);
+    P.fillSelect(document.getElementById('competence'), profile.competences, '– Kompetenz wählen –');
+
+    const programGroup = document.getElementById('programGroup');
+    const occupationGroup = document.getElementById('occupationGroup');
+    if (programGroup) programGroup.hidden = !profile.showProgram;
+    if (occupationGroup) occupationGroup.hidden = !profile.showOccupation;
+    if (profile.showProgram) {
+        P.fillSelect(document.getElementById('program'), profile.programs, `– ${profile.labels.program} wählen –`);
     }
 
     const levelSelect = document.getElementById('level');
@@ -150,7 +163,8 @@ function populateGradeAndLevel() {
         levelSelect.appendChild(opt);
     }
 }
-populateGradeAndLevel();
+
+waitForProfiles(populateFromProfile);
 
 // ====================== HILFSFUNKTION ======================
 function getExistingResources() {
@@ -168,6 +182,8 @@ document.getElementById('saveBtn').onclick = () => {
         topic: document.getElementById('topic').value.trim(),
         subject: document.getElementById('subject').value,
         grade: document.getElementById('grade').value,
+        program: document.getElementById('program')?.value || '',
+        occupation: document.getElementById('occupation')?.value.trim() || '',
         competence: document.getElementById('competence').value,
         level: levelNum ? `Niveaustufe ${levelNum}` : '',
         tool: document.getElementById('tool').value.trim(),

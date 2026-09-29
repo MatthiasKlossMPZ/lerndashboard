@@ -6,6 +6,7 @@ import { getLevelMode, getLevelOptions } from '../levelMode.js';
 import { showFancyAlert } from '../ui/modals.js';
 import { createSafetyBackup } from '../stats.js';
 import { store } from '../state.js';
+import { getActiveProfile } from '../config/profiles.js';
 
 // ==================== HILFSFUNKTIONEN ====================
 function getDateString() {
@@ -34,7 +35,7 @@ function updateCurrentFilters() {
  
 export function exportTemplate() {
     const template = [
-        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung',
+        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung,Bildungsgang,Beruf',
         'Beispiel: Klimawandel,Geografie,Klasse 7,Analysieren und Reflektieren,Niveaustufe 3,Google Earth,"Beschreibung des Einsatzes..."'
     ].join('\n');
     downloadFile(template, 'Lerndashboard_Vorlage.csv', 'text/csv');
@@ -78,7 +79,9 @@ export function exportCSV() {
         `"${r.competence || ''}"`,
         `"${r.level || ''}"`,
         `"${(r.tool || '').replace(/"/g, '""')}"`,
-        `"${(r.description || '').replace(/"/g, '""')}"`
+        `"${(r.description || '').replace(/"/g, '""')}"`,
+        `"${r.program || ''}"`,
+        `"${r.occupation || ''}"`
     ].join(','));
 
     csv += rows.join('\n');
@@ -210,7 +213,9 @@ export function exportPDF() {
         y += 8;
 
         doc.setFontSize(10);
-        doc.text(`Fach: ${r.subject || '—'} | Klasse: ${r.grade || '—'} | ${r.level || '—'}`, 20, y);
+                const p = getActiveProfile();
+        const extra = [r.program, r.occupation].filter(Boolean).join(' | ');
+        doc.text(`${p.labels.subject}: ${r.subject || '—'} | ${p.labels.grade}: ${r.grade || '—'} | ${r.level || '—'}${extra ? ' | ' + extra : ''}`, 20, y);
         y += 8;
 
         if (r.tool) {
@@ -598,9 +603,10 @@ export function printOptimized() {
         printHtml += `
             <div style="margin:15px 0; padding:10px; border-bottom:1px solid #ddd;">
                 <h3>${i+1}. ${r.topic || '—'}</h3>
-                <p><strong>Fach:</strong> ${r.subject || '—'} | 
-                   <strong>Klasse:</strong> ${r.grade || '—'} | 
-                   <strong>Niveau:</strong> ${r.level || '—'}</p>
+                <p><strong>${getActiveProfile().labels.subject}:</strong> ${r.subject || '—'} | 
+                   <strong>${getActiveProfile().labels.grade}:</strong> ${r.grade || '—'} | 
+                   <strong>Niveau:</strong> ${r.level || '—'}
+                   ${r.program ? ` | ${r.program}` : ''}${r.occupation ? ` | ${r.occupation}` : ''}</p>
                 ${r.tool ? `<p><strong>Tool:</strong> ${r.tool}</p>` : ''}
                 ${r.description ? `<p style="margin-top:8px;">${r.description}</p>` : ''}
             </div>`;

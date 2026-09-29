@@ -8,15 +8,21 @@
  */
 
 // src/state.js
+
+import { getProfileId } from './config/profiles.js';
+
 export const store = {
     resources: [],
     undoStack: [],
     schoolName: '',
-    
+    schoolType: getProfileId(),
+
     // WICHTIG: Filter-Objekt
     filters: {
         subject: '',
         grade: '',
+        program: '',
+        occupation: '',
         competence: '',
         level: '',
         tool: '',
@@ -52,3 +58,5 @@ console.log('✅ state.js geladen');
 
 const savedSchool = localStorage.getItem('schoolName');
 if (savedSchool) store.schoolName = savedSchool;
+
+store.schoolType = getProfileId();

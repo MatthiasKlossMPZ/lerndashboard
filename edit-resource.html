@@ -23,17 +23,17 @@ body {
     box-shadow: var(--shadow);
 }
 h2 { color: var(--primary); text-align: center; margin-top: 0; font-size: 23px; font-weight: 700; }
-.form-group { 
-    margin-bottom: 22px; 
-    position: relative; 
+.form-group {
+    margin-bottom: 22px;
+    position: relative;
 }
 label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14.8px; }
 input, select, textarea {
     width: 100%; padding: 13px; border: 1.5px solid #ccc; border-radius: 12px;
     font-size: 15.5px; box-sizing: border-box;
 }
-input:focus, select:focus, textarea:focus { 
-    border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15); 
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15);
 }
 textarea { min-height: 110px; resize: vertical; }
 .buttons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; }
@@ -45,7 +45,6 @@ button {
 .save:hover { background: #5a37a8; }
 .cancel { background: #95a5a6; color: white; }
 
-/* Dropdown – finaler Fix */
 .autocomplete-dropdown {
     position: fixed !important;
     z-index: 2147483647 !important;
@@ -57,7 +56,7 @@ button {
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
     display: none;
-    width: 340px; /* wird dynamisch angepasst */
+    width: 340px;
 }
 .autocomplete-item {
     padding: 12px 16px;
@@ -80,13 +79,23 @@ button {
         </div>
 
         <div class="form-group">
-            <label>Fach *</label>
+            <label data-label="subject">Fach *</label>
             <select id="subject" required></select>
         </div>
 
         <div class="form-group">
-            <label>Klasse *</label>
+            <label data-label="grade">Klasse *</label>
             <select id="grade" required></select>
+        </div>
+
+        <div class="form-group" id="programGroup" hidden>
+            <label data-label="program">Bildungsgang</label>
+            <select id="program"></select>
+        </div>
+
+        <div class="form-group" id="occupationGroup" hidden>
+            <label data-label="occupation">Beruf / Fachrichtung</label>
+            <input type="text" id="occupation" autocomplete="off" placeholder="z. B. Elektroniker/-in">
         </div>
 
         <div class="form-group">
@@ -117,32 +126,44 @@ button {
     </form>
 </div>
 
+<script type="module" src="src/config/profiles.js"></script>
+
 <script>
+window.currentEditIndex = -1;
 
-    window.currentEditIndex = -1;
-
-// Globale Variablen
 let currentEditIndex = -1;
 let allTopics = [];
 let allTools = [];
 
-// Selects befüllen
+function waitForProfiles(cb) {
+    if (window.LDProfiles) return cb();
+    setTimeout(() => waitForProfiles(cb), 30);
+}
+
+function ensureOption(select, value) {
+    if (!select || !value) return;
+    const exists = Array.from(select.options).some(o => o.value === value);
+    if (!exists) select.add(new Option(value, value));
+    select.value = value;
+}
+
 function initSelects() {
-    const subjectSelect = document.getElementById('subject');
-    ["AWT","Altgriechisch","Astronomie","Biologie","Chemie","Deutsch","Englisch","Französisch","Geografie","Geschichte","Gesellschaftskunde","Griechisch","Informatik","Italienisch",
-     "Kunst","Latein","Mathematik","Musik","Niederdeutsch","Naturwissenschaften","Philosophieren mit Kindern","Physik","Politische Bildung","Polnisch","Religion","Russisch","Sachkunde",
-     "Schwedisch","Sozialkunde","Spanisch","Sport","Theater","Werken","Wirtschaft"]
-        .forEach(s => subjectSelect.add(new Option(s, s)));
+    const P = window.LDProfiles;
+    if (!P) return setTimeout(initSelects, 30);
 
-    const gradeSelect = document.getElementById('grade');
-    gradeSelect.innerHTML = '<option value="">– Klasse wählen –</option>';
-    for (let i = 1; i <= 13; i++) gradeSelect.add(new Option(`Klasse ${i}`, `Klasse ${i}`));
+    const profile = P.getActiveProfile();
+    P.applyProfileLabels();
+    P.fillSelect(document.getElementById('subject'), profile.subjects, `– ${profile.labels.subject} wählen –`);
+    P.fillSelect(document.getElementById('grade'), profile.grades, `– ${profile.labels.grade} wählen –`);
+    P.fillSelect(document.getElementById('competence'), profile.competences, '– Kompetenz wählen –');
 
-    const compSelect = document.getElementById('competence');
-    compSelect.innerHTML = '<option value="">– Kompetenz wählen –</option>';
-    ["Suchen, Verarbeiten und Aufbewahren","Kommunizieren und Kooperieren","Produzieren und Präsentieren",
-     "Schützen und sicher Agieren","Problemlösen und Handeln","Analysieren und Reflektieren"]
-        .forEach(c => compSelect.add(new Option(c, c)));
+    const programGroup = document.getElementById('programGroup');
+    const occupationGroup = document.getElementById('occupationGroup');
+    if (programGroup) programGroup.hidden = !profile.showProgram;
+    if (occupationGroup) occupationGroup.hidden = !profile.showOccupation;
+    if (profile.showProgram) {
+        P.fillSelect(document.getElementById('program'), profile.programs, `– ${profile.labels.program} wählen –`);
+    }
 }
 
 function populateLevelSelect() {
@@ -155,7 +176,6 @@ function populateLevelSelect() {
     if (current) select.value = current;
 }
 
-// Autocomplete
 function setupAutocomplete(inputId, dropdownId, getList) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
@@ -208,6 +228,8 @@ function saveResource() {
         topic: document.getElementById('topic').value.trim(),
         subject: document.getElementById('subject').value,
         grade: document.getElementById('grade').value,
+        program: document.getElementById('program')?.value || '',
+        occupation: document.getElementById('occupation')?.value.trim() || '',
         competence: document.getElementById('competence').value,
         level: document.getElementById('level').value,
         tool: document.getElementById('tool').value.trim(),
@@ -215,7 +237,7 @@ function saveResource() {
     };
 
     if (!data.topic || !data.subject || !data.grade || !data.competence || !data.level) {
-        alert("Bitte alle Pflichtfelder ausfüllen!");
+        alert('Bitte alle Pflichtfelder ausfüllen!');
         return;
     }
 
@@ -229,7 +251,20 @@ function saveResource() {
     window.close();
 }
 
-// ==================== MESSAGE HANDLER ====================
+function fillForm(r) {
+    document.getElementById('topic').value = r.topic || '';
+    ensureOption(document.getElementById('subject'), r.subject || '');
+    ensureOption(document.getElementById('grade'), r.grade || '');
+    ensureOption(document.getElementById('program'), r.program || '');
+    const occupationEl = document.getElementById('occupation');
+    if (occupationEl) occupationEl.value = r.occupation || '';
+    ensureOption(document.getElementById('competence'), r.competence || '');
+    document.getElementById('tool').value = r.tool || '';
+    document.getElementById('description').value = r.description || '';
+
+    populateLevelSelect();
+    ensureOption(document.getElementById('level'), r.level || '');
+}
 
 window.addEventListener('message', event => {
     if (event.origin !== location.origin) return;
@@ -239,11 +274,9 @@ window.addEventListener('message', event => {
 
     console.log('📥 Nachricht empfangen:', msg.type);
 
-    // Globale Variablen für Autocomplete
     window.allTopics = msg.allTopics || [];
     window.allTools = msg.allTools || [];
 
-    // Autocomplete initialisieren
     if (typeof setupAutocomplete === 'function') {
         setupAutocomplete('topic', 'topicDropdown', () => window.allTopics);
         setupAutocomplete('tool', 'toolDropdown', () => window.allTools);
@@ -252,22 +285,12 @@ window.addEventListener('message', event => {
     if (msg.type === 'EDIT_RESOURCE') {
         window.currentEditIndex = msg.index;
         currentEditIndex = msg.index;
-        
         document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
 
-        const r = msg.data || {};
-        
-        document.getElementById('topic').value = r.topic || '';
-        document.getElementById('subject').value = r.subject || '';
-        document.getElementById('grade').value = r.grade || '';
-        document.getElementById('competence').value = r.competence || '';
-        document.getElementById('tool').value = r.tool || '';
-        document.getElementById('description').value = r.description || '';
-
-        if (typeof populateLevelSelect === 'function') {
-            populateLevelSelect();
-        }
-        document.getElementById('level').value = r.level || '';
+        waitForProfiles(() => {
+            initSelects();
+            fillForm(msg.data || {});
+        });
 
         console.log('✏️ Bearbeitungsmodus geladen für Index', msg.index);
 
@@ -275,22 +298,23 @@ window.addEventListener('message', event => {
         window.currentEditIndex = -1;
         document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
 
-        // Formular zurücksetzen
         document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea')
             .forEach(el => el.value = '');
 
-        if (typeof populateLevelSelect === 'function') {
+        waitForProfiles(() => {
+            initSelects();
             populateLevelSelect();
-        }
+        });
 
         console.log('➕ Neuer Ressourcen-Modus aktiviert');
     }
 });
 
-// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-    initSelects();
-    populateLevelSelect();
+    waitForProfiles(() => {
+        initSelects();
+        populateLevelSelect();
+    });
 
     if (window.opener?.document.body.classList.contains('dark')) {
         document.body.classList.add('dark');
