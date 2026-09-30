@@ -62,16 +62,5 @@ export function initNewResourceListener() {
                 console.log('✅ Neue Ressource hinzugefügt – Undo bereit:', undoEntry.message);
             }
         }
-
-        else if (msg.type === 'SAVE_EDIT' && msg.index >= 0) {
-            store.resources[msg.index] = {
-                ...store.resources[msg.index],
-                ...msg.data,
-                lastModified: new Date().toLocaleDateString('de-DE')
-            };
-            store.save();
-            populateFilterOptions();
-            applyFilters();
-        }
     });
 }
