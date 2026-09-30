@@ -76,6 +76,8 @@ function handleCSVImport(csvString) {
                 if (header.includes('thema') || header.includes('topic')) row.topic = val;
                 else if (header.includes('fach') || header.includes('subject')) row.subject = val;
                 else if (header.includes('klasse') || header.includes('grade')) row.grade = val;
+                else if (header.includes('bildungsgang') || header.includes('program')) row.program = val;
+                else if (header.includes('beruf') || header.includes('occupation') || header.includes('fachrichtung')) row.occupation = val;
                 else if (header.includes('kompetenz') || header.includes('competence')) row.competence = val;
                 else if (header.includes('niveau') || header.includes('level')) row.level = val;
                 else if (header.includes('tool') || header.includes('hilfsmittel')) row.tool = val;
@@ -87,6 +89,8 @@ function handleCSVImport(csvString) {
                     topic: row.topic || '(Ohne Thema)',
                     subject: row.subject || '',
                     grade: row.grade || '',
+                    program: row.program || '',
+                    occupation: row.occupation || '',
                     competence: row.competence || '',
                     level: row.level || '',
                     tool: row.tool || '',
@@ -122,6 +126,8 @@ function prepareImportData(importedResources) {
             topic: String(entry.topic || '').trim(),
             subject: String(entry.subject || '').trim(),
             grade: String(entry.grade || '').trim(),
+            program: String(entry.program || '').trim(),
+            occupation: String(entry.occupation || '').trim(),
             competence: String(entry.competence || '').trim(),
             level: String(entry.level || '').trim(),
             tool: String(entry.tool || '').trim(),

@@ -138,7 +138,7 @@ export function getFilteredResources() {
         if (f.occupation && resource.occupation !== f.occupation) return false;
         if (f.competence && resource.competence !== f.competence) return false;
         if (f.tool && resource.tool !== f.tool) return false;
-        if (f.grade && !flexMatch(resource.grade, f.grade)) return false;
+        if (f.grade && resource.grade !== f.grade) return false;
         if (f.level && !flexMatch(resource.level, f.level)) return false;
         return true;
     });
@@ -207,7 +207,8 @@ export function populateFilterOptions() {
     ])].sort();
 
     const competences = [...new Set(r.map(x => x.competence).filter(Boolean))].sort();
-    const tools = [...new Set(r.map(x => x.tool).filter(Boolean))].sort();
+    const tools = [...new Set(r.map(x => x.tool).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
     const gradeOptions = getAllGradeOptions(r);
 
     populateSelect('filterSubject', subjects);
