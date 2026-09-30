@@ -668,6 +668,8 @@ function updateProfileDependentUI() {
 
     const statsTitle = document.getElementById('statsFachTitle');
     if (statsTitle) statsTitle.textContent = `${profile.labels.subjectPlural}-Statistik`;
+    const mark = document.getElementById('vocationalMark');
+    if (mark) mark.hidden = getActiveProfile().id !== 'beruflich';
 }
 
 window.initSchoolTypeUI = initSchoolTypeUI;

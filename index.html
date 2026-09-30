@@ -105,6 +105,32 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        position: relative;
+        overflow: visible;
+    }
+    #vocationalMark {
+        position: absolute;
+        left: calc(100% + 6px);
+        top: -4px;
+        color: #0d9488;
+        font-family: "Segoe Script", "Lucida Handwriting", cursive;
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1;
+        transform: rotate(-12deg);
+        transform-origin: left center;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+    }
+    .dark #vocationalMark { color: #2dd4bf; }
+    @media (max-width: 768px) {
+        #vocationalMark {
+            left: auto;
+            right: -4px;
+            top: -8px;
+            font-size: 16px;
+        }
     }
     .title-main {
         font-size: 28px;
@@ -778,6 +804,7 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                 <div class="logo-title">
                     <div class="title-main">LernDashboard</div>
                     <div class="title-sub">Digital</div>
+                    <span id="vocationalMark" hidden>beruflich</span>
                 </div>
             </div>
 
