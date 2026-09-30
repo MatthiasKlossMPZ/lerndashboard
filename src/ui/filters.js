@@ -9,12 +9,25 @@ console.log('✅ filters.js geladen');
 // ====================== INITIALISIERUNG ======================
 export function initFilters() {
     // Suchfeld
-    const searchInput = document.getElementById('searchTopic');
+        const searchInput = document.getElementById('searchTopic');
+    const suggestionsBox = document.getElementById('suggestions');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            store.filters.topic = searchInput.value.trim();
+            const term = searchInput.value.trim();
+            store.filters.topic = term;
             applyFilters();
             updateActiveFilterStyle();
+            renderTopicSuggestions(term, searchInput, suggestionsBox);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideTopicSuggestions(suggestionsBox);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestionsBox?.contains(e.target)) {
+                hideTopicSuggestions(suggestionsBox);
+            }
         });
     }
 
@@ -64,6 +77,52 @@ if (sortSelect) {
     console.log('🎛️ Filter-Listener initialisiert');
 }
 
+function hideTopicSuggestions(box) {
+    if (!box) return;
+    box.innerHTML = '';
+    box.style.display = 'none';
+}
+
+function renderTopicSuggestions(term, input, box) {
+    if (!box) return;
+
+    const query = term.toLowerCase();
+    if (!query) {
+        hideTopicSuggestions(box);
+        return;
+    }
+
+    const matches = [...new Set(
+        store.resources
+            .map(r => (r.topic || '').trim())
+            .filter(Boolean)
+    )]
+        .filter(topic => topic.toLowerCase().includes(query))
+        .sort((a, b) => a.localeCompare(b, 'de'))
+        .slice(0, 10);
+
+    if (!matches.length) {
+        hideTopicSuggestions(box);
+        return;
+    }
+
+    box.innerHTML = '';
+    matches.forEach(topic => {
+        const item = document.createElement('div');
+        item.textContent = topic;
+        item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            input.value = topic;
+            store.filters.topic = topic;
+            applyFilters();
+            updateActiveFilterStyle();
+            hideTopicSuggestions(box);
+        });
+        box.appendChild(item);
+    });
+    box.style.display = 'block';
+}
+
 // ====================== FILTER LOGIK ======================
 export function getFilteredResources() {
     return store.resources.filter(resource => {
@@ -106,6 +165,11 @@ function updateActiveFilterStyle() {
         (typeof v === 'boolean' && v) || (typeof v === 'string' && v !== '')
     );
     container.classList.toggle('active', isActive);
+
+    const title = document.getElementById('filterExportTitle');
+    if (title) {
+        title.textContent = isActive ? 'Filter-Exporte aktiv' : 'Filter-Exporte';
+    }
 }
 
 export function resetFilters() {
@@ -124,9 +188,11 @@ export function resetFilters() {
 
     const searchInput = document.getElementById('searchTopic');
     if (searchInput) searchInput.value = '';
+    hideTopicSuggestions(document.getElementById('suggestions'));
 
     applyFilters();
     updateActiveFilterStyle();
+  
     console.log('🔄 Filter zurückgesetzt');
 }
 

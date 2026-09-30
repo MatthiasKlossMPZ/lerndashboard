@@ -8,6 +8,7 @@
  */
 
 // src/resources.js
+
 console.log('🚀 resources.js START');
 
 import { store } from './state.js';
@@ -15,6 +16,7 @@ import { getFilteredResources, getSortedResources } from './ui/filters.js';
 import { updateSubjectStats, updateStorageIndicator, updateTopStats } from './stats.js';
 import { showDeleteConfirm, deleteResourceConfirmed, cancelDelete } from './ui/modals.js';
 import { escapeHtml } from './utils/helpers.js';
+import { getActiveProfile } from './config/profiles.js';
 
 console.log('✅ resources.js erfolgreich geladen');
 
@@ -74,8 +76,8 @@ export function displayResources(list) {
                 <div class="tags">
                     ${resource.subject ? `<span class="tag subject-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('subject', '${escapeHtml(resource.subject)}')">${escapeHtml(resource.subject)}</span>` : ''}
                     ${resource.grade ? `<span class="tag grade-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('grade', '${escapeHtml(resource.grade)}')">${escapeHtml(resource.grade)}</span>` : ''}
-                    ${resource.program ? `<span class="tag competence-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('program', '${escapeHtml(resource.program)}')">${escapeHtml(resource.program)}</span>` : ''}
-                    ${resource.occupation ? `<span class="tag tool-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('occupation', '${escapeHtml(resource.occupation)}')">${escapeHtml(resource.occupation)}</span>` : ''}
+                    ${resource.program ? `<span class="tag program-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('program', '${escapeHtml(resource.program)}')">${escapeHtml(resource.program)}</span>` : ''}
+                    ${resource.occupation ? `<span class="tag occupation-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('occupation', '${escapeHtml(resource.occupation)}')">${escapeHtml(resource.occupation)}</span>` : ''}
                     ${resource.competence ? `<span class="tag competence-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('competence', '${escapeHtml(resource.competence)}')">${escapeHtml(resource.competence)}</span>` : ''}
                     ${resource.level ? `<span class="tag level-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('level', '${escapeHtml(resource.level)}')">${escapeHtml(resource.level)}</span>` : ''}
                     ${resource.tool ? `<span class="tag tool-tag" onclick="event.stopImmediatePropagation(); applyQuickFilter('tool', '${escapeHtml(resource.tool)}')">${escapeHtml(resource.tool)}</span>` : ''}

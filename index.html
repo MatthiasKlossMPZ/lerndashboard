@@ -130,6 +130,8 @@
         --text-light: #555;
         --favorite: #f39c12;
         --level: #00bfff;  
+        --program: #0d9488;
+        --occupation: #db2777;
         }
     .dark {
         --bg: #1a1a1a;
@@ -236,6 +238,8 @@
     }
     .grade-tag { background: var(--grade); }
     .tool-tag { background: var(--tool); }
+    .program-tag { background: var(--program); }
+    .occupation-tag { background: var(--occupation); }
     .competence-tag { background: var(--competence); }
     .level-tag { background: var(--level); }
     .subject-tag { background: var(--subject); }
@@ -674,6 +678,11 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     border: 2px solid #ff6b6b !important;
 }
 
+.filter-container.active ~ .export-buttons #filterExportTitle {
+    color: #e63939;
+    font-weight: 700;
+}
+
 /* Kein roter Strich links */
 .filter-container.active::before {
     display: none !important;
@@ -863,14 +872,12 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
                     title="Exportiert gefilterte Ressourcen als CSV">CSV</button>
             <button class="btn pdf filtered-export" onclick="exportPDF()" 
                     title="Exportiert gefilterte Ressourcen als PDF">PDF</button>
-            <button class="btn matrix filtered-export" onclick="exportMatrixCSV()" 
-                    style="background:#e67e22;" 
+            <button class="btn matrix-csv filtered-export" onclick="exportMatrixCSV()"
                     title="Matrix als CSV – basierend auf aktuellen Filtern">Matrix CSV</button>
-            <button class="btn matrix filtered-export" id="matrixPdfBtn" 
-                    style="background:#9c27b0; color:white;" 
+            <button class="btn matrix-pdf filtered-export" id="matrixPdfBtn"
+                    title="Matrix als PDF – basierend auf aktuellen Filtern"
                     onclick="exportMatrixPDF()">Matrix PDF</button>
-            <button class="btn matrix filtered-export" onclick="exportMatrixExcel()" 
-                    style="background:#27ae60; color:white;" 
+            <button class="btn matrix-xlsx filtered-export" onclick="exportMatrixExcel()"
                     title="Formatierte Excel-Matrix mit aktuellen Filtern">Matrix Excel</button>
         </div>
     </div>
@@ -1244,6 +1251,24 @@ dialog#confirmDeleteDialog button[value="delete"]:hover {
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transition: all 0.25s ease;
+}
+
+.export-buttons .btn {
+    color: #fff;
+    border: none;
+}
+
+.export-buttons .btn.csv          { background: #c9a227; }
+.export-buttons .btn.pdf          { background: #6b7c3a; }
+.export-buttons .btn.matrix-csv   { background: #0f4c5c; }
+.export-buttons .btn.matrix-pdf   { background: #1e3a5f; }
+.export-buttons .btn.matrix-xlsx  { background: #7a2f5a; }
+
+.export-buttons .btn.print        { background: #5c4a32; }
+.export-buttons .btn.import       { background: #3d4f5f; }
+.export-buttons .btn.template     { background: #6e5a44; }
+.export-buttons .btn:not([class*="csv"]):not([class*="pdf"]):not([class*="matrix"]):not(.print):not(.import):not(.template) {
+    background: #2c3e50; /* Backup jetzt */
 }
 
 .export-buttons .btn:hover {

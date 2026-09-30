@@ -565,22 +565,93 @@ function initSchoolTypeUI() {
     const select = document.getElementById('schoolTypeSelect');
     if (!select) return;
 
-    select.value = getProfileId();
+    const current = getProfileId();
+    select.value = current;
+    select.dataset.committed = current;
     updateProfileDependentUI();
 
-    select.addEventListener('change', () => {
+    const onChange = () => {
         const next = select.value;
-        const ok = confirm(
-            'Schulform wirklich wechseln?\n\n' +
-            'Vorhandene Ressourcen bleiben erhalten.\n' +
-            'Filter, Formulare und Bezeichnungen werden umgestellt.'
-        );
-        if (!ok) {
-            select.value = getProfileId();
-            return;
+        const committed = select.dataset.committed || getProfileId();
+        if (next === committed) return;
+        showSchoolTypeModal(select, committed, next);
+    };
+
+    select.removeEventListener('change', select._schoolTypeHandler);
+    select._schoolTypeHandler = onChange;
+    select.addEventListener('change', onChange);
+}
+
+function showSchoolTypeModal(select, currentId, nextId) {
+    document.querySelectorAll('.schooltype-modal').forEach(m => m.remove());
+
+    const nextName = nextId === 'beruflich'
+        ? 'Berufliche Schule'
+        : 'Allgemeinbildende Schule';
+
+    const modal = document.createElement('div');
+    modal.className = 'schooltype-modal';
+    modal.style.cssText = `
+        position:fixed; inset:0; z-index:30000;
+        background:rgba(0,0,0,0.65); backdrop-filter:blur(10px);
+        display:flex; align-items:center; justify-content:center;
+        padding:20px;
+    `;
+
+    modal.innerHTML = `
+        <div style="background:var(--card); color:inherit; padding:32px; border-radius:20px;
+                    width:90%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <h3 style="margin:0 0 8px; text-align:center; font-size:20px;">Schulform wechseln?</h3>
+            <p style="text-align:center; color:#666; margin:0 0 20px; line-height:1.5;">
+                Wechsel zu <strong>${nextName}</strong>.
+            </p>
+            <ul style="margin:0 0 24px; padding-left:20px; line-height:1.6; color:#555;">
+                <li>Vorhandene Ressourcen bleiben erhalten.</li>
+                <li>Filter, Formulare und Bezeichnungen werden umgestellt.</li>
+                <li>Alte Klassen- oder Fachwerte bleiben an den Karten stehen.</li>
+            </ul>
+            <div style="display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
+                <button type="button" id="schoolTypeCancel"
+                        style="padding:12px 26px; background:#95a5a6; color:white; border:none;
+                               border-radius:12px; font-weight:600; cursor:pointer;">
+                    Abbrechen
+                </button>
+                <button type="button" id="schoolTypeOk"
+                        style="padding:12px 32px; background:var(--primary); color:white; border:none;
+                               border-radius:12px; font-weight:700; cursor:pointer;">
+                    Wechseln
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const onEsc = (e) => {
+        if (e.key === 'Escape') close(true);
+    };
+
+    const close = (reset) => {
+        document.removeEventListener('keydown', onEsc);
+        if (reset) {
+            select.value = currentId;
+            select.dataset.committed = currentId;
         }
-        setProfileId(next);
-        store.schoolType = next;
+        modal.remove();
+    };
+
+    document.addEventListener('keydown', onEsc);
+    modal.querySelector('#schoolTypeCancel').addEventListener('click', () => close(true));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) close(true);
+    });
+
+    modal.querySelector('#schoolTypeOk').addEventListener('click', () => {
+        setProfileId(nextId);
+        store.schoolType = nextId;
+        select.dataset.committed = nextId;
+        document.removeEventListener('keydown', onEsc);
+        modal.remove();
         location.reload();
     });
 }
