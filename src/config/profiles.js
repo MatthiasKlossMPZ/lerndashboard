@@ -71,6 +71,7 @@ export const PROFILES = {
             'Lernfeld 8',
             'Lernfeld 9',
             'Lernfeld 10',
+            'Biologie',
             'Fachpraxis',
             'Wahlpflichtbereich',
             'Sonstiges / berufsbezogen'

@@ -30,6 +30,14 @@ export function deleteResourceConfirmed() {
     // Backup für Undo-Stack
     const backupBefore = JSON.parse(JSON.stringify(store.resources));
 
+        if (!store.undoStack) store.undoStack = [];
+    store.undoStack.unshift({
+        action: 'delete',
+        resourcesBackup: backupBefore,
+        timestamp: Date.now()
+    });
+    if (store.undoStack.length > 15) store.undoStack.pop();
+
     // Ressource löschen
     store.resources.splice(resourceToDeleteIndex, 1);
     store.save();
@@ -119,10 +127,13 @@ export function undoLastAction() {
         store.resources.splice(entry.addedIndex, 1);
         console.log('🔄 Neue Ressource rückgängig gemacht');
     } 
-    else if (entry.action === 'delete' && entry.resourcesBackup) {
-        // Gelöschte Ressource wiederherstellen
+        else if (entry.action === 'delete' && entry.resourcesBackup) {
         store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
-        console.log('🔄 Gelöschte Ressource wiederhergestellt');
+        console.log('Gelöschte Ressource wiederhergestellt');
+    }
+    else if (entry.action === 'edit' && entry.oldResource && entry.index >= 0) {
+        store.resources[entry.index] = JSON.parse(JSON.stringify(entry.oldResource));
+        console.log('Bearbeitung rückgängig gemacht');
     }
 
     store.save();
