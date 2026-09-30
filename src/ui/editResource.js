@@ -8,46 +8,38 @@ import { showUndoToast } from './modals.js';
 console.log('✅ editResource.js geladen');
 
 export function initEditResourceListener() {
+    if (window.__editListenerBound) return;
+    window.__editListenerBound = true;
+
     window.addEventListener('message', event => {
         if (event.origin !== location.origin) return;
         const msg = event.data;
 
-        if (msg.type === 'SAVE_EDIT' && msg.index >= 0) {
-            const index = msg.index;
-            const oldResource = { ...store.resources[index] }; // Backup für Undo
+                if (msg.type === 'SAVE_EDIT' && msg.index >= 0 && store.resources[msg.index]) {
+            const backupBefore = JSON.parse(JSON.stringify(store.resources));
 
-            // Update durchführen
-            store.resources[index] = {
-                ...store.resources[index],
+            store.resources[msg.index] = {
+                ...store.resources[msg.index],
                 ...msg.data,
-                lastModified: new Date().toLocaleDateString('de-DE')
+                lastModified: new Date().toISOString().slice(0, 16).replace('T', ' ')
             };
 
-            const newResource = store.resources[index];
+            if (!store.undoStack) store.undoStack = [];
+            store.undoStack.unshift({
+                action: 'edit',
+                resourcesBackup: backupBefore,
+                timestamp: Date.now()
+            });
+            if (store.undoStack.length > 15) store.undoStack.pop();
 
             store.save();
             populateFilterOptions();
             applyFilters();
             updateSubjectStats();
 
-            // Undo-Eintrag erstellen
-            const undoEntry = {
-                action: 'edit',
-                timestamp: Date.now(),
-                index: index,
-                oldResource: oldResource,
-                newResource: { ...newResource },
-                message: `"${newResource.topic}" bearbeitet`
-            };
+            showUndoToast(`„${store.resources[msg.index].topic}“ bearbeitet`);
 
-            if (!store.undoStack) store.undoStack = [];
-            store.undoStack.unshift(undoEntry);
-            if (store.undoStack.length > 15) store.undoStack.pop();
-
-            // Rückgängig-Toast anzeigen
-            showUndoToast(undoEntry.message);
-
-            console.log(`✏️ Ressource bearbeitet: ${newResource.topic}`);
+            console.log('✏️ Ressource bearbeitet');
         }
     });
 }

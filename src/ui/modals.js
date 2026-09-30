@@ -131,7 +131,11 @@ export function undoLastAction() {
         store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
         console.log('Gelöschte Ressource wiederhergestellt');
     }
-    else if (entry.action === 'edit' && entry.oldResource && entry.index >= 0) {
+        else if (entry.action === 'edit' && entry.resourcesBackup) {
+        store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
+        console.log('Bearbeitung rückgängig gemacht');
+    }
+        else if (entry.action === 'edit' && entry.oldResource && entry.index >= 0) {
         store.resources[entry.index] = JSON.parse(JSON.stringify(entry.oldResource));
         console.log('Bearbeitung rückgängig gemacht');
     }
