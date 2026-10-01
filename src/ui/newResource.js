@@ -2,6 +2,7 @@
 import { store } from '../state.js';
 import { applyFilters } from '../resources.js'; 
 import { populateFilterOptions } from './filters.js';
+import { showUndoToast } from './modals.js';
 
 export function openNewResourceWindow() {
     const popup = window.open('new-resource.html', 'newResource', 
@@ -65,11 +66,7 @@ export function initNewResourceListener() {
 
             applyFilters();
 
-            if (typeof showUndoToast === 'function') {
-                showUndoToast(undoEntry.message);
-            } else {
-                console.log('✅ Neue Ressource hinzugefügt – Undo bereit:', undoEntry.message);
-            }
+            showUndoToast(undoEntry.message);
         }
     });
 }

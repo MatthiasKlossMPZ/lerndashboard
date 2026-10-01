@@ -122,20 +122,23 @@ export function undoLastAction() {
 
     const entry = store.undoStack.shift();
 
-    if (entry.action === 'add' && entry.addedIndex !== undefined) {
-        // Neue Ressource entfernen
+    if (entry.action === 'add' && entry.resourcesBackup) {
+        store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
+        console.log('Neue Ressource rückgängig gemacht');
+    }
+    else if (entry.action === 'add' && entry.addedIndex !== undefined) {
         store.resources.splice(entry.addedIndex, 1);
-        console.log('🔄 Neue Ressource rückgängig gemacht');
-    } 
-        else if (entry.action === 'delete' && entry.resourcesBackup) {
+        console.log('Neue Ressource rückgängig gemacht');
+    }
+    else if (entry.action === 'delete' && entry.resourcesBackup) {
         store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
         console.log('Gelöschte Ressource wiederhergestellt');
     }
-        else if (entry.action === 'edit' && entry.resourcesBackup) {
+    else if (entry.action === 'edit' && entry.resourcesBackup) {
         store.resources = JSON.parse(JSON.stringify(entry.resourcesBackup));
         console.log('Bearbeitung rückgängig gemacht');
     }
-        else if (entry.action === 'edit' && entry.oldResource && entry.index >= 0) {
+    else if (entry.action === 'edit' && entry.oldResource && entry.index >= 0) {
         store.resources[entry.index] = JSON.parse(JSON.stringify(entry.oldResource));
         console.log('Bearbeitung rückgängig gemacht');
     }
