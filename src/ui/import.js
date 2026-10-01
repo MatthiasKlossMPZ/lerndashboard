@@ -3,7 +3,7 @@ import { store } from '../state.js';
 import { getLevelMode } from '../levelMode.js';
 import { applyFilters } from '../resources.js';
 import { populateFilterOptions } from './filters.js';
-import { updateSubjectStats } from '../stats.js';
+import { updateSubjectStats, updateStorageIndicator, updateTopStats } from '../stats.js';
 import { showFancyAlert } from './modals.js';
 import { createSafetyBackup } from '../stats.js';
 
