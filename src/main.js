@@ -185,35 +185,43 @@ if (sortSelect) {
 
 
     // === EDIT & NEW RESOURCE WINDOW HANDLER ===
-    window.editResource = function(index) {
-    if (index < 0 || index >= store.resources.length) {
-        console.error('Ungültiger Edit-Index:', index);
-        return;
-    }
-
-    const resource = store.resources[index];
-    const allTopics = [...new Set(store.resources.map(r => r.topic))];
-    const allTools = [...new Set(store.resources.map(r => r.tool).filter(Boolean))];
-
-    const popup = window.open(
-        'edit-resource.html?index=' + index,
-        'editResource',
-        'width=720,height=820,scrollbars=yes,resizable=yes'
-    );
-
-    setTimeout(() => {
-        if (popup) {
-            popup.postMessage({
-                type: 'EDIT_RESOURCE',
-                index: index,
-                data: resource,
-                allTopics: allTopics,
-                allTools: allTools
-            }, location.origin);
+        window.editResource = function(index) {
+        if (index < 0 || index >= store.resources.length) {
+            console.error('Ungültiger Edit-Index:', index);
+            return;
         }
-    }, 300);
 
-    console.log(`📝 Edit-Fenster geöffnet für Index ${index}`);
+        const resource = JSON.parse(JSON.stringify(store.resources[index]));
+        const allTopics = [...new Set(store.resources.map(r => r.topic).filter(Boolean))];
+        const allTools = [...new Set(store.resources.map(r => r.tool).filter(Boolean))];
+
+        const popup = window.open(
+            'edit-resource.html?index=' + index,
+            'editResource',
+            'width=720,height=820,scrollbars=yes,resizable=yes'
+        );
+
+        if (!popup) {
+            showFancyAlert('Popup blockiert', 'warning', 'Bitte Popups für diese Seite erlauben.');
+            return;
+        }
+
+        const payload = {
+            type: 'EDIT_RESOURCE',
+            index,
+            data: resource,
+            allTopics,
+            allTools
+        };
+
+        let attempts = 0;
+        const sendData = () => {
+            if (popup.closed || attempts > 25) return;
+            attempts++;
+            try { popup.postMessage(payload, location.origin); } catch (e) {}
+            setTimeout(sendData, 150);
+        };
+        setTimeout(sendData, 100);
     };
 
 // ====================== GLOBALE BUTTONS PER addEventListener ======================

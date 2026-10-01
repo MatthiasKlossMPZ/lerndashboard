@@ -134,6 +134,7 @@ window.currentEditIndex = -1;
 let currentEditIndex = -1;
 let allTopics = [];
 let allTools = [];
+let pendingEdit = null;
 
 function waitForProfiles(cb) {
     if (window.LDProfiles) return cb();
@@ -266,6 +267,16 @@ function fillForm(r) {
     ensureOption(document.getElementById('level'), r.level || '');
 }
 
+function applyPendingEdit() {
+    if (!pendingEdit) return;
+    window.currentEditIndex = pendingEdit.index;
+    currentEditIndex = pendingEdit.index;
+    initSelects();
+    fillForm(pendingEdit.data || {});
+}
+
+let autocompleteReady = false;
+
 window.addEventListener('message', event => {
     if (event.origin !== location.origin) return;
 
@@ -274,39 +285,32 @@ window.addEventListener('message', event => {
 
     console.log('📥 Nachricht empfangen:', msg.type);
 
-    window.allTopics = msg.allTopics || [];
-    window.allTools = msg.allTools || [];
+    if (msg.allTopics) window.allTopics = msg.allTopics;
+    if (msg.allTools) window.allTools = msg.allTools;
 
-    if (typeof setupAutocomplete === 'function') {
-        setupAutocomplete('topic', 'topicDropdown', () => window.allTopics);
-        setupAutocomplete('tool', 'toolDropdown', () => window.allTools);
+    if (!autocompleteReady && typeof setupAutocomplete === 'function') {
+        autocompleteReady = true;
+        setupAutocomplete('topic', 'topicDropdown', () => window.allTopics || []);
+        setupAutocomplete('tool', 'toolDropdown', () => window.allTools || []);
     }
 
     if (msg.type === 'EDIT_RESOURCE') {
-        window.currentEditIndex = msg.index;
-        currentEditIndex = msg.index;
+        pendingEdit = { index: msg.index, data: msg.data || {} };
         document.getElementById('pageTitle').textContent = 'Ressource bearbeiten';
+        waitForProfiles(applyPendingEdit);
+        return;
+    }
 
-        waitForProfiles(() => {
-            initSelects();
-            fillForm(msg.data || {});
-        });
-
-        console.log('✏️ Bearbeitungsmodus geladen für Index', msg.index);
-
-    } else if (msg.type === 'NEW_RESOURCE') {
+    if (msg.type === 'NEW_RESOURCE') {
+        pendingEdit = null;
         window.currentEditIndex = -1;
         document.getElementById('pageTitle').textContent = 'Neue Ressource anlegen';
-
         document.querySelectorAll('#editForm input:not([type="button"]), #editForm select, #editForm textarea')
-            .forEach(el => el.value = '');
-
+            .forEach(el => { el.value = ''; });
         waitForProfiles(() => {
             initSelects();
             populateLevelSelect();
         });
-
-        console.log('➕ Neuer Ressourcen-Modus aktiviert');
     }
 });
 
@@ -314,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     waitForProfiles(() => {
         initSelects();
         populateLevelSelect();
+        applyPendingEdit();
     });
 
     if (window.opener?.document.body.classList.contains('dark')) {

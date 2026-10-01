@@ -7,7 +7,7 @@
  * See the LICENSE file for details.
  */
 
-const VERSION = '1.1.98';
+const VERSION = '1.1.99';
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
