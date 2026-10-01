@@ -67,7 +67,6 @@ export function exportCSV() {
     // Header mit Schulnamen
     const columns = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung','Bildungsgang','Beruf'];
     let csv = columns.join(',') + '\n';
-    csv += `"${schoolName}","${documentTitle}","${exportDate}"\n`;
 
     // Daten
     const rows = filtered.map(r => [
