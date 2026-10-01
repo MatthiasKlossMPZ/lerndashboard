@@ -54,25 +54,24 @@ function handleJSONImport(jsonString) {
 // ====================== CSV IMPORT ======================
 function handleCSVImport(csvString) {
     try {
-        const lines = csvString.split('\n').map(l => l.trim()).filter(Boolean);
+        const lines = csvString.replace(/^\uFEFF/, '').split('\n').map(l => l.trim()).filter(Boolean);
         if (lines.length < 2) {
             return showFancyAlert('CSV leer', 'warning', 'Die Datei enthält keine Daten.');
         }
 
-        // Header flexibel erkennen (auch mit Anführungszeichen oder leicht abweichenden Namen)
-        let headers = parseCSVLine(lines[0]);
+        const delimiter = detectDelimiter(lines[0]);
+        let headers = parseCSVLine(lines[0], delimiter);
         headers = headers.map(h => h.trim().replace(/"/g, '').toLowerCase());
 
         const imported = [];
 
         for (let i = 1; i < lines.length; i++) {
-            const values = parseCSVLine(lines[i]);
+            const values = parseCSVLine(lines[i], delimiter);
             if (values.length < 2) continue;
 
             const row = {};
             headers.forEach((header, idx) => {
-                let val = (values[idx] || '').trim().replace(/^"|"$/g, '');
-                // Mögliche Spaltennamen abfangen
+                const val = (values[idx] || '').trim().replace(/^"|"$/g, '');
                 if (header.includes('thema') || header.includes('topic')) row.topic = val;
                 else if (header.includes('fach') || header.includes('subject')) row.subject = val;
                 else if (header.includes('klasse') || header.includes('grade')) row.grade = val;
@@ -463,7 +462,13 @@ function levenshteinDistance(a, b) {
     return matrix[b.length][a.length];
 }
 
-function parseCSVLine(line) {
+function detectDelimiter(line) {
+    const semicolons = (line.match(/;/g) || []).length;
+    const commas = (line.match(/,/g) || []).length;
+    return semicolons > commas ? ';' : ',';
+}
+
+function parseCSVLine(line, delimiter = ',') {
     const result = [];
     let current = '';
     let inQuotes = false;
@@ -471,7 +476,7 @@ function parseCSVLine(line) {
         const char = line[i];
         if (char === '"') {
             inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
+        } else if (char === delimiter && !inQuotes) {
             result.push(current);
             current = '';
         } else {
