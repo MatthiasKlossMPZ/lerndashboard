@@ -35,7 +35,16 @@ export function initNewResourceListener() {
                 lastModified: new Date().toLocaleDateString('de-DE')
             };
 
-            const backupBefore = JSON.parse(JSON.stringify(store.resources));
+        const backupBefore = JSON.parse(JSON.stringify(store.resources));
+
+            if (Array.isArray(msg.replaceIndexes) && msg.replaceIndexes.length) {
+                msg.replaceIndexes
+                    .slice()
+                    .sort((a, b) => b - a)
+                    .forEach(index => {
+                        if (store.resources[index]) store.resources.splice(index, 1);
+                    });
+            }
 
             store.resources.push(resource);
             store.save();

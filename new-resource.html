@@ -276,24 +276,33 @@ function checkForSimilarAndDecide(resource, backupBefore) {
         sendAddResource(resource);
     };
     modal.querySelector('#modalOverride').onclick = () => {
+        const replaceIndexes = [...modal.querySelectorAll('.similar-check:checked')]
+        .map(box => similarEntries[Number(box.dataset.index)]?.originalIndex)
+        .filter(index => Number.isInteger(index));
+
+        if (!replaceIndexes.length) {
+        alert('Bitte mindestens eine vorhandene Ressource auswählen.');
+        return;
+    }
+
         modal.remove();
-        sendAddResource(resource); // später erweiterbar
+        sendAddResource(resource, replaceIndexes);
     };
 }
 
-function sendAddResource(resource) {
-    if (window.opener) {
-      
-        window.opener.postMessage({ 
-            type: 'SAVE_NEW', 
-            data: resource 
-        }, location.origin);  
-        
-        const btn = document.getElementById('saveBtn');
-        btn.textContent = 'Gespeichert!';
-        btn.style.background = '#27ae60';
-        setTimeout(() => window.close(), 800);
-    }
+function sendAddResource(resource, replaceIndexes = []) {
+    if (!window.opener) return;
+
+    window.opener.postMessage({
+        type: 'SAVE_NEW',
+        data: resource,
+        replaceIndexes
+    }, location.origin);
+
+    const btn = document.getElementById('saveBtn');
+    btn.textContent = 'Gespeichert!';
+    btn.style.background = '#27ae60';
+    setTimeout(() => window.close(), 800);
 }
 
 // Autocomplete
