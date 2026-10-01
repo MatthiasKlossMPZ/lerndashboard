@@ -7,7 +7,7 @@
  * See the LICENSE file for details.
  */
 
-const VERSION = '1.1.99';
+const VERSION = '1.1.100';
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -56,7 +56,8 @@ const urlsToCache = [
   'icon-maskable-512.png',
   'schule_in_mv.png',
   'docs/Bedienungsanleitung_LernDashboard.pdf',
-  'docs/Niveaustufen_3.pdf'
+  'docs/Niveaustufen_3.pdf',
+  'src/config/profiles.js',
 ].map(url => new URL(url, REPO_PATH).href);
 
 self.addEventListener('install', event => {
