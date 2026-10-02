@@ -39,6 +39,8 @@ export function initEditResourceListener() {
 
             showUndoToast(`„${store.resources[msg.index].topic}“ bearbeitet`);
 
+            window.closeResourceFrame?.();
+
             console.log('✏️ Ressource bearbeitet');
         }
     });

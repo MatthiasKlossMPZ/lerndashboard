@@ -343,7 +343,7 @@ export function populateLevelFilter() {
 }
 
 // ====================== SAFETY BACKUPS ======================
-const MAX_BACKUPS = 6;
+const MAX_BACKUPS = 3;
 
 export function createSafetyBackup(actionName = 'Unbekannte Aktion') {
     const backup = {
@@ -355,12 +355,24 @@ export function createSafetyBackup(actionName = 'Unbekannte Aktion') {
         levelMode: store.levelMode
     };
 
-    let backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
-    backups.unshift(backup);
-    if (backups.length > MAX_BACKUPS) backups.pop();
+    let backups = [];
+    try {
+        backups = JSON.parse(localStorage.getItem('safetyBackups') || '[]');
+        if (!Array.isArray(backups)) backups = [];
+    } catch (e) {
+        backups = [];
+    }
 
-    localStorage.setItem('safetyBackups', JSON.stringify(backups));
-    console.log(`💾 Safety-Backup erstellt: ${actionName}`);
+    backups.unshift(backup);
+    if (backups.length > MAX_BACKUPS) backups.length = MAX_BACKUPS;
+
+    try {
+        localStorage.setItem('safetyBackups', JSON.stringify(backups));
+        console.log(`💾 Safety-Backup erstellt: ${actionName}`);
+    } catch (e) {
+        console.error('Safety-Backup nicht gespeichert', e);
+        localStorage.removeItem('safetyBackups');
+    }
 }
 
 export function showRestoreDialog() {

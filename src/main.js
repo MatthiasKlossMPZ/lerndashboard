@@ -1,8 +1,8 @@
 /**
  * Lerndashboard
- * 
+ *
  * Copyright (c) 2025-2026 Matthias Kloss
- * 
+ *
  * This file is part of Lerndashboard and licensed under the MIT License.
  * See the LICENSE file in the project root for full license text.
  */
@@ -14,18 +14,18 @@ import { getProfileId, setProfileId, applyProfileLabels, getActiveProfile } from
 import { initializeData, startUI, applyFilters } from './resources.js';
 import { updateVersionDisplay } from './ui/version.js';
 import { initFilters, populateFilterOptions, applyQuickFilter } from './ui/filters.js';
-import { 
-    updateSubjectStats, 
-    updateStorageIndicator, 
+import {
+    updateSubjectStats,
+    updateStorageIndicator,
     initLevelMode,
     changeLevelMode,
     showInitialLevelModeModal
 } from './stats.js';
-import { 
-    deleteResourceConfirmed, 
+import {
+    deleteResourceConfirmed,
     cancelDelete,
     showUndoToast,
-    undoLastAction ,
+    undoLastAction,
     showFancyAlert,
     showUpdateToast
 } from './ui/modals.js';
@@ -33,7 +33,7 @@ import { openNewResourceWindow, initNewResourceListener } from './ui/newResource
 import { handleImportFile } from './ui/import.js';
 import { initEditResourceListener } from './ui/editResource.js';
 
-import { 
+import {
     exportTemplate,
     exportCSV,
     exportPDF,
@@ -41,7 +41,7 @@ import {
     exportMatrixPDF,
     exportMatrixExcel,
     autoBackup,
-    printOptimized 
+    printOptimized
 } from './export/index.js';
 
 window.exportTemplate = exportTemplate;
@@ -52,7 +52,7 @@ window.exportMatrixPDF = exportMatrixPDF;
 window.exportMatrixExcel = exportMatrixExcel;
 window.autoBackup = autoBackup;
 window.printOptimized = printOptimized;
-window.handleImportFile = handleImportFile;  
+window.handleImportFile = handleImportFile;
 window.escapeHtml = escapeHtml;
 
 async function bootApp() {
@@ -80,10 +80,77 @@ function setupImportHandler(handleImportFile) {
     }
 
     importInput.removeEventListener('change', handleImportFile);
-    
     importInput.addEventListener('change', handleImportFile);
     console.log('✅ Import-Button erfolgreich verbunden');
 }
+
+function lockPageScroll() {
+    document.documentElement.dataset.prevOverflow = document.documentElement.style.overflow || '';
+    document.body.dataset.prevOverflow = document.body.style.overflow || '';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+}
+
+function unlockPageScroll() {
+    document.documentElement.style.overflow = document.documentElement.dataset.prevOverflow || '';
+    document.body.style.overflow = document.body.dataset.prevOverflow || '';
+    delete document.documentElement.dataset.prevOverflow;
+    delete document.body.dataset.prevOverflow;
+}
+
+let resourceDialog = null;
+
+function closeResourceFrame() {
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    const dialog = resourceDialog || document.getElementById('resourceFrameDialog');
+    resourceDialog = null;
+    if (!dialog) return;
+    if (dialog.open) dialog.close();
+    dialog.remove();
+}
+
+window.closeResourceFrame = closeResourceFrame;
+
+function openResourceFrame(url, payload) {
+    closeResourceFrame();
+
+    const dialog = document.createElement('dialog');
+    dialog.id = 'resourceFrameDialog';
+    dialog.style.cssText = [
+        'width:min(760px,96vw)',
+        'height:min(860px,94vh)',
+        'max-height:94vh',
+        'padding:0',
+        'border:none',
+        'border-radius:16px',
+        'overflow:hidden'
+    ].join(';');
+    dialog.innerHTML = '<iframe title="Ressource" style="display:block;width:100%;height:100%;border:0;"></iframe>';
+    document.body.appendChild(dialog);
+    resourceDialog = dialog;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    const frame = dialog.querySelector('iframe');
+    frame.src = url;
+    frame.addEventListener('load', () => {
+        frame.contentWindow.postMessage(payload, location.origin);
+    }, { once: true });
+
+    dialog.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        closeResourceFrame();
+    });
+    dialog.showModal();
+}
+
+window.addEventListener('message', (event) => {
+    if (event.origin !== location.origin) return;
+    if (event.data?.type !== 'FORM_CLOSE') return;
+    closeResourceFrame();
+});
 
 export function initUI() {
     console.log('🚀 initUI() gestartet');
@@ -93,14 +160,13 @@ export function initUI() {
         console.log('🆕 Frische Neuinstallation erkannt – Stufenabfrage wird angezeigt');
         showInitialLevelModeModal();
     } else {
-        initLevelMode(); 
+        initLevelMode();
     }
 
     initSchoolTypeUI();
     applyProfileLabels();
 
     // ====================== NORMALER UI-START ======================
-    // Sichere Aufrufe mit Fallback
     if (typeof updateTopStats === 'function') updateTopStats();
     if (typeof updateSubjectStats === 'function') updateSubjectStats();
     if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
@@ -136,11 +202,11 @@ export function initUI() {
         .then(() => console.log('✅ levelMode.js geladen'))
         .catch(() => console.warn('levelMode.js noch nicht gefunden'));
 
-const sortSelect = document.getElementById('sortBy');
-if (sortSelect) {
-    const saved = localStorage.getItem('sortMode');
-    if (saved) sortSelect.value = saved;
-}
+    const sortSelect = document.getElementById('sortBy');
+    if (sortSelect) {
+        const saved = localStorage.getItem('sortMode');
+        if (saved) sortSelect.value = saved;
+    }
 
     // ====================== UI AUFBAU ======================
     startUI();
@@ -148,7 +214,7 @@ if (sortSelect) {
     window.applyQuickFilter = applyQuickFilter;
     populateFilterOptions();
     applyFilters();
-    updateTopStats(); 
+    updateTopStats();
     updateSubjectStats();
     updateStorageIndicator();
     initLevelMode();
@@ -183,106 +249,66 @@ if (sortSelect) {
     // Restore Button
     document.querySelector('button[onclick*="showRestoreDialog"]')?.addEventListener('click', showRestoreDialog);
 
-
     // === EDIT & NEW RESOURCE WINDOW HANDLER ===
-        window.editResource = function(index) {
+    window.editResource = function(index) {
         if (index < 0 || index >= store.resources.length) {
             console.error('Ungültiger Edit-Index:', index);
             return;
         }
 
-        const resource = JSON.parse(JSON.stringify(store.resources[index]));
-        const allTopics = [...new Set(store.resources.map(r => r.topic).filter(Boolean))];
-        const allTools = [...new Set(store.resources.map(r => r.tool).filter(Boolean))];
-
-        const popup = window.open(
-            'edit-resource.html?index=' + index,
-            'editResource',
-            'width=720,height=820,scrollbars=yes,resizable=yes'
-        );
-
-        if (!popup) {
-            showFancyAlert('Popup blockiert', 'warning', 'Bitte Popups für diese Seite erlauben.');
-            return;
-        }
-
-        const payload = {
+        openResourceFrame('edit-resource.html?index=' + index, {
             type: 'EDIT_RESOURCE',
             index,
-            data: resource,
-            allTopics,
-            allTools
-        };
-
-        let attempts = 0;
-        const sendData = () => {
-            if (popup.closed || attempts > 25) return;
-            attempts++;
-            try { popup.postMessage(payload, location.origin); } catch (e) {}
-            setTimeout(sendData, 150);
-        };
-        setTimeout(sendData, 100);
+            data: JSON.parse(JSON.stringify(store.resources[index])),
+            allTopics: [...new Set(store.resources.map(r => r.topic).filter(Boolean))],
+            allTools: [...new Set(store.resources.map(r => r.tool).filter(Boolean))]
+        });
     };
 
-// ====================== GLOBALE BUTTONS PER addEventListener ======================
-console.log('🔗 Globale Buttons werden verbunden...');
+    // ====================== GLOBALE BUTTONS PER addEventListener ======================
+    console.log('🔗 Globale Buttons werden verbunden...');
 
-// Handbuch-Button
-const manualBtn = document.getElementById('btnOpenManual') ||
-                  document.querySelector('button[onclick*="openManual"]');
-if (manualBtn) {
-    manualBtn.addEventListener('click', openManual);
-    manualBtn.removeAttribute('onclick');
-} else {
-    console.warn('⚠️ Button für openManual nicht gefunden');
-}
+    // Handbuch-Button
+    const manualBtn = document.getElementById('btnOpenManual') ||
+        document.querySelector('button[onclick*="openManual"]');
+    if (manualBtn) {
+        manualBtn.addEventListener('click', openManual);
+        manualBtn.removeAttribute('onclick');
+    } else {
+        console.warn('⚠️ Button für openManual nicht gefunden');
+    }
 
-// ====================== Schulbutton beim Start aktualisieren ======================
-const schoolBtnEl = document.getElementById('schoolButton');
-const schoolTextEl = document.getElementById('schoolButtonText');
+    // ====================== Schulbutton beim Start aktualisieren ======================
+    const schoolBtnEl = document.getElementById('schoolButton');
+    const schoolTextEl = document.getElementById('schoolButtonText');
 
-if (schoolTextEl) {
-    schoolTextEl.textContent = store.schoolName || 'Schule einstellen';
-}
-if (schoolBtnEl) {
-    schoolBtnEl.dataset.set = store.schoolName ? 'true' : 'false';
-}
+    if (schoolTextEl) {
+        schoolTextEl.textContent = store.schoolName || 'Schule einstellen';
+    }
+    if (schoolBtnEl) {
+        schoolBtnEl.dataset.set = store.schoolName ? 'true' : 'false';
+    }
 
-// ====================== SCHOOL NAME BUTTON ======================
-const schoolButton = document.getElementById('schoolButton');
-if (schoolButton) {
-    schoolButton.removeAttribute('onclick'); // falls noch vorhanden
-    schoolButton.addEventListener('click', () => window.setSchoolName());
-    console.log('✅ Schulname-Button Listener gesetzt');
-}
+    // ====================== SCHOOL NAME BUTTON ======================
+    const schoolButton = document.getElementById('schoolButton');
+    if (schoolButton) {
+        schoolButton.removeAttribute('onclick');
+        schoolButton.addEventListener('click', () => window.setSchoolName());
+        console.log('✅ Schulname-Button Listener gesetzt');
+    }
 }
 
 window.openNewResource = function() {
-    const allTopics = [...new Set(store.resources.map(r => r.topic))];
-    const allTools = [...new Set(store.resources.map(r => r.tool).filter(Boolean))];
-
-    const popup = window.open(
-        'new-resource.html',
-        'newResource',
-        'width=720,height=820,scrollbars=yes,resizable=yes'
-    );
-
-    setTimeout(() => {
-        if (popup) {
-            popup.postMessage({
-                type: 'NEW_RESOURCE',
-                allTopics: allTopics,
-                allTools: allTools
-            }, location.origin);
-        }
-    }, 300);
-
+    openResourceFrame('new-resource.html', {
+        type: 'NEW_RESOURCE',
+        allTopics: [...new Set(store.resources.map(r => r.topic).filter(Boolean))],
+        allTools: [...new Set(store.resources.map(r => r.tool).filter(Boolean))]
+    });
 };
 
 // ====================== SERVICE WORKER + UPDATE TOAST ======================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Zuerst alle alten SWs sauber entfernen (hilft gegen redundant)
         navigator.serviceWorker.getRegistrations().then(regs => {
             regs.forEach(reg => {
                 if (reg.active && reg.active.scriptURL !== new URL('./service-worker.js', location.href).href) {
@@ -304,21 +330,14 @@ if ('serviceWorker' in navigator) {
                         console.log(`SW State: ${newWorker.state}`);
 
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🚀 Neue Version installiert → aktiviere');
+                            console.log('Neue Version installiert');
                             if (typeof showUpdateToast === 'function') showUpdateToast();
                             newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        }
+}
 
-                        if (newWorker.state === 'activated') {
-                        console.log('🎉 Neue Version aktiv! Seite wird neu geladen...');
-                        setTimeout(() => {
-                        window.location.reload();
-                        }, 800);
-                        }
-
-                        if (newWorker.state === 'activated') {
-                            console.log('🎉 Neue Version aktiv!');
-                        }
+                        if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                            console.log('Neue Version aktiv, Reload beim nächsten Aufruf');
+}
 
                         if (newWorker.state === 'redundant') {
                             console.warn('⚠️ SW redundant – versuche Neuregistrierung');
@@ -343,13 +362,12 @@ function toggleDarkMode() {
     console.log('🌗 Dark Mode toggled →', isDark ? 'AN' : 'AUS');
 }
 
-// WICHTIG: Global verfügbar machen
 window.initDarkMode = initDarkMode;
 window.toggleDarkMode = toggleDarkMode;
 
 initDarkMode();
 
-console.log('🌗 Dark Mode Funktionen global registriert'); 
+console.log('🌗 Dark Mode Funktionen global registriert');
 
 // ====================== GLOBALE FUNKTIONEN ======================
 
@@ -374,7 +392,7 @@ const HELP_DOCS = [
         fullTitle: 'KMK-Kompetenzrahmen · 5 Niveaustufen',
         file: 'docs/Niveaustufen_5.pdf',
         levelMode: '5',
-        hidden: true   // auf false setzen, sobald die Datei existiert
+        hidden: true
     }
 ];
 
@@ -484,11 +502,9 @@ function openManual() {
 
 function setSchoolName() {
     const current = store.schoolName || '';
-    
     const schoolBtnEl = document.getElementById('schoolButton');
     const schoolTextEl = document.getElementById('schoolButtonText');
 
-    // Alten Modal ggf. entfernen
     document.querySelectorAll('.school-modal').forEach(m => m.remove());
 
     const modal = document.createElement('div');
@@ -501,24 +517,24 @@ function setSchoolName() {
     `;
 
     modal.innerHTML = `
-        <div style="background:var(--card); padding:32px; border-radius:20px; width:90%; max-width:460px; 
+        <div style="background:var(--card); padding:32px; border-radius:20px; width:90%; max-width:460px;
                     box-shadow:0 20px 60px rgba(0,0,0,0.4);">
             <h3 style="margin:0 0 8px; text-align:center; font-size:20px;">🏫 Schulname festlegen</h3>
             <p style="text-align:center; color:#666; margin-bottom:24px;">
                 Wird in Druck-Exports und oben angezeigt
             </p>
-            <input type="text" id="schoolNameInput" value="${escapeHtml(current)}" 
-                   placeholder="z. B. Grundschule am Park" 
-                   style="width:100%; padding:14px; font-size:16px; border:2px solid #ddd; 
+            <input type="text" id="schoolNameInput" value="${escapeHtml(current)}"
+                   placeholder="z. B. Grundschule am Park"
+                   style="width:100%; padding:14px; font-size:16px; border:2px solid #ddd;
                           border-radius:12px; margin-bottom:24px; box-sizing:border-box;">
             <div style="display:flex; gap:12px; justify-content:flex-end;">
                 <button id="cancelSchoolBtn"
-                        style="padding:12px 26px; background:#95a5a6; color:white; border:none; 
+                        style="padding:12px 26px; background:#95a5a6; color:white; border:none;
                                border-radius:12px; font-weight:600; cursor:pointer;">
                     Abbrechen
                 </button>
                 <button id="saveSchoolBtn"
-                        style="padding:12px 32px; background:var(--primary); color:white; border:none; 
+                        style="padding:12px 32px; background:var(--primary); color:white; border:none;
                                border-radius:12px; font-weight:700; cursor:pointer;">
                     Speichern
                 </button>
@@ -528,7 +544,6 @@ function setSchoolName() {
 
     document.body.appendChild(modal);
 
-    // === Event Listener (sauber und zuverlässig) ===
     const input = modal.querySelector('#schoolNameInput');
     const cancelBtn = modal.querySelector('#cancelSchoolBtn');
     const saveBtn = modal.querySelector('#saveSchoolBtn');
@@ -539,10 +554,8 @@ function setSchoolName() {
 
     saveBtn.addEventListener('click', () => {
         const name = input.value.trim();
-        
         store.schoolName = name;
         localStorage.setItem('schoolName', name);
-    
         store.save();
 
         if (schoolTextEl) schoolTextEl.textContent = name || 'Schule einstellen';
@@ -557,12 +570,10 @@ function setSchoolName() {
         );
     });
 
-    // Enter-Taste im Input = Speichern
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') saveBtn.click();
     });
 
-    // Fokus setzen
     setTimeout(() => {
         input.focus();
         input.select();
@@ -687,6 +698,5 @@ window.initSchoolTypeUI = initSchoolTypeUI;
 window.setSchoolName = setSchoolName;
 window.openManual = openManual;
 window.openNewResourceWindow = openNewResourceWindow;
-
 
 console.log('🌍 Globale Funktionen final registriert → setSchoolName, openManual');

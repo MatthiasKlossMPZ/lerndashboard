@@ -7,7 +7,7 @@
  * See the LICENSE file for details.
  */
 
-const VERSION = '1.1.105';
+const VERSION = '1.1.106';
 const CACHE_NAME = `lerndashboard-v${VERSION.replace(/\./g, '')}`;
 
 const REPO_PATH = (() => {
@@ -28,7 +28,6 @@ const urlsToCache = [
   './',
   'index.html',
   'manifest.json',
-  'service-worker.js',
   'new-resource.html',
   'edit-resource.html',
   'src/main.js',
@@ -54,8 +53,6 @@ const urlsToCache = [
   'icon-512.png',
   'icon-maskable-192.png',
   'icon-maskable-512.png',
-  'schule_in_mv.png',
-  'docs/Bedienungsanleitung_LernDashboard.pdf',
   'docs/Niveaustufen_3.pdf',
   'src/config/profiles.js',
 ].map(url => new URL(url, REPO_PATH).href);
@@ -63,15 +60,19 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   console.log(`SW Installiere Version ${VERSION}`);
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('SW Cache wird befüllt...');
-      return Promise.allSettled(urlsToCache.map(url =>
-        fetch(url, { cache: 'reload' }).then(r => r.ok ? cache.put(url, r) : Promise.reject())
+    caches.open(CACHE_NAME).then(async cache => {
+      const results = await Promise.allSettled(urlsToCache.map(url =>
+        fetch(url, { cache: 'reload' }).then(response => {
+          if (!response.ok) throw new Error(`${response.status} ${url}`);
+          return cache.put(url, response);
+        })
       ));
-    }).then(() => {
-      console.log(`SW Version ${VERSION} installiert`);
-      self.skipWaiting();
-    })
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error('Precache fehlgeschlagen:', urlsToCache[index], result.reason);
+        }
+      });
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -83,6 +84,10 @@ self.addEventListener('activate', event => {
         .map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
@@ -121,15 +126,15 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    fromCache().then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(fresh => {
-        if (fresh && fresh.ok) {
-          const clone = fresh.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return fresh;
-      });
-    })
-  );
+  fromCache().then(cached => {
+    if (cached) return cached;
+    return fetch(event.request).then(fresh => {
+      if (fresh && fresh.ok) {
+        const clone = fresh.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      }
+      return fresh;
+    }).catch(() => cached || Response.error());
+  })
+);
 });

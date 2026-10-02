@@ -582,42 +582,68 @@ export function autoBackup() {
     showFancyAlert('Backup erfolgreich erstellt & heruntergeladen!', 'success');
 }
 
+function escapePrint(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 export function printOptimized() {
     const schoolName = localStorage.getItem('schoolName') || 'Deine Schule';
-    const allResources = store.resources;     // ← hier store verwenden
+    const allResources = store.resources;
 
     if (allResources.length === 0) {
         showFancyAlert('Keine Ressourcen zum Drucken.', 'warning');
         return;
     }
 
-    let printHtml = `
-        <h1 style="text-align:center;color:#6b46c1;">LernDashboard Digital – Alle Ressourcen</h1>
-        <p style="text-align:center;">Schule: <strong>${schoolName}</strong> | ${new Date().toLocaleDateString('de-DE')}</p>
-    `;
+    const labels = getActiveProfile().labels;
+    const rows = allResources.map((r, i) => `
+        <div class="item">
+            <h3>${i + 1}. ${escapePrint(r.topic || '—')}</h3>
+            <p><strong>${escapePrint(labels.subject)}:</strong> ${escapePrint(r.subject || '—')} |
+               <strong>${escapePrint(labels.grade)}:</strong> ${escapePrint(r.grade || '—')} |
+               <strong>Niveau:</strong> ${escapePrint(r.level || '—')}
+               ${r.program ? ` | ${escapePrint(r.program)}` : ''}${r.occupation ? ` | ${escapePrint(r.occupation)}` : ''}</p>
+            ${r.tool ? `<p><strong>Tool:</strong> ${escapePrint(r.tool)}</p>` : ''}
+            ${r.description ? `<p>${escapePrint(r.description)}</p>` : ''}
+        </div>
+    `).join('');
 
-    allResources.forEach((r, i) => {
-        printHtml += `
-            <div style="margin:15px 0; padding:10px; border-bottom:1px solid #ddd;">
-                <h3>${i+1}. ${r.topic || '—'}</h3>
-                <p><strong>${getActiveProfile().labels.subject}:</strong> ${r.subject || '—'} | 
-                   <strong>${getActiveProfile().labels.grade}:</strong> ${r.grade || '—'} | 
-                   <strong>Niveau:</strong> ${r.level || '—'}
-                   ${r.program ? ` | ${r.program}` : ''}${r.occupation ? ` | ${r.occupation}` : ''}</p>
-                ${r.tool ? `<p><strong>Tool:</strong> ${r.tool}</p>` : ''}
-                ${r.description ? `<p style="margin-top:8px;">${r.description}</p>` : ''}
-            </div>`;
-    });
+    const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>LernDashboard Druck</title>
+<style>
+    body { font-family: sans-serif; margin: 24px; color: #222; }
+    h1 { text-align: center; color: #6b46c1; font-size: 22px; }
+    .meta { text-align: center; margin-bottom: 24px; }
+    .item { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid #ddd; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+    <h1>LernDashboard Digital – Alle Ressourcen</h1>
+    <p class="meta">Schule: <strong>${escapePrint(schoolName)}</strong> | ${new Date().toLocaleDateString('de-DE')}</p>
+    ${rows}
+</body>
+</html>`;
 
-    const mainContainer = document.querySelector('.main');
-    const originalContent = mainContainer.innerHTML;
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;';
+    document.body.appendChild(frame);
 
-    mainContainer.innerHTML = printHtml;
-    window.print();
+    const doc = frame.contentDocument;
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-    setTimeout(() => {
-        mainContainer.innerHTML = originalContent;
-    }, 800);
+    const cleanup = () => frame.remove();
+    frame.contentWindow.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(() => frame.contentWindow.print(), 0);
+    setTimeout(cleanup, 60000);
 }
 
 // ====================== IMPORT ======================

@@ -224,6 +224,13 @@ function setupAutocomplete(inputId, dropdownId, getList) {
     });
 }
 
+function closeForm() {
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'FORM_CLOSE' }, location.origin);
+    }
+    if (window.opener) window.close();
+}
+
 function saveResource() {
     const data = {
         topic: document.getElementById('topic').value.trim(),
@@ -242,14 +249,15 @@ function saveResource() {
         return;
     }
 
-    if (window.opener) {
-        window.opener.postMessage({
+    const host = window.opener || window.parent;
+    if (host && host !== window) {
+        host.postMessage({
             type: 'SAVE_EDIT',
             index: window.currentEditIndex,
             data: data
         }, location.origin);
     }
-    window.close();
+    closeForm();
 }
 
 function fillForm(r) {
@@ -315,24 +323,27 @@ window.addEventListener('message', event => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    const hostDoc = (window.opener || window.parent)?.document;
+    if (hostDoc && hostDoc !== document &&
+        (hostDoc.documentElement.classList.contains('dark') || hostDoc.body.classList.contains('dark'))) {
+        document.body.classList.add('dark');
+    }
+
     waitForProfiles(() => {
         initSelects();
         populateLevelSelect();
         applyPendingEdit();
     });
 
-    if (window.opener?.document.body.classList.contains('dark')) {
-        document.body.classList.add('dark');
-    }
-
     document.getElementById('saveBtn').onclick = saveResource;
-    document.getElementById('cancelBtn').onclick = () => window.close();
+    document.getElementById('cancelBtn').onclick = closeForm;
 
     document.getElementById('editForm').addEventListener('keydown', e => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
             e.preventDefault();
             saveResource();
         }
+        if (e.key === 'Escape') closeForm();
     });
 
     console.log('✅ edit-resource.html geladen (modular)');

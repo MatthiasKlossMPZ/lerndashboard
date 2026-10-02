@@ -1,59 +1,60 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Neue Ressource hinzufügen</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        :root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
-        .dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
+<meta charset="UTF-8">
+<title>Neue Ressource hinzufügen</title>
+<style>
+    
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+:root { --primary: #6b46c1; --card: #ffffff; --bg: #f5f7fa; --shadow: 0 4px 20px rgba(0,0,0,0.12); }
+.dark { --bg: #1a1a1a; --card: #2d2d2d; color: #e0e0e0; }
 
-        .container { 
-            max-width: 680px; 
-            margin: 10px auto; 
-            background: var(--card); 
-            padding: 32px; 
-            border-radius: 18px; 
-            box-shadow: var(--shadow); 
-        }
-        h2 { color: var(--primary); text-align: center; font-size: 23px; font-weight: 700; margin-top: 0; }
+.container {
+    max-width: 680px;
+    margin: 10px auto;
+    background: var(--card);
+    padding: 32px;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+h2 { color: var(--primary); text-align: center; font-size: 23px; font-weight: 700; margin-top: 0; }
 
-        .form-group { margin-bottom: 20px; position: relative; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14.8px; }
-        input, select, textarea {
-            width: 100%; padding: 13px; border: 1.8px solid #ccc; border-radius: 12px;
-            font-size: 15.5px; box-sizing: border-box;
-        }
-        input:focus, select:focus, textarea:focus { 
-            border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15); 
-        }
-        textarea { min-height: 110px; resize: vertical; }
+.form-group { margin-bottom: 20px; position: relative; }
+label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14.8px; }
+input, select, textarea {
+    width: 100%; padding: 13px; border: 1.8px solid #ccc; border-radius: 12px;
+    font-size: 15.5px; box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(107,70,193,0.15);
+}
+textarea { min-height: 110px; resize: vertical; }
 
-        .buttons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; }
-        button {
-            padding: 14px 28px; border: none; border-radius: 14px; cursor: pointer;
-            font-weight: 700; font-size: 15.5px; min-width: 130px;
-        }
-        .cancel { background: #95a5a6; color: white; }
-        .save { background: var(--primary); color: white; }
+.buttons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; }
+button {
+    padding: 14px 28px; border: none; border-radius: 14px; cursor: pointer;
+    font-weight: 700; font-size: 15.5px; min-width: 130px;
+}
+.cancel { background: #95a5a6; color: white; }
+.save { background: var(--primary); color: white; }
 
-        .autocomplete-dropdown {
-            position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
-            background: var(--card); border: 1.8px solid var(--primary); border-top: none;
-            border-radius: 0 0 12px 12px; max-height: 220px; overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.18); display: none;
-        }
-        .autocomplete-item {
-            padding: 11px 14px; cursor: pointer; border-bottom: 1px solid #eee;
-        }
-        .autocomplete-item:hover { background: #eef5ff; }
-    </style>
+.autocomplete-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
+    background: var(--card); border: 1.8px solid var(--primary); border-top: none;
+    border-radius: 0 0 12px 12px; max-height: 220px; overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18); display: none;
+}
+.autocomplete-item {
+    padding: 11px 14px; cursor: pointer; border-bottom: 1px solid #eee;
+}
+.autocomplete-item:hover { background: #eef5ff; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -126,15 +127,17 @@
 <script type="module" src="src/config/profiles.js"></script>
 
 <script>
-// Dark Mode
-if (window.opener?.document.body.classList.contains('dark')) document.body.classList.add('dark');
+const hostDoc = (window.opener || window.parent)?.document;
+if (hostDoc && hostDoc !== document &&
+    (hostDoc.documentElement.classList.contains('dark') || hostDoc.body.classList.contains('dark'))) {
+    document.body.classList.add('dark');
+}
 
 function waitForProfiles(cb) {
     if (window.LDProfiles) return cb();
     setTimeout(() => waitForProfiles(cb), 30);
 }
 
-// ====================== BEFÜLLEN ======================
 function populateFromProfile() {
     const P = window.LDProfiles;
     const profile = P.getActiveProfile();
@@ -166,17 +169,14 @@ function populateFromProfile() {
 
 waitForProfiles(populateFromProfile);
 
-// ====================== HILFSFUNKTION ======================
 function getExistingResources() {
     try { return JSON.parse(localStorage.getItem('resources') || '[]'); }
-    catch(e) { return []; }
+    catch (e) { return []; }
 }
 
-// ====================== SPEICHERN ======================
 document.getElementById('saveBtn').onclick = () => {
     const levelNum = document.getElementById('level').value;
-
-    const now = new Date();   
+    const now = new Date();
 
     const resource = {
         topic: document.getElementById('topic').value.trim(),
@@ -189,8 +189,6 @@ document.getElementById('saveBtn').onclick = () => {
         tool: document.getElementById('tool').value.trim(),
         description: document.getElementById('description').value.trim(),
         favorite: false,
-        
-        // === Zeitstempel ===
         created: now.toISOString(),
         lastModified: now.toISOString().slice(0, 16).replace('T', ' ')
     };
@@ -200,16 +198,14 @@ document.getElementById('saveBtn').onclick = () => {
         return;
     }
 
-    const backupBefore = JSON.parse(JSON.stringify(getExistingResources()));
-    checkForSimilarAndDecide(resource, backupBefore);
+    checkForSimilarAndDecide(resource);
 };
 
-// ====================== ÄHNLICHKEITS-MODAL (JETZT FUNKTIONIERT) ======================
-function checkForSimilarAndDecide(resource, backupBefore) {
+function checkForSimilarAndDecide(resource) {
     const existing = getExistingResources();
     const similarEntries = existing
         .map((r, i) => ({ ...r, originalIndex: i }))
-        .filter(r => 
+        .filter(r =>
             r.subject === resource.subject &&
             r.grade === resource.grade &&
             (r.tool || '').trim().toLowerCase() === (resource.tool || '').trim().toLowerCase()
@@ -229,7 +225,6 @@ function checkForSimilarAndDecide(resource, backupBefore) {
     modal.innerHTML = `
         <div style="background:var(--card);border-radius:20px;width:100%;max-width:680px;
                     box-shadow:0 30px 80px rgba(0,0,0,0.45);overflow:hidden;">
-            
             <div style="background:#fff8e1;padding:25px 30px;text-align:center;border-bottom:5px solid #ffb300;">
                 <h3 style="margin:0;font-size:24px;color:#d35400;font-weight:700;">
                     ${similarEntries.length} ähnliche Ressource${similarEntries.length > 1 ? 'n' : ''} gefunden
@@ -249,7 +244,7 @@ function checkForSimilarAndDecide(resource, backupBefore) {
                     <label style="display:flex;align-items:flex-start;gap:18px;padding:16px;
                                  background:#fdfdfd;border:2px solid #eee;border-radius:14px;
                                  margin-bottom:14px;cursor:pointer;">
-                        <input type="checkbox" class="similar-check" data-index="${idx}" checked 
+                        <input type="checkbox" class="similar-check" data-index="${idx}" checked
                                style="margin-top:4px;width:20px;height:20px;flex-shrink:0;">
                         <div style="flex:1;">
                             <div style="font-weight:700;font-size:16.5px;">${entry.topic}</div>
@@ -269,7 +264,6 @@ function checkForSimilarAndDecide(resource, backupBefore) {
 
     document.body.appendChild(modal);
 
-    // Event Listener
     modal.querySelector('#modalCancel').onclick = () => modal.remove();
     modal.querySelector('#modalNewOnly').onclick = () => {
         modal.remove();
@@ -277,23 +271,29 @@ function checkForSimilarAndDecide(resource, backupBefore) {
     };
     modal.querySelector('#modalOverride').onclick = () => {
         const replaceIndexes = [...modal.querySelectorAll('.similar-check:checked')]
-        .map(box => similarEntries[Number(box.dataset.index)]?.originalIndex)
-        .filter(index => Number.isInteger(index));
+            .map(box => similarEntries[Number(box.dataset.index)]?.originalIndex)
+            .filter(index => Number.isInteger(index));
 
         if (!replaceIndexes.length) {
-        alert('Bitte mindestens eine vorhandene Ressource auswählen.');
-        return;
-    }
+            alert('Bitte mindestens eine vorhandene Ressource auswählen.');
+            return;
+        }
 
         modal.remove();
         sendAddResource(resource, replaceIndexes);
     };
 }
 
-function sendAddResource(resource, replaceIndexes = []) {
-    if (!window.opener) return;
+function closeForm() {
+    if (window.opener) window.close();
+    else window.parent.postMessage({ type: 'FORM_CLOSE' }, location.origin);
+}
 
-    window.opener.postMessage({
+function sendAddResource(resource, replaceIndexes = []) {
+    const host = window.opener || window.parent;
+    if (!host || host === window) return;
+
+    host.postMessage({
         type: 'SAVE_NEW',
         data: resource,
         replaceIndexes
@@ -302,10 +302,9 @@ function sendAddResource(resource, replaceIndexes = []) {
     const btn = document.getElementById('saveBtn');
     btn.textContent = 'Gespeichert!';
     btn.style.background = '#27ae60';
-    setTimeout(() => window.close(), 800);
+    setTimeout(closeForm, 800);
 }
 
-// Autocomplete
 function setupAutocomplete(inputId, dropdownId, getValues) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
@@ -337,21 +336,20 @@ function setupAutocomplete(inputId, dropdownId, getValues) {
     });
 }
 
-setupAutocomplete('topic', 'topicDropdown', () => 
+setupAutocomplete('topic', 'topicDropdown', () =>
     [...new Set(getExistingResources().map(r => r.topic).filter(Boolean))].sort()
 );
-setupAutocomplete('tool', 'toolDropdown', () => 
+setupAutocomplete('tool', 'toolDropdown', () =>
     [...new Set(getExistingResources().map(r => r.tool).filter(Boolean))].sort()
 );
 
-// Tastatur
-document.getElementById('cancelBtn').onclick = () => window.close();
+document.getElementById('cancelBtn').onclick = closeForm;
 document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') {
         e.preventDefault();
         document.getElementById('saveBtn').click();
     }
-    if (e.key === 'Escape') window.close();
+    if (e.key === 'Escape') closeForm();
 });
 </script>
 </body>
