@@ -390,13 +390,13 @@ function performImport(newOnes, similarOnes, modal) {
         if (!importCb?.checked) return;
 
         const overwriteCb = overwriteCheckboxes[i];
-        const res = item.resource || item;
+        const { existing, similarityScore, ...clean } = item.resource || item;
 
-        if (overwriteCb?.checked && item.existing) {
-            const idx = store.resources.findIndex(r => r === item.existing);
+        if (overwriteCb?.checked && existing) {
+            const idx = store.resources.findIndex(r => r === existing);
             if (idx !== -1) {
                 store.resources[idx] = {
-                    ...res,
+                    ...clean,
                     favorite: store.resources[idx].favorite ?? false,
                     lastModified: new Date().toLocaleDateString('de-DE')
                 };
@@ -404,8 +404,8 @@ function performImport(newOnes, similarOnes, modal) {
             }
         } else {
             store.resources.push({
-                ...res,
-                favorite: res.favorite === true,
+                ...clean,
+                favorite: clean.favorite === true,
                 lastModified: new Date().toLocaleDateString('de-DE')
             });
             added++;
