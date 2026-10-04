@@ -142,51 +142,6 @@ function deleteResource(i) {
     showDeleteConfirm(i);
 }
 
-// Deine editResource-Funktion
-function editResource(index) {
-    if (index < 0 || index >= store.resources.length) {
-        console.error('Ungültiger Edit-Index:', index);
-        return;
-    }
-    const resource = store.resources[index];
-    const allTopics = [...new Set(store.resources.map(r => r.topic).filter(Boolean))];
-    const allTools = [...new Set(store.resources.map(r => r.tool).filter(Boolean))];
-
-    const popup = window.open(
-        'edit-resource.html?index=' + index,
-        'editResource',
-        'width=760,height=860,scrollbars=yes,resizable=yes,menubar=no'
-    );
-
-    if (!popup) {
-        console.error('Popup konnte nicht geöffnet werden');
-        showFancyAlert('Popup blockiert', 'warning', 'Bitte erlaube Popups für diese Seite.');
-        return;
-    }
-
-    console.log(`📝 Edit-Fenster geöffnet für Index ${index}`);
-
-    let attempts = 0;
-    const maxAttempts = 12;
-    const sendData = () => {
-        attempts++;
-        if (popup.closed) return;
-        try {
-            popup.postMessage({
-                type: 'EDIT_RESOURCE',
-                index: index,
-                data: resource,
-                allTopics: allTopics,
-                allTools: allTools
-            }, location.origin);
-        } catch (e) {
-            console.warn('PostMessage fehlgeschlagen', e);
-        }
-        if (attempts < maxAttempts) setTimeout(sendData, 100);
-    };
-    setTimeout(sendData, 250);
-}
-
 // ====================== COMPACT MODE ======================
 export function toggleCompactMode() {
     store.compactMode = !store.compactMode;
@@ -229,7 +184,6 @@ window.toggleResource = toggleResource;
 // ====================== GLOBALE BINDINGS ======================
 window.toggleFavorite = toggleFavorite;
 window.deleteResource = deleteResource;
-window.editResource = editResource;
 window.toggleCompactMode = toggleCompactMode;
 
 console.log('✅ resources.js vollständig initialisiert');

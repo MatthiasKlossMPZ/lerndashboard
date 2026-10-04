@@ -6,6 +6,7 @@ import { populateFilterOptions } from './filters.js';
 import { updateSubjectStats, updateStorageIndicator, updateTopStats } from '../stats.js';
 import { showFancyAlert } from './modals.js';
 import { createSafetyBackup } from '../stats.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 console.log('✅ Import-Modul vollständig geladen');
 
@@ -73,14 +74,15 @@ function handleCSVImport(csvString) {
             headers.forEach((header, idx) => {
                 const val = (values[idx] || '').trim().replace(/^"|"$/g, '');
                 if (header.includes('thema') || header.includes('topic')) row.topic = val;
-                else if (header.includes('fach') || header.includes('subject')) row.subject = val;
-                else if (header.includes('klasse') || header.includes('grade')) row.grade = val;
+                else if (header.includes('fachrichtung') || header.includes('beruf') || header.includes('occupation')) row.occupation = val;
                 else if (header.includes('bildungsgang') || header.includes('program')) row.program = val;
-                else if (header.includes('beruf') || header.includes('occupation') || header.includes('fachrichtung')) row.occupation = val;
+                else if (header.includes('fach') || header.includes('subject')) row.subject = val;
+                else if (header.includes('klasse') || header.includes('grade') || header.includes('jahrgang')) row.grade = val;
                 else if (header.includes('kompetenz') || header.includes('competence')) row.competence = val;
                 else if (header.includes('niveau') || header.includes('level')) row.level = val;
                 else if (header.includes('tool') || header.includes('hilfsmittel')) row.tool = val;
                 else if (header.includes('beschreibung') || header.includes('description')) row.description = val;
+                else if (header.includes('favorit')) row.favorite = /^(1|ja|true|x)$/i.test(val);
             });
 
             if (row.topic || row.subject) {
@@ -94,7 +96,7 @@ function handleCSVImport(csvString) {
                     level: row.level || '',
                     tool: row.tool || '',
                     description: row.description || '',
-                    favorite: false,
+                    favorite: row.favorite === true,
                     lastModified: new Date().toISOString().slice(0, 16).replace('T', ' ')
                 });
             }
@@ -130,13 +132,15 @@ function prepareImportData(importedResources) {
             competence: String(entry.competence || '').trim(),
             level: String(entry.level || '').trim(),
             tool: String(entry.tool || '').trim(),
-            description: String(entry.description || '').trim()
+            description: String(entry.description || '').trim(),
+            favorite: entry.favorite === true
         };
 
         const normalizeTool = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
         const isExactDuplicate = store.resources.some(r =>
             r.topic === n.topic && r.subject === n.subject && r.grade === n.grade &&
+            r.program === n.program && r.occupation === n.occupation &&
             r.competence === n.competence && r.tool === n.tool && r.description === n.description
         );
 
@@ -373,7 +377,7 @@ function performImport(newOnes, similarOnes, modal) {
             const res = item.resource || item;
             store.resources.push({
                 ...res,
-                favorite: false,
+                favorite: res.favorite === true,
                 lastModified: new Date().toLocaleDateString('de-DE')
             });
             added++;
@@ -401,7 +405,7 @@ function performImport(newOnes, similarOnes, modal) {
         } else {
             store.resources.push({
                 ...res,
-                favorite: false,
+                favorite: res.favorite === true,
                 lastModified: new Date().toLocaleDateString('de-DE')
             });
             added++;
@@ -433,12 +437,6 @@ function getDifferenceHint(existing, imported) {
     if (existing.level !== imported.level) diffs.push("anderes Level");
     if (existing.competence !== imported.competence) diffs.push("andere Kompetenz");
     return diffs.length ? diffs.join(" • ") : "ähnliche Metadaten";
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 function similarity(a, b) {

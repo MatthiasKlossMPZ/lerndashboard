@@ -18,7 +18,6 @@ import {
     updateSubjectStats,
     updateStorageIndicator,
     initLevelMode,
-    changeLevelMode,
     showInitialLevelModeModal
 } from './stats.js';
 import {
@@ -171,8 +170,6 @@ export function initUI() {
     if (typeof updateSubjectStats === 'function') updateSubjectStats();
     if (typeof updateStorageIndicator === 'function') updateStorageIndicator();
 
-    initFilters();
-
     import('./export/index.js')
         .then(({
             exportTemplate, exportCSV, exportPDF,
@@ -210,6 +207,8 @@ export function initUI() {
 
     // ====================== UI AUFBAU ======================
     startUI();
+        const compactToggle = document.getElementById('compactToggle');
+        if (compactToggle) compactToggle.checked = store.compactMode;
     initFilters();
     window.applyQuickFilter = applyQuickFilter;
     populateFilterOptions();
@@ -220,9 +219,7 @@ export function initUI() {
     initLevelMode();
     updateVersionDisplay();
 
-    // Level-Buttons
-    document.getElementById('levelBtn3')?.addEventListener('click', () => changeLevelMode('3'));
-    document.getElementById('levelBtn5')?.addEventListener('click', () => changeLevelMode('5'));
+    // Level-Buttons bleiben über onclick="changeLevelMode(...)" in index.html verdrahtet.
 
     // Delete Dialog
     const dialog = document.getElementById('confirmDeleteDialog');

@@ -343,7 +343,43 @@ export function populateLevelFilter() {
 }
 
 // ====================== SAFETY BACKUPS ======================
-const MAX_BACKUPS = 3;
+const MAX_BACKUPS = 2;
+
+function offerSafetyBackupDownload(backup) {
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    const blob = new Blob([JSON.stringify({
+        version: '1.2',
+        exportDate: new Date().toISOString(),
+        levelMode: backup.levelMode,
+        resources: backup.resources
+    }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lerndashboard-notfallkopie-${stamp}.json`;
+
+    const notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;inset:0;z-index:40000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px;';
+    notice.innerHTML = `
+        <div style="background:#fff;color:#222;max-width:460px;padding:28px;border-radius:16px;">
+            <h3 style="margin:0 0 8px;">Notfallkopie nicht im Browser gespeichert</h3>
+            <p style="margin:0 0 18px;line-height:1.45;">
+                Der Browser-Speicher ist voll. Die bisherige Notfallkopie bleibt erhalten.
+                Bitte diese Datei herunterladen, bevor der Vorgang fortgesetzt wird.
+            </p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" id="safetyBackupClose" style="padding:10px 16px;border:none;border-radius:10px;background:#95a5a6;color:#fff;">Schließen</button>
+                <button type="button" id="safetyBackupDownload" style="padding:10px 16px;border:none;border-radius:10px;background:#6b46c1;color:#fff;">Backup herunterladen</button>
+            </div>
+        </div>`;
+    document.body.appendChild(notice);
+    notice.querySelector('#safetyBackupClose').onclick = () => notice.remove();
+    notice.querySelector('#safetyBackupDownload').onclick = () => {
+        link.click();
+        URL.revokeObjectURL(url);
+        notice.remove();
+    };
+}
 
 export function createSafetyBackup(actionName = 'Unbekannte Aktion') {
     const backup = {
@@ -364,15 +400,22 @@ export function createSafetyBackup(actionName = 'Unbekannte Aktion') {
     }
 
     backups.unshift(backup);
-    if (backups.length > MAX_BACKUPS) backups.length = MAX_BACKUPS;
 
-    try {
-        localStorage.setItem('safetyBackups', JSON.stringify(backups));
-        console.log(`💾 Safety-Backup erstellt: ${actionName}`);
-    } catch (e) {
-        console.error('Safety-Backup nicht gespeichert', e);
-        localStorage.removeItem('safetyBackups');
+    while (backups.length) {
+        const attempt = backups.slice(0, MAX_BACKUPS);
+        try {
+            localStorage.setItem('safetyBackups', JSON.stringify(attempt));
+            console.log(`💾 Safety-Backup erstellt: ${actionName}`);
+            return true;
+        } catch (e) {
+            console.warn('Safety-Backup zu groß, älteste Kopie wird verworfen', e);
+            backups.pop();
+        }
     }
+
+    console.error('Safety-Backup nicht gespeichert, bisherige Kopien bleiben erhalten');
+    offerSafetyBackupDownload(backup);
+    return false;
 }
 
 export function showRestoreDialog() {

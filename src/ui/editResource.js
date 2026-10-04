@@ -7,6 +7,11 @@ import { showUndoToast } from './modals.js';
 
 console.log('✅ editResource.js geladen');
 
+function localStamp(date = new Date()) {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16).replace('T', ' ');
+}
+
 export function initEditResourceListener() {
     if (window.__editListenerBound) return;
     window.__editListenerBound = true;
@@ -21,8 +26,7 @@ export function initEditResourceListener() {
             store.resources[msg.index] = {
                 ...store.resources[msg.index],
                 ...msg.data,
-                lastModified: new Date().toISOString().slice(0, 16).replace('T', ' ')
-            };
+                lastModified: localStamp()            };
 
             if (!store.undoStack) store.undoStack = [];
             store.undoStack.unshift({
