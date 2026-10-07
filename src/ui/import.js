@@ -75,7 +75,7 @@ function handleCSVImport(csvString) {
                 const val = (values[idx] || '').trim().replace(/^"|"$/g, '');
                 if (header.includes('thema') || header.includes('topic')) row.topic = val;
                 else if (header.includes('fachrichtung') || header.includes('beruf') || header.includes('occupation')) row.occupation = val;
-                else if (header.includes('bildungsgang') || header.includes('program')) row.program = val;
+                else if (header.includes('schulart') || header.includes('bildungsgang') || header.includes('program')) row.program = val;
                 else if (header.includes('fach') || header.includes('subject')) row.subject = val;
                 else if (header.includes('klasse') || header.includes('grade') || header.includes('jahrgang')) row.grade = val;
                 else if (header.includes('kompetenz') || header.includes('competence')) row.competence = val;

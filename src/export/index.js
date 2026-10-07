@@ -35,7 +35,7 @@ function updateCurrentFilters() {
  
 export function exportTemplate() {
     const template = [
-        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung,Bildungsgang,Beruf',
+        'Thema,Unterrichtsfach,Klassenstufe,Kompetenzbereich,Niveaustufe,Digitales Hilfsmittel,Beschreibung,Schulart,Beruf',
         'Beispiel: Klimawandel,Geografie,Klasse 7,Analysieren und Reflektieren,Niveaustufe 3,Google Earth,"Beschreibung des Einsatzes..."'
     ].join('\n');
     downloadFile(template, 'Lerndashboard_Vorlage.csv', 'text/csv');
@@ -65,7 +65,7 @@ export function exportCSV() {
     const exportDate = `Export: ${new Date().toLocaleDateString('de-DE')}`;
 
     // Header mit Schulnamen
-    const columns = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung','Bildungsgang','Beruf'];
+    const columns = ['Thema','Unterrichtsfach','Klassenstufe','Kompetenzbereich','Niveaustufe','Digitales_Hilfsmittel','Beschreibung','Schulart','Beruf'];
     let csv = columns.join(',') + '\n';
 
     // Daten
@@ -293,7 +293,7 @@ export function exportMatrixPDF() {
             const c = r.competence?.trim();
             const l = r.level?.trim();
             if (c && l && matrix[c]?.[l]) {
-                matrix[c][l].push(`${r.topic}\nKlasse ${r.grade||''}${r.tool ? ` – ${r.tool}` : ''}`);
+                matrix[c][l].push(`${r.topic}\n${r.grade || ''}${r.tool ? ` – ${r.tool}` : ''}`);
             }
         });
 

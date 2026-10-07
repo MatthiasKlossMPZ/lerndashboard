@@ -48,7 +48,7 @@ export const PROFILES = {
             subject: 'Fach / Lernfeld',
             subjectPlural: 'Fächer / Lernfelder',
             grade: 'Jahrgang',
-            program: 'Bildungsgang',
+            program: 'Schulart',
             occupation: 'Beruf / Fachrichtung'
         },
         subjects: [
